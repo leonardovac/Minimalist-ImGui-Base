@@ -80,7 +80,9 @@ namespace Overlay
 	inline void CheckGraphicsDriver()
 	{
 		if (GetModuleHandleW(L"d3d11.dll")) graphicsAPI = D3D11;
+#ifdef _WIN64
 		else if (GetModuleHandleW(L"d3d12.dll")) graphicsAPI = D3D12;
+#endif
 		else if (GetModuleHandleW(L"opengl32.dll")) graphicsAPI = OpenGL;
 		else if (GetModuleHandleW(L"vulkan-1.dll")) graphicsAPI = Vulkan;
 		else graphicsAPI = UNSUPPORTED;

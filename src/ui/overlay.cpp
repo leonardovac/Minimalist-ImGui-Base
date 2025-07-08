@@ -32,8 +32,8 @@ bool Overlay::TryAllPresentMethods()
 	{
 	case GraphicsAPI::D3D11:
 		return Overlay::DirectX11::Init();
-	case GraphicsAPI::D3D12:
 #ifdef _WIN64
+	case GraphicsAPI::D3D12:
 		return Overlay::DirectX12::Init();
 #endif
 	case GraphicsAPI::OpenGL:
