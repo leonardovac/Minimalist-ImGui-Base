@@ -90,8 +90,9 @@ namespace Overlay::DirectX11
 
 	inline void CleanupDeviceD3D()
 	{
-		if (ImGui::GetIO().BackendRendererUserData) ImGui_ImplDX11_Shutdown();
-		if (ImGui::GetIO().BackendPlatformUserData) ImGui_ImplWin32_Shutdown();
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
 		ReleaseRenderTargetView();
 		if (Interface::pSwapChain) { Interface::pSwapChain->Release(); Interface::pSwapChain = nullptr; }
 		if (Interface::pDeviceContext) { Interface::pDeviceContext->Release(); Interface::pDeviceContext = nullptr; }

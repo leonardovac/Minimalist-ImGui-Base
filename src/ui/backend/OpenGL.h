@@ -26,12 +26,9 @@ namespace Overlay::OpenGL
 
 	inline void Cleanup()
 	{
-		if (ImGui::GetCurrentContext())
-		{
-			if (ImGui::GetIO().BackendRendererUserData) ImGui_ImplOpenGL3_Shutdown();
-			if (ImGui::GetIO().BackendPlatformUserData) ImGui_ImplWin32_Shutdown();
-			ImGui::DestroyContext();
-		}
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
 	}
 
 	inline BOOL WINAPI WglSwapBuffers(const HDC hdc)

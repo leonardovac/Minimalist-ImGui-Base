@@ -187,8 +187,9 @@ namespace Overlay::DirectX12
 
 	inline void CleanupDeviceD3D()
 	{
-		if (ImGui::GetIO().BackendRendererUserData) ImGui_ImplDX12_Shutdown();
-		if (ImGui::GetIO().BackendPlatformUserData) ImGui_ImplWin32_Shutdown();
+		ImGui_ImplDX12_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
 		ReleaseMainTargetView();
 		if (Interface::pSwapChain) { Interface::pSwapChain->Release(); Interface::pSwapChain = nullptr; }
 		if (Interface::pCommandAllocator) { Interface::pCommandAllocator->Release(); Interface::pCommandAllocator = nullptr; }
