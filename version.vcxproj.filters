@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="include\SafetyHook\safetyhook.cpp">
+      <Filter>include\SafetyHook</Filter>
+    </ClCompile>
+    <ClCompile Include="include\SafetyHook\Zydis.c">
+      <Filter>include\SafetyHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\base.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Mem\hook.cpp">
+      <Filter>include\Mem</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Mem\mem.cpp">
+      <Filter>include\Mem</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\menu.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\overlay.cpp">
+      <Filter>src\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="include\ScreenCleaner\ScreenCleaner.cpp">
+      <Filter>include\ScreenCleaner</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="include\SafetyHook\safetyhook.hpp">
+      <Filter>include\SafetyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SafetyHook\Zydis.h">
+      <Filter>include\SafetyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SafetyHook\Wrapper.hpp">
+      <Filter>include\SafetyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mem\hook.h">
+      <Filter>include\Mem</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mem\mem.h">
+      <Filter>include\Mem</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hooks.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\misc\keybinds.h">
+      <Filter>src\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\menu.h">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\overlay.h">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\widgets.h">
+      <Filter>src\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\misc\fonts\font_awesome.hpp">
+      <Filter>src\misc\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="src\misc\fonts\roboto_mono.hpp">
+      <Filter>src\misc\fonts</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScreenCleaner\ScreenCleaner.h">
+      <Filter>include\ScreenCleaner</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\backend\D3D11.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\backend\D3D12.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\backend\Discord.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\backend\OpenGL.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\backend\Steam.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\backend\Vulkan.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="version.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="version.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{ad294d68-bec6-4b1e-9850-825564f6db45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{ee6ca8f5-a787-446e-a744-1fbff4ead29f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\SafetyHook">
+      <UniqueIdentifier>{38878c2c-ec09-4051-a252-61712216cd1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Mem">
+      <UniqueIdentifier>{23f98cef-f878-4114-9597-0ff5fb134495}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\misc">
+      <UniqueIdentifier>{6816d7a0-fb2d-43e7-9d9f-a66ea1110cdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui">
+      <UniqueIdentifier>{36629bfe-03ba-431c-94d9-2dc9bf7639bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\misc\fonts">
+      <UniqueIdentifier>{67332f60-a0d7-4b79-a66a-1035118f6d7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ScreenCleaner">
+      <UniqueIdentifier>{595fd539-999a-4283-86c4-5d3592f7ad77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ui\backend">
+      <UniqueIdentifier>{dd876da3-8fca-43b3-bfdd-2a3a3fe25762}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
