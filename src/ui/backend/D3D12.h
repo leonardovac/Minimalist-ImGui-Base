@@ -146,19 +146,12 @@ namespace Overlay::DirectX12
 		ComPtr<IDXGISwapChain> pSwapChain;
 		if (FAILED(pFactory->CreateSwapChain(pCommandQueue.Get(), &swapChainDesc, &pSwapChain))) return false;
 
-		auto& commandQueueVTable = HooksManager::SetupVmt(pCommandQueue.Get());
-		HooksManager::SetupVm(commandQueueVTable, 10, &ExecuteCommandLists);
-
-		auto& swapChainVTable = HooksManager::SetupVmt(pSwapChain.Get());
-		HooksManager::SetupVm(swapChainVTable, 8, &Present);
-		HooksManager::SetupVm(swapChainVTable, 13, &ResizeBuffers);
-
-		/*uint64_t** pvCommandQueue = *reinterpret_cast<uint64_t***>(pCommandQueue.Get());
-		uint64_t** pvSwapChain = *reinterpret_cast<uint64_t***>(pSwapChain.Get());
+		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
+		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 		HooksManager::Setup<InlineHook>(pvCommandQueue[10], &ExecuteCommandLists);
 		HooksManager::Setup<InlineHook>(pvSwapChain[8], &Present);
-		HooksManager::Setup<InlineHook>(pvSwapChain[13], &ResizeBuffers);*/
+		HooksManager::Setup<InlineHook>(pvSwapChain[13], &ResizeBuffers);
 		return true;
 	}
 

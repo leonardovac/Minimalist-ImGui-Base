@@ -64,13 +64,10 @@ namespace Overlay::DirectX11
 		constexpr D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
 		if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, featureLevels, std::size(featureLevels), D3D11_SDK_VERSION, &sd, &pSwapChain, &pDevice, nullptr, nullptr))) return false;
 
-		auto& vmtHook = HooksManager::SetupVmt(pSwapChain.Get());
-		HooksManager::SetupVm(vmtHook, 8, &PresentHook);
-		HooksManager::SetupVm(vmtHook, 13, &ResizeBuffersHook);
+		uintptr_t** pVTable = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
-		/*void** pVTable = *reinterpret_cast<void***>(pSwapChain.Get());
 		HooksManager::Setup<InlineHook>(pVTable[8], &PresentHook);
-		HooksManager::Setup<InlineHook>(pVTable[13], &ResizeBuffersHook);*/
+		HooksManager::Setup<InlineHook>(pVTable[13], &ResizeBuffersHook);
 		return true;
 	}
 
