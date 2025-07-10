@@ -15,7 +15,7 @@ struct Hook
 		size_t relative;
 
 		LengthPatched(): absolute(0), relative(0) {}
-		LengthPatched(const size_t rel, const size_t abs): absolute(max(ABS_JMP_SIZE, abs)), relative(max(REL_JMP_SIZE, rel)) {}
+		LengthPatched(const size_t rel, const size_t abs): absolute(ABS_JMP_SIZE > abs ? ABS_JMP_SIZE : abs), relative(REL_JMP_SIZE > rel ? REL_JMP_SIZE : rel) {}
 	};
 
 	bool bStatus = false;

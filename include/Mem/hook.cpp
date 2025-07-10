@@ -68,7 +68,7 @@ Hook::Hook(void* moduleHandle, const char* pattern, const LengthPatched length, 
 	this->len = length;
 	this->code = code;
 	this->codeLen = codeLen;
-	memcpy(originalBytes, address, max(length.relative, length.absolute));
+	memcpy(originalBytes, address, std::max(length.relative, length.absolute));
 }
 
 Hook::Hook(void* moduleHandle, const char* pattern, BYTE* code, const size_t codeLen)
@@ -93,7 +93,7 @@ void Hook::Disable()
 {
 	bStatus = false;
 	if (bDisabled) return;
-	mem::Patch(address, originalBytes, max(len.relative, len.absolute));
+	mem::Patch(address, originalBytes, std::max(len.relative, len.absolute));
 	VirtualFree(detour, 0, MEM_RELEASE);
 }
 

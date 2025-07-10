@@ -36,8 +36,8 @@ void* mem::AllocateMemory(const LPVOID lpAddress, const DWORD flAllocationType)
 	const uint64_t PAGE_SIZE = sysInfo.dwPageSize;
 
 	const uint64_t startAddr = reinterpret_cast<uint64_t>(lpAddress) & ~(PAGE_SIZE - 1); //round down to nearest page boundary
-	const uint64_t minAddr = min(startAddr - 0x7FFFFF00, (uint64_t)sysInfo.lpMinimumApplicationAddress);
-	const uint64_t maxAddr = max(startAddr + 0x7FFFFF00, (uint64_t)sysInfo.lpMaximumApplicationAddress);
+	const uint64_t minAddr = std::min(startAddr - 0x7FFFFF00, reinterpret_cast<uint64_t>(sysInfo.lpMinimumApplicationAddress));
+	const uint64_t maxAddr = std::max(startAddr + 0x7FFFFF00, reinterpret_cast<uint64_t>(sysInfo.lpMaximumApplicationAddress));
 
 	const uint64_t startPage = startAddr - startAddr % PAGE_SIZE;
 
