@@ -82,7 +82,7 @@ namespace Overlay::DirectX11
 
 	inline void ReleaseRenderTargetView()
 	{
-		if (Interface::pRenderTargetView) { Interface::pRenderTargetView->Release(); Interface::pRenderTargetView = nullptr; }
+		SafeRelease(Interface::pRenderTargetView);
 	}
 
 	inline void CleanupDeviceD3D()
@@ -90,10 +90,11 @@ namespace Overlay::DirectX11
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
+
 		ReleaseRenderTargetView();
-		if (Interface::pSwapChain) { Interface::pSwapChain->Release(); Interface::pSwapChain = nullptr; }
-		if (Interface::pDeviceContext) { Interface::pDeviceContext->Release(); Interface::pDeviceContext = nullptr; }
-		if (Interface::pDevice) { Interface::pDevice->Release(); Interface::pDevice = nullptr; }
+		SafeRelease(Interface::pSwapChain);
+		SafeRelease(Interface::pDeviceContext);
+		SafeRelease(Interface::pDevice);
 	}
 
 	inline long PresentHook(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)

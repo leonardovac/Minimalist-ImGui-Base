@@ -25,6 +25,14 @@ inline LRESULT WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, co
 	return CallWindowProc(lpPrevWndFunc, hWnd, uMsg, wParam, lParam);
 }
 
+template<typename T>
+void SafeRelease(T*& ptr) {
+	if (ptr) {
+		ptr->Release();
+		ptr = nullptr;
+	}
+}
+
 enum GraphicsAPI : UINT8
 {
 	UNSUPPORTED,

@@ -170,11 +170,7 @@ namespace Overlay::DirectX12
 	{
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{
-			if (Interface::pFrameContext[i].pResource)
-			{
-				Interface::pFrameContext[i].pResource->Release();
-				Interface::pFrameContext[i].pResource = nullptr;
-			}
+			SafeRelease(Interface::pFrameContext[i].pResource);
 		}
 	}
 
@@ -183,14 +179,15 @@ namespace Overlay::DirectX12
 		ImGui_ImplDX12_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
+
 		ReleaseMainTargetView();
-		if (Interface::pSwapChain) { Interface::pSwapChain->Release(); Interface::pSwapChain = nullptr; }
-		if (Interface::pCommandAllocator) { Interface::pCommandAllocator->Release(); Interface::pCommandAllocator = nullptr; }
-		if (Interface::pCommandQueue) { Interface::pCommandQueue->Release(); Interface::pCommandQueue = nullptr; }
-		if (Interface::pCommandList) { Interface::pCommandList->Release(); Interface::pCommandList = nullptr; }
-		if (Interface::pDescHeapBackBuffers) { Interface::pDescHeapBackBuffers->Release(); Interface::pDescHeapBackBuffers = nullptr; }
-		if (Interface::pDescHeapImGuiRender) { Interface::pDescHeapImGuiRender->Release(); Interface::pDescHeapImGuiRender = nullptr; }
-		if (Interface::pDevice) { Interface::pDevice->Release(); Interface::pDevice = nullptr; }
+		SafeRelease(Interface::pSwapChain);
+		SafeRelease(Interface::pCommandAllocator);
+		SafeRelease(Interface::pCommandQueue);
+		SafeRelease(Interface::pCommandList);
+		SafeRelease(Interface::pDescHeapBackBuffers);
+		SafeRelease(Interface::pDescHeapImGuiRender);
+		SafeRelease(Interface::pDevice);
 	}
 
 	inline long Present(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)
