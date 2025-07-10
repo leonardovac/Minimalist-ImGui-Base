@@ -40,11 +40,23 @@ namespace Overlay
 	inline bool bInitialized;
 	inline bool bEnabled{true};
 
+	inline HWND hWindow;
 	inline GraphicsAPI graphicsAPI;
 
-	inline WNDCLASSEX wndClass;
-	inline HWND hWindow;
-	inline HWND hGameWindow;
+	inline const WNDCLASSEX wndClass{
+		.cbSize = sizeof(WNDCLASSEX),
+		.style = CS_HREDRAW | CS_VREDRAW,
+		.lpfnWndProc = DefWindowProcW,
+		.cbClsExtra = 0,
+		.cbWndExtra = 0,
+		.hInstance = GetModuleHandleW(nullptr),
+		.hIcon = nullptr,
+		.hCursor = nullptr,
+		.hbrBackground = nullptr,
+		.lpszMenuName = nullptr,
+		.lpszClassName = L"Overlay",
+		.hIconSm = nullptr
+	};
 
 	// Functions
 	void RenderLogic();
@@ -53,18 +65,6 @@ namespace Overlay
 	/// Helpers
 	inline bool InitWindow()
 	{
-		wndClass.cbSize = sizeof(WNDCLASSEX);
-		wndClass.style = CS_HREDRAW | CS_VREDRAW;
-		wndClass.lpfnWndProc = DefWindowProcW;
-		wndClass.cbClsExtra = 0;
-		wndClass.cbWndExtra = 0;
-		wndClass.hInstance = GetModuleHandleW(nullptr);
-		wndClass.hIcon = nullptr;
-		wndClass.hCursor = nullptr;
-		wndClass.hbrBackground = nullptr;
-		wndClass.lpszMenuName = nullptr;
-		wndClass.lpszClassName = L"Overlay";
-		wndClass.hIconSm = nullptr;
 		RegisterClassExW(&wndClass);
 		hWindow = CreateWindowExW(0L, wndClass.lpszClassName, L"", WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, nullptr, nullptr, wndClass.hInstance, nullptr);
 		return hWindow != nullptr;
