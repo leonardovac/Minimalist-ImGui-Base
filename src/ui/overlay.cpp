@@ -1,5 +1,6 @@
 #include "overlay.h"
 
+#include "../misc/Keybinds.h"
 #include "backend/D3D11.h"
 #include "backend/D3D12.h"
 #include "backend/Discord.h"

@@ -4,7 +4,6 @@
 #include <wrl/client.h>
 
 #include "menu.h"
-#include "../misc/keybinds.h"
 #include "SafetyHook/Wrapper.hpp"
 
 using Microsoft::WRL::ComPtr;
