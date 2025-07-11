@@ -55,7 +55,7 @@ namespace ImGui
 	    }
 
 	    static float distance;
-	    distance = max(distance, itemSize);
+	    distance = std::max(distance, itemSize);
 	    ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x + distance);
 
 	    const bool isMouseKey = keyBind->key > 0 && keyBind->key < 7;
