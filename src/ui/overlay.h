@@ -42,6 +42,39 @@ enum GraphicsAPI : UINT8
 	Vulkan
 };
 
+static const char* GraphicsAPIStrings[] = {
+	"UNSUPPORTED",
+	"D3D9",
+	"D3D11",
+	"D3D12",
+	"OpenGL",
+	"Vulkan"
+};
+
+inline const char* GraphicsAPIToString(const GraphicsAPI api)
+{
+	if (api < std::size(GraphicsAPIStrings)) 
+		return GraphicsAPIStrings[api];
+	return "UNKNOWN";
+}
+
+#if LOGGING_ENABLED
+#define FORMATTER fmtquill::formatter
+#define FORMAT_TO fmtquill::format_to
+#else
+#define FORMATTER std::formatter
+#define FORMAT_TO std::format_to
+#endif
+
+template<>
+struct FORMATTER<GraphicsAPI>
+{
+	static constexpr auto parse(const format_parse_context& ctx) { return ctx.begin(); }
+
+	template<typename FormatContext>
+	auto format(const GraphicsAPI& api, FormatContext& ctx) const { return FORMAT_TO(ctx.out(), "{}", GraphicsAPIToString(api)); }
+};
+
 namespace Overlay
 {
 	/// Declarations
