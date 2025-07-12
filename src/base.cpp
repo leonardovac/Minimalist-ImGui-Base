@@ -4,7 +4,9 @@
 
 #include <SafetyHook/Wrapper.hpp>
 #include <ScreenCleaner/ScreenCleaner.h>
+
 #include "hooks.h"
+#include "misc/logger.h"
 #include "ui/overlay.h"
 
 namespace
@@ -53,7 +55,7 @@ namespace
 
 		if (!Overlay::TryAllPresentMethods())
 		{
-			MessageBoxA(nullptr, "Couldn't hook game rendering.", nullptr, 0);
+			LOG_CRITICAL("Couldn't hook game rendering.");
 		}
 	}
 }
@@ -61,6 +63,11 @@ namespace
 ScreenCleaner screenCleaner(&Overlay::bEnabled);
 void MainThread()
 {
+#if LOGGING_ENABLED
+	ConsoleManager::create_console();
+	SetupQuill("log.txt");
+#endif
+
 	Hooks::SetupAllHooks();
 	std::thread(HookPresent).detach();
 	if (screenCleaner.Init()) screenCleaner.Enable();
