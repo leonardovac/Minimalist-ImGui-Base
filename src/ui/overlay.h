@@ -34,7 +34,7 @@ void SafeRelease(T*& ptr) {
 
 enum GraphicsAPI : UINT8
 {
-	UNSUPPORTED,
+	UNKNOWN,
 	D3D9,
 	D3D11,
 	D3D12,
@@ -43,7 +43,7 @@ enum GraphicsAPI : UINT8
 };
 
 static const char* GraphicsAPIStrings[] = {
-	"UNSUPPORTED",
+	"UNKNOWN",
 	"D3D9",
 	"D3D11",
 	"D3D12",
@@ -126,7 +126,7 @@ namespace Overlay
 #endif
 		else if (GetModuleHandleW(L"opengl32.dll")) graphicsAPI = OpenGL;
 		else if (GetModuleHandleW(L"vulkan-1.dll")) graphicsAPI = Vulkan;
-		else graphicsAPI = UNSUPPORTED;
+		else graphicsAPI = UNKNOWN;
 
 		LOG_NOTICE("Graphics API: {}", graphicsAPI);
 	}

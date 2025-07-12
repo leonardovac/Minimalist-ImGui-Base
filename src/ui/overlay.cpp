@@ -31,8 +31,10 @@ bool Overlay::TryAllPresentMethods()
 
 	switch(Overlay::graphicsAPI)
 	{
+	case GraphicsAPI::UNKNOWN:
+		break;
 	case GraphicsAPI::D3D9:
-		return false;
+		break;
 	case GraphicsAPI::D3D11:
 		return Overlay::DirectX11::Init();
 #ifdef _WIN64
@@ -42,7 +44,9 @@ bool Overlay::TryAllPresentMethods()
 	case GraphicsAPI::OpenGL:
 		return Overlay::OpenGL::Init();
 	case GraphicsAPI::Vulkan:
-	default:
-		return false;
+		break;
 	}
+
+	LOG_WARNING("Graphics API {} currently not implemented.", Overlay::graphicsAPI);
+	return false;
 }
