@@ -4,7 +4,7 @@
 
 namespace
 {
-	BOOL WINAPI hkBitBlt(const HDC hdcDst, const int x, const int y, const int cx, const int cy, const HDC hdcSrc, const int x1, const int y1, const DWORD rop)
+	BOOL WINAPI BitBltHook(const HDC hdcDst, const int x, const int y, const int cx, const int cy, const HDC hdcSrc, const int x1, const int y1, const DWORD rop)
 	{
 		BOOL result;
 
@@ -40,7 +40,7 @@ bool ScreenCleaner::Init()
 	if (!hGdi32) return false;
 
 	const auto address = GetProcAddress(hGdi32, "BitBlt");
-	this->hook = safetyhook::create_inline(reinterpret_cast<void*>(address), reinterpret_cast<void*>(&hkBitBlt));
+	this->hook = safetyhook::create_inline(reinterpret_cast<void*>(address), reinterpret_cast<void*>(&BitBltHook));
 
 	bInitComplete = true;
 	return true;
