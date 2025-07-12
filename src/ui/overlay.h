@@ -35,6 +35,7 @@ void SafeRelease(T*& ptr) {
 enum GraphicsAPI : UINT8
 {
 	UNSUPPORTED,
+	D3D9,
 	D3D11,
 	D3D12,
 	OpenGL,

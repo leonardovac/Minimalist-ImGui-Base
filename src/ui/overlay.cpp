@@ -31,6 +31,8 @@ bool Overlay::TryAllPresentMethods()
 
 	switch(Overlay::graphicsAPI)
 	{
+	case GraphicsAPI::D3D9:
+		return false;
 	case GraphicsAPI::D3D11:
 		return Overlay::DirectX11::Init();
 #ifdef _WIN64
