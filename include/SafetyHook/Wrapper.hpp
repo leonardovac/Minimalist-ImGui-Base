@@ -202,7 +202,7 @@ namespace HooksManager
 
 		if (!targetObject)
 		{
-			LOG_ERROR("Invalid address passed: {}", targetObject);
+			LOG_ERROR("Invalid address passed: 0x{:X}", reinterpret_cast<uintptr_t>(targetObject));
 			RETURN_FAIL(emptyHook)
 		}
 
@@ -210,9 +210,9 @@ namespace HooksManager
 		std::unique_lock lock(hooking);
 		vmt_hooks[targetObject].emplace_back(std::make_unique<FunctionHook<VmtHook>>(targetObject));
 
-		if (const uint8_t error = vmt_hooks[targetObject].back()->geterror())
+		if (const uint8_t error = vmt_hooks[targetObject].back()->getError())
 		{
-			LOG_ERROR("Couldn't hook VTable at {}, error: {}", targetObject, ParseError(error));
+			LOG_ERROR("Couldn't hook VTable at 0x{:X}, error: {}", reinterpret_cast<uintptr_t>(targetObject), ParseError(error));
 			RETURN_FAIL(emptyHook)
 		}
 
@@ -225,9 +225,9 @@ namespace HooksManager
 		std::unique_lock lock(hooking); 	// Locks until out of scope
 		hooks[hookFn].emplace_back(std::make_unique<FunctionHook<VmHook>>(vmtHook, index, hookFn));
 
-		if (const uint8_t error = hooks[hookFn].back()->geterror())
+		if (const uint8_t error = hooks[hookFn].back()->getError())
 		{
-			LOG_ERROR("Couldn't hook virtual method at Index {} for {} | {}", index, hookFn, functionName, ParseError(error));
+			LOG_ERROR("Couldn't hook virtual method at Index {} for {} | {}", index, functionName, ParseError(error));
 			RETURN_FAIL()
 		}
 	}
