@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <imgui.h>
 #include <windows.h>
 #include <wrl/client.h>
@@ -127,5 +127,7 @@ namespace Overlay
 		else if (GetModuleHandleW(L"opengl32.dll")) graphicsAPI = OpenGL;
 		else if (GetModuleHandleW(L"vulkan-1.dll")) graphicsAPI = Vulkan;
 		else graphicsAPI = UNSUPPORTED;
+
+		LOG_NOTICE("Graphics API: {}", graphicsAPI);
 	}
 }

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "game.h"
 #include "Mem/mem.h"
 #include "SafetyHook/safetyhook.hpp"
@@ -41,29 +41,44 @@ namespace Hooks
 
 	struct HookEntry
 	{
-		const char* pattern {};
-		void* address {};
-		HMODULE module {};
+		void* address{};
 		void* detour;
+		const char* name{};
+		HMODULE module{};
+		const char* pattern {};
 		HookType type;
 	};
+
+	// Define a macro to set the detour function and its name
+
+
+#if LOGGING_ENABLED
+#define DETOUR(func) \
+        .detour = (func), \
+        .name = #func
+#else
+#define DETOUR(func) \
+        .detour = (func), \
+        .name = nullptr
+#endif
 
 	inline HookEntry List[]
 	{
 		{
 			.address = MessageBoxA,
-			.detour = Hooks::Detours::ExampleInlineDetour,
+			DETOUR(Detours::ExampleInlineDetour),
 			.type = HookType::Inline
 		},
 		{
 			.address = MessageBoxW,
-			.detour = Hooks::Detours::ExampleMidDetour,
+			.detour = Detours::ExampleMidDetour,
+			.name = "Detours::ExampleMidDetour", // or any other name, e.g., "MessageBoxW Detour"
 			.type = HookType::Mid
 		},
 		{
-			.pattern = "DEAD BEEF ?? BABE FACE",
+			.detour = Detours::ExampleMidDetour,
 			.module = hExecutable,
-			.detour = Hooks::Detours::ExampleMidDetour,
+			.pattern = "DEAD BEEF ?? BABE FACE",
 			.type = HookType::Mid
 		},
 	};
@@ -71,17 +86,18 @@ namespace Hooks
 
 	static void SetupAllHooks()
 	{
-		for (auto& [pattern, address, module, detour, type] : Hooks::List)
+		LOG_NOTICE("Starting hooking procedures...");
+		for (auto& [address, detour, name, module, pattern, type] : Hooks::List)
 		{
 			if (!address && pattern && module) { address = mem::PatternScan(module, pattern); }
 
 			switch (type)
 			{
 			case HookType::Inline:
-				HooksManager::Setup<InlineHook>(address, detour);
+				HooksManager::Setup<InlineHook>(address, detour, name);
 				break;
 			case HookType::Mid:
-				HooksManager::Setup<MidHook>(address, detour);
+				HooksManager::Setup<MidHook>(address, detour, name);
 				break;
 			}
 		}

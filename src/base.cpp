@@ -1,7 +1,6 @@
-#include "base.h"
+﻿#include "base.h"
 
 #include <windows.h>
-
 #include <SafetyHook/Wrapper.hpp>
 #include <ScreenCleaner/ScreenCleaner.h>
 
@@ -16,42 +15,49 @@ namespace
 		const auto startTime = std::chrono::steady_clock::now();
 		constexpr std::chrono::seconds timeout{ 10 };
 
-		const DWORD currentProcessId = GetCurrentProcessId();
-
-#ifdef _WIN64
-		while (!Overlay::hGameWindow)
-		{
-			HWND hWindow = FindWindowEx(nullptr, nullptr, nullptr, nullptr);
-
-			while (hWindow)
+		while (!Game::hWindow) {
+			const auto EnumWindowsProc = [](const HWND hWindow, const LPARAM lParam) -> BOOL
 			{
+				const auto gameWindow = reinterpret_cast<HWND*>(lParam);
+
 				DWORD processId;
 				GetWindowThreadProcessId(hWindow, &processId);
 
-				if (processId == currentProcessId && IsWindowVisible(hWindow) && !IsIconic(hWindow))
+				if (processId == GetCurrentProcessId() && hWindow != GetConsoleWindow() && IsWindowVisible(hWindow) && !IsIconic(hWindow))
 				{
-					if (RECT rect; GetWindowRect(hWindow, &rect) && rect.right >= rect.left && rect.bottom >= rect.top && rect.right - rect.left > 100 && rect.bottom - rect.top > 100)
+					RECT rect;
+					if (GetWindowRect(hWindow, &rect) && rect.right >= rect.left && rect.bottom >= rect.top && rect.right - rect.left > 100 && rect.bottom - rect.top > 100) 
 					{
 						wchar_t windowTitle[256];
 						GetWindowTextW(hWindow, windowTitle, sizeof(windowTitle));
 
 						if (wcslen(windowTitle) > 0)
 						{
-							Overlay::hGameWindow = hWindow;
-							break;
+							*gameWindow = hWindow;
+							return FALSE; // Stop
 						}
 					}
 				}
+				return TRUE; // Continue
+			};
 
-				hWindow = FindWindowEx(nullptr, hWindow, nullptr, nullptr);
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&Game::hWindow));
+
+			if (std::chrono::steady_clock::now() - startTime > timeout) 
+			{
+				LOG_WARNING("Window search is taking too long, trying GetForegroundWindow()...");
+				if (!((Game::hWindow = GetForegroundWindow())))
+				{
+					LOG_CRITICAL("Couldn't find game window.");
+					return;
+				}
 			}
 
-			if (std::chrono::steady_clock::now() - startTime > timeout) { return; }
+			// When console is created and not hidden, we need to make sure the game window is the main one.
+			SetForegroundWindow(Game::hWindow);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
-#endif
 
 		if (!Overlay::TryAllPresentMethods())
 		{

@@ -66,8 +66,8 @@ namespace Overlay::DirectX11
 
 		uintptr_t** pVTable = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
-		HooksManager::Setup<InlineHook>(pVTable[8], &PresentHook);
-		HooksManager::Setup<InlineHook>(pVTable[13], &ResizeBuffersHook);
+		HooksManager::Setup<InlineHook>(pVTable[8], FUNCTION(PresentHook));
+		HooksManager::Setup<InlineHook>(pVTable[13], FUNCTION(ResizeBuffersHook));
 		return true;
 	}
 

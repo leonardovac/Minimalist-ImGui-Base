@@ -16,8 +16,8 @@ namespace Overlay::Steam
 				{
 					if (void* pResizeBuffers = mem::PatternScan(hModule, "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 44 8B FA"))
 					{
-						HooksManager::Setup<InlineHook>(pPresent, &DirectX11::PresentHook);
-						HooksManager::Setup<InlineHook>(pResizeBuffers, &DirectX11::ResizeBuffersHook);
+						HooksManager::Setup<InlineHook>(pPresent, FUNCTION(DirectX11::PresentHook));
+						HooksManager::Setup<InlineHook>(pResizeBuffers, FUNCTION(DirectX11::ResizeBuffersHook));
 						return true;
 					}
 				}

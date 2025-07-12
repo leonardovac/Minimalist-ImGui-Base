@@ -149,9 +149,9 @@ namespace Overlay::DirectX12
 		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
 		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
-		HooksManager::Setup<InlineHook>(pvCommandQueue[10], &ExecuteCommandLists);
-		HooksManager::Setup<InlineHook>(pvSwapChain[8], &Present);
-		HooksManager::Setup<InlineHook>(pvSwapChain[13], &ResizeBuffers);
+		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
+		HooksManager::Setup<InlineHook>(pvSwapChain[8], FUNCTION(Present));
+		HooksManager::Setup<InlineHook>(pvSwapChain[13], FUNCTION(ResizeBuffers));
 		return true;
 	}
 
