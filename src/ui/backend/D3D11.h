@@ -1,6 +1,5 @@
-#pragma once
+﻿#pragma once
 #include <d3d11.h>
-#include <dxgi1_4.h>
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
@@ -8,8 +7,8 @@
 
 namespace Overlay::DirectX11
 {
-	long PresentHook(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags);
-	HRESULT ResizeBuffersHook(IDXGISwapChain3* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
+	long PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags);
+	HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 
 	namespace Interface
 	{
@@ -97,7 +96,7 @@ namespace Overlay::DirectX11
 		SafeRelease(Interface::pDevice);
 	}
 
-	inline long PresentHook(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)
+	inline long PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags)
 	{
 		Interface::pSwapChain = pSwapChain;
 		[&pSwapChain]
@@ -136,7 +135,7 @@ namespace Overlay::DirectX11
 		return HooksManager::GetOriginal(&PresentHook).unsafe_stdcall<long>(pSwapChain, SyncInterval, uFlags);
 	}
 
-	inline HRESULT ResizeBuffersHook(IDXGISwapChain3* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)
+	inline HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)
 	{
 		ReleaseRenderTargetView();
 		const HRESULT result = HooksManager::GetOriginal(&ResizeBuffersHook).unsafe_stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
