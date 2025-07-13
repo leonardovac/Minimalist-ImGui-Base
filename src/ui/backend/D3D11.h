@@ -103,19 +103,19 @@ namespace Overlay::DirectX11
 		{
 			if (!Overlay::bInitialized)
 			{
+				Interface::pSwapChain = pSwapChain;
 				if (SUCCEEDED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice))))
 				{
 					Interface::pDevice->GetImmediateContext(&Interface::pDeviceContext);
 					DXGI_SWAP_CHAIN_DESC sd;
 					if (SUCCEEDED(pSwapChain->GetDesc(&sd)))
 					{
-						hWindow = sd.OutputWindow;
-						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(sd.OutputWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 						// Setup Dear ImGui context 
 						ImGui::CreateContext();
 						Menu::SetupImGuiStyle();
 						// Setup Platform/Renderer backends 
-						if (!ImGui_ImplWin32_Init(hWindow) || !((Overlay::bInitialized = ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)))) return;
+						if (!ImGui_ImplWin32_Init(sd.OutputWindow) || !((Overlay::bInitialized = ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)))) return;
 						CreateMainRenderTargetView(pSwapChain);
 					}
 				}

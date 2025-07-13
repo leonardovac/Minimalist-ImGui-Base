@@ -202,10 +202,7 @@ namespace Overlay::DirectX12
 					DXGI_SWAP_CHAIN_DESC descSwapChain;
 					if (SUCCEEDED(pSwapChain->GetDesc(&descSwapChain)))
 					{
-						descSwapChain.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-						hWindow = descSwapChain.OutputWindow;
-						descSwapChain.Windowed = (GetWindowLongPtr(hWindow, GWL_STYLE) & WS_POPUP) == 0;
-						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(descSwapChain.OutputWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 
 						Interface::nBuffersCounts = descSwapChain.BufferCount;
 						Interface::pFrameContext = new Interface::FrameContext[Interface::nBuffersCounts];
@@ -243,7 +240,7 @@ namespace Overlay::DirectX12
 						ImGui::CreateContext();
 						Menu::SetupImGuiStyle();
 						// Setup Platform/Renderer backends
-						if (!ImGui_ImplWin32_Init(hWindow)) return;
+						if (!ImGui_ImplWin32_Init(descSwapChain.OutputWindow)) return;
 
 						ImGui_ImplDX12_InitInfo initInfo = {};
 						initInfo.Device = Interface::pDevice;
