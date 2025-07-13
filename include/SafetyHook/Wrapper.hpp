@@ -6,12 +6,10 @@
 
 using safetyhook::InlineHook;
 using safetyhook::MidHook;
-using safetyhook::VmtHook;
-using safetyhook::VmHook;
 using safetyhook::Context;
 
 #if LOGGING_ENABLED
-#define FUNCTION(func) (func), \
+#define FUNCTION(func) &(func), \
         #func
 #else
 #define FUNCTION(func) (func), \
@@ -33,8 +31,6 @@ public:
 	virtual void        unhook()		= 0;
 	virtual InlineHook& getHookInline() = 0;
 	virtual MidHook&	getHookMid()	= 0;
-	virtual VmtHook&	getHookVmt()	= 0;
-	virtual VmHook&		getHookVm()		= 0;
 	virtual uint8_t     getError()		= 0;
 };
 
@@ -64,28 +60,6 @@ public:
 		}
 	}
 
-	// Constructor for VMT hook
-	template<typename T>
-	FunctionHook(T* targetObject) requires std::is_same_v<HookType, VmtHook>
-	{
-		if (auto result = VmtHook::create(targetObject))
-		{
-			originalFunctionVmt = std::move(*result);
-		}
-		else errorType = result.error().type;
-	}
-
-	// Constructor for VM hook
-	template<typename T>
-	FunctionHook(VmtHook& vmtHook, std::size_t index, T hookFn) requires std::is_same_v<HookType, VmHook>
-	{
-		if (auto result = vmtHook.hook_method(index, hookFn))
-		{
-			originalFunctionVm = std::move(*result);
-		}
-		else errorType = result.error().type;
-	}
-
 	InlineHook& getHookInline() override
 	{
 		return originalFunctionInline;
@@ -96,22 +70,10 @@ public:
 		return originalFunctionMid;
 	}
 
-	VmtHook& getHookVmt() override
-	{
-		return originalFunctionVmt;
-	}
-
-	VmHook& getHookVm() override
-	{
-		return originalFunctionVm;
-	}
-
 	void unhook() override
 	{
 		originalFunctionInline = {};
 		originalFunctionMid = {};
-		originalFunctionVmt = {};
-		originalFunctionVm = {};
 	}
 
 	uint8_t getError() override
@@ -122,19 +84,14 @@ public:
 private:
 	InlineHook	originalFunctionInline;
 	MidHook		originalFunctionMid;
-	VmtHook		originalFunctionVmt;
-	VmHook		originalFunctionVm;
 
 	uint8_t		errorType = 0;
-	uint8_t		hookType  = 0; // 0 - InlineHook, 1 - MidHook, 2 - VmtHook, 3 - VmHook
 };
 
 namespace HooksManager
 {
 	inline int fails;
 	inline std::unordered_map<const void*, std::vector<std::unique_ptr<HookBase>>> hooks;
-	// Separate storage for VMT hooks since they don't have a replacement function pointer
-	inline std::unordered_map<const void*, std::vector<std::unique_ptr<HookBase>>> vmt_hooks;
 	// To avoid a (possible) crash on Inject
 	static std::shared_mutex hooking;
 
@@ -194,44 +151,6 @@ namespace HooksManager
 		Setup<HookType>(original, replacement, nullptr, flags);
 	}
 
-	// Setup for VMT hooks - returns reference to the created VMT hook
-	template <typename T>
-	VmtHook& SetupVmt(T* targetObject)
-	{
-		static VmtHook emptyHook{}; // Static empty hook for error cases
-
-		if (!targetObject)
-		{
-			LOG_ERROR("Invalid address passed: 0x{:X}", reinterpret_cast<uintptr_t>(targetObject));
-			RETURN_FAIL(emptyHook)
-		}
-
-		// Locks until out of scope
-		std::unique_lock lock(hooking);
-		vmt_hooks[targetObject].emplace_back(std::make_unique<FunctionHook<VmtHook>>(targetObject));
-
-		if (const uint8_t error = vmt_hooks[targetObject].back()->getError())
-		{
-			LOG_ERROR("Couldn't hook VTable at 0x{:X}, error: {}", reinterpret_cast<uintptr_t>(targetObject), ParseError(error));
-			RETURN_FAIL(emptyHook)
-		}
-
-		return vmt_hooks[targetObject].back()->getHookVmt();
-	}
-
-	template <typename T>
-	void SetupVm(VmtHook& vmtHook, std::size_t index, T hookFn, const char* functionName = "Unknown")
-	{
-		std::unique_lock lock(hooking); 	// Locks until out of scope
-		hooks[hookFn].emplace_back(std::make_unique<FunctionHook<VmHook>>(vmtHook, index, hookFn));
-
-		if (const uint8_t error = hooks[hookFn].back()->getError())
-		{
-			LOG_ERROR("Couldn't hook virtual method at Index {} for {} | {}", index, functionName, ParseError(error));
-			RETURN_FAIL()
-		}
-	}
-
 	template <typename HookType>
 	HookType& GetOriginal(const void* replacement)
 	{
@@ -245,10 +164,6 @@ namespace HooksManager
 		{
 			return hooks[replacement].back()->getHookMid();
 		}
-		else if constexpr (std::is_same_v<HookType, VmHook>)
-		{
-			return hooks[replacement].back()->getHookVm();
-		}
 		else return HookType{};
 	}
 
@@ -257,12 +172,6 @@ namespace HooksManager
 		return GetOriginal<InlineHook>(replacement);
 	}
 
-	// Get VMT hook by target object
-	inline VmtHook& GetVmtHook(const void* targetObject)
-	{
-		std::shared_lock lock(hooking);
-		return vmt_hooks[targetObject].back()->getHookVmt();
-	}
 
 	template <typename HookType>
 	bool Enable(const void* replacement)
@@ -293,13 +202,12 @@ namespace HooksManager
 	inline size_t GetHookCount()
 	{
 		std::shared_lock lock(hooking);
-		return hooks.size() + vmt_hooks.size();
+		return hooks.size();
 	}
 
 	inline void UnhookAll()
 	{
 		hooks.clear();
-		vmt_hooks.clear();
 	}
 
 	inline void Unhook(const void* replacement)
@@ -307,10 +215,6 @@ namespace HooksManager
 		if (hooks.contains(replacement))
 		{
 			hooks.erase(replacement);
-		}
-		else if (vmt_hooks.contains(replacement))
-		{
-			vmt_hooks.erase(replacement);
 		}
 	}
 };
