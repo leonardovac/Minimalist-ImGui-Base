@@ -93,7 +93,7 @@ namespace Overlay::DirectX12
 		if (FAILED(static_cast<long(*)(const IID&, void**)>(CreateDXGIFactory)(IID_PPV_ARGS(&pFactory)))) return false;
 
 		IDXGIAdapter* pAdapter;
-		if (pFactory->EnumAdapters(0, &pAdapter) == DXGI_ERROR_NOT_FOUND) return false;
+		if (FAILED(pFactory->EnumAdapters(0, &pAdapter))) return false;
 
 		void* D3D12CreateDevice = GetProcAddress(hD3D12, "D3D12CreateDevice");
 		if (D3D12CreateDevice == nullptr) return false;
@@ -101,11 +101,7 @@ namespace Overlay::DirectX12
 		ID3D12Device* pDevice;
 		if (FAILED(static_cast<long(*)(IUnknown*, D3D_FEATURE_LEVEL, const IID&, void**)>(D3D12CreateDevice)(pAdapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pDevice)))) return false;
 
-		D3D12_COMMAND_QUEUE_DESC queueDesc;
-		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-		queueDesc.Priority = 0;
-		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-		queueDesc.NodeMask = 0;
+		constexpr D3D12_COMMAND_QUEUE_DESC queueDesc{ D3D12_COMMAND_LIST_TYPE_DIRECT, 0, D3D12_COMMAND_QUEUE_FLAG_NONE , 0 };
 
 		ComPtr<ID3D12CommandQueue> pCommandQueue;
 		if (FAILED(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)))) return false;
@@ -116,21 +112,9 @@ namespace Overlay::DirectX12
 		ComPtr<ID3D12GraphicsCommandList> pCommandList;
 		if (FAILED(pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&pCommandList)))) return false;
 
-		DXGI_RATIONAL refreshRate;
-		refreshRate.Numerator = 60;
-		refreshRate.Denominator = 1;
-
-		DXGI_MODE_DESC bufferDesc;
-		bufferDesc.Width = 100;
-		bufferDesc.Height = 100;
-		bufferDesc.RefreshRate = refreshRate;
-		bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		bufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-		bufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-
-		DXGI_SAMPLE_DESC sampleDesc;
-		sampleDesc.Count = 1;
-		sampleDesc.Quality = 0;
+		constexpr DXGI_RATIONAL refreshRate {60, 1};
+		constexpr DXGI_MODE_DESC bufferDesc {100, 100, refreshRate, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED };
+		constexpr DXGI_SAMPLE_DESC sampleDesc {1, 0};
 
 		DXGI_SWAP_CHAIN_DESC swapChainDesc;
 		swapChainDesc.BufferDesc = bufferDesc;
@@ -191,11 +175,11 @@ namespace Overlay::DirectX12
 
 	inline HRESULT Present(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)
 	{
-		Interface::pSwapChain = pSwapChain;
 		[&pSwapChain]
 		{
 			if (!Overlay::bInitialized)
 			{
+				Interface::pSwapChain = pSwapChain;
 				if (SUCCEEDED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX12::Interface::pDevice))))
 				{
 					DXGI_SWAP_CHAIN_DESC descSwapChain;
@@ -206,19 +190,10 @@ namespace Overlay::DirectX12
 						Interface::nBuffersCounts = descSwapChain.BufferCount;
 						Interface::pFrameContext = new Interface::FrameContext[Interface::nBuffersCounts];
 
-						D3D12_DESCRIPTOR_HEAP_DESC descBackBuffers;
-						descBackBuffers.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-						descBackBuffers.NumDescriptors = Interface::nBuffersCounts;
-						descBackBuffers.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-						descBackBuffers.NodeMask = 1;
-
+						const D3D12_DESCRIPTOR_HEAP_DESC descBackBuffers { D3D12_DESCRIPTOR_HEAP_TYPE_RTV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 1 };
 						if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descBackBuffers, IID_PPV_ARGS(&Interface::pDescHeapBackBuffers)))) return;
 
-						D3D12_DESCRIPTOR_HEAP_DESC descImGuiRender = {};
-						descImGuiRender.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-						descImGuiRender.NumDescriptors = Interface::nBuffersCounts;
-						descImGuiRender.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
+						const D3D12_DESCRIPTOR_HEAP_DESC descImGuiRender = { D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1};
 						if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descImGuiRender, IID_PPV_ARGS(&Interface::pDescHeapImGuiRender)))) return;
 
 						if (FAILED(Interface::pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Interface::pCommandAllocator)))) return;
@@ -281,7 +256,7 @@ namespace Overlay::DirectX12
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			Interface::pCommandList->Reset(Interface::pCommandAllocator, nullptr);
+			if(FAILED(Interface::pCommandList->Reset(Interface::pCommandAllocator, nullptr))) return;
 			Interface::pCommandList->ResourceBarrier(1, &barrier);
 
 			Interface::pCommandList->OMSetRenderTargets(1, &Interface::pFrameContext[backBufferIndex].pDescriptorHandle, FALSE, nullptr);
@@ -290,7 +265,7 @@ namespace Overlay::DirectX12
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 			Interface::pCommandList->ResourceBarrier(1, &barrier);
-			Interface::pCommandList->Close();
+			if (FAILED(Interface::pCommandList->Close())) return;
 			Interface::pCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList* const*>(&Interface::pCommandList));
 		}();
 		return HooksManager::GetOriginal(&Present).unsafe_call<long>(pSwapChain, SyncInterval, uFlags);
