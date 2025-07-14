@@ -73,7 +73,7 @@ void SetupQuill(char const* logFile)
         { std::move(consoleSink), std::move(fileSink) },
         quill::PatternFormatterOptions
         {
-            "%(time) [%(thread_id:<5)] %(short_source_location:<16) %(log_level:<9) [%(caller_function)] %(message)",
+            "%(time:>8) [%(thread_id:>5)] %(short_source_location:<16) %(log_level:<9) [%(caller_function)] %(message)",
             "%H:%M:%S"
         }
     );
