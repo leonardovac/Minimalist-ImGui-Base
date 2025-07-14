@@ -26,6 +26,7 @@ bool Overlay::TryAllPresentMethods()
 #if HOOK_THIRD_PARTY_OVERLAYS
 	if (Overlay::Discord::Init() || Overlay::Steam::Init())
 		return true;
+#endif
 
 	switch(Overlay::graphicsAPI)
 	{
