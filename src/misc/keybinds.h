@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef KEYBINDS_H
 #define KEYBINDS_H
 
@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 #include <windows.h>
+
+#include "menu.h"
 
 namespace Keybinds
 {

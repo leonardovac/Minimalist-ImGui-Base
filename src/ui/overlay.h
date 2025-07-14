@@ -1,10 +1,8 @@
 ﻿#pragma once
 #include <imgui.h>
 #include <windows.h>
-#include <VMTHook/vmthook.h>
 #include <wrl/client.h>
 
-#include "menu.h"
 #include "../misc/logger.h"
 
 #define USE_VMTHOOK_WHEN_AVAILABLE 1 // Mainly for D3D9, D3D11, and D3D12
@@ -20,10 +18,7 @@ inline LRESULT WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, co
 {
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-	if (Menu::bOpen) // Not really needed
-	{
 		if (const ImGuiIO& io = ImGui::GetIO(); io.WantCaptureMouse || io.WantCaptureKeyboard) return true;
-	}
 
 	return CallWindowProc(lpPrevWndFunc, hWnd, uMsg, wParam, lParam);
 }

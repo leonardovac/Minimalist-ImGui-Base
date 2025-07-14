@@ -97,6 +97,7 @@ namespace Overlay::DirectX11
 	inline void CleanupDeviceD3D()
 	{
 		swapChainHook.reset();
+
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
