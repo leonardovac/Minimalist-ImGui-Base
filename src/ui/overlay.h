@@ -5,6 +5,7 @@
 
 #include "menu.h"
 #include "SafetyHook/Wrapper.hpp"
+#include "../misc/logger.h"
 
 #define HOOK_THIRD_PARTY_OVERLAYS 1 // May use Inline hooking
 
@@ -44,6 +45,7 @@ enum GraphicsAPI : UINT8
 	Vulkan
 };
 
+#if LOGGING_ENABLED
 static const char* GraphicsAPIStrings[] = {
 	"UNKNOWN",
 	"D3D9",
@@ -60,22 +62,15 @@ inline const char* GraphicsAPIToString(const GraphicsAPI api)
 	return "UNKNOWN";
 }
 
-#if LOGGING_ENABLED
-#define FORMATTER fmtquill::formatter
-#define FORMAT_TO fmtquill::format_to
-#else
-#define FORMATTER std::formatter
-#define FORMAT_TO std::format_to
-#endif
-
 template<>
-struct FORMATTER<GraphicsAPI>
+struct fmtquill::formatter<GraphicsAPI>
 {
 	static constexpr auto parse(const format_parse_context& ctx) { return ctx.begin(); }
 
 	template<typename FormatContext>
-	auto format(const GraphicsAPI& api, FormatContext& ctx) const { return FORMAT_TO(ctx.out(), "{}", GraphicsAPIToString(api)); }
+	auto format(const GraphicsAPI& api, FormatContext& ctx) const { return fmtquill::format_to(ctx.out(), "{}", GraphicsAPIToString(api)); }
 };
+#endif
 
 namespace Overlay
 {
