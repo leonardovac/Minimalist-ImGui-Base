@@ -21,9 +21,6 @@ void Overlay::RenderLogic()
 
 bool Overlay::TryAllPresentMethods()
 {
-	if (!Overlay::InitWindow())
-		return false;
-
 	Overlay::CheckGraphicsDriver();
 
 #if HOOK_THIRD_PARTY_OVERLAYS
