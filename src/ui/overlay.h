@@ -118,6 +118,13 @@ namespace Overlay
 		return hWindow == nullptr;
 	}
 
+	struct WinGuard {
+		WinGuard() { result = InitWindow(); }
+		~WinGuard() { DeleteWindow(); }
+		explicit operator bool() const { return result; }
+		bool result;
+	};
+
 	inline void CheckGraphicsDriver()
 	{
 		if (GetModuleHandleW(L"d3d11.dll")) graphicsAPI = D3D11;

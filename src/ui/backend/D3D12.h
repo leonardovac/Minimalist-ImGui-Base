@@ -78,10 +78,9 @@ namespace Overlay::DirectX12
 
 	inline bool Init()
 	{
-		// RAII wrapper to ensure DeleteWindow() is called on scope exit
-		struct Guard {
-			~Guard() { DeleteWindow(); }
-		} guard;
+		// RAII wrapper to ensure window is deleted on scope exit
+		WinGuard window;
+		if (!window) return false;
 
 		const HMODULE hD3D12 = GetModuleHandleW(L"d3d12.dll");
 		const HMODULE hDXGI = GetModuleHandleW(L"dxgi.dll");

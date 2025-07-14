@@ -36,10 +36,9 @@ namespace Overlay::DirectX11
 
 	inline bool Init()
 	{
-		// RAII wrapper to ensure DeleteWindow() is called on scope exit
-		struct Guard {
-			~Guard() { DeleteWindow(); }
-		} guard;
+		// RAII wrapper to ensure window is deleted on scope exit
+		WinGuard window;
+		if (!window) return false;
 
 		const HMODULE hD3D11 = GetModuleHandleW(L"d3d11.dll");
 		if (!hD3D11) return false;
