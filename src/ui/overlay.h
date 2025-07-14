@@ -6,6 +6,8 @@
 #include "menu.h"
 #include "SafetyHook/Wrapper.hpp"
 
+#define HOOK_THIRD_PARTY_OVERLAYS 1 // May use Inline hooking
+
 using Microsoft::WRL::ComPtr;
 
 /// WndProc
