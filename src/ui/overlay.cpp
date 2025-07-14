@@ -7,6 +7,16 @@
 #include "backend/OpenGL.h"
 #include "backend/Steam.h"
 
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+{
+	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+
+	if (const ImGuiIO& io = ImGui::GetIO(); io.WantCaptureMouse || io.WantCaptureKeyboard) return true;
+
+	return CallWindowProc(lpPrevWndFunc, hWnd, uMsg, wParam, lParam);
+}
+
 void Overlay::RenderLogic()
 {
 #ifdef KEYBINDS_H

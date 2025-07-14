@@ -10,22 +10,14 @@
 
 using Microsoft::WRL::ComPtr;
 
-/// WndProc
+LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 inline WNDPROC lpPrevWndFunc;
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-inline LRESULT WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
-{
-	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
-
-		if (const ImGuiIO& io = ImGui::GetIO(); io.WantCaptureMouse || io.WantCaptureKeyboard) return true;
-
-	return CallWindowProc(lpPrevWndFunc, hWnd, uMsg, wParam, lParam);
-}
 
 template<typename T>
-void SafeRelease(T*& ptr) {
-	if (ptr) {
+void SafeRelease(T*& ptr) 
+{
+	if (ptr) 
+	{
 		ptr->Release();
 		ptr = nullptr;
 	}
