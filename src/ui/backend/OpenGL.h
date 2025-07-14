@@ -1,11 +1,10 @@
-#pragma once
-#include <Windows.h>
+﻿#pragma once
 #include <imgui.h>
-#include <imgui_impl_win32.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_impl_win32.h>
+#include <Windows.h>
 
 #include "../overlay.h"
-#include "SafetyHook/Wrapper.hpp"
 
 namespace Overlay::OpenGL
 {
@@ -39,9 +38,9 @@ namespace Overlay::OpenGL
 			{
 				ImGui::CreateContext();
 				Menu::SetupImGuiStyle();
-				Overlay::hWindow = WindowFromDC(hdc);
+				const HWND hWindow = WindowFromDC(hdc);
 				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
-				if (!ImGui_ImplWin32_Init(Overlay::hWindow) || !((Overlay::bInitialized = ImGui_ImplOpenGL3_Init()))) return;
+				if (!ImGui_ImplWin32_Init(hWindow) || !((Overlay::bInitialized = ImGui_ImplOpenGL3_Init()))) return;
 			}
 
 			if (!Overlay::bEnabled) return;
