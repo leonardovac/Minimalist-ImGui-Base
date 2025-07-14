@@ -4,6 +4,7 @@
 #include <SafetyHook/Wrapper.hpp>
 #include <ScreenCleaner/ScreenCleaner.h>
 
+#include "game.h"
 #include "hooks.h"
 #include "misc/logger.h"
 #include "ui/overlay.h"
