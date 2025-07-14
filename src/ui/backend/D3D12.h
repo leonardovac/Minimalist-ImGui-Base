@@ -13,9 +13,9 @@
 
 namespace Overlay::DirectX12
 {
-	void APIENTRY ExecuteCommandLists(ID3D12CommandQueue* queue, UINT numCommandLists, ID3D12CommandList* ppCommandLists);
+	void ExecuteCommandLists(ID3D12CommandQueue* pCommandQueue, UINT numCommandLists, ID3D12CommandList* ppCommandLists);
 	HRESULT ResizeBuffers(IDXGISwapChain3* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
-	long Present(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags);
+	HRESULT Present(IDXGISwapChain3* pSwapChain, UINT SyncInterval, UINT uFlags);
 
 	namespace Interface
 	{
@@ -189,7 +189,7 @@ namespace Overlay::DirectX12
 		SafeRelease(Interface::pDevice);
 	}
 
-	inline long Present(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)
+	inline HRESULT Present(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)
 	{
 		Interface::pSwapChain = pSwapChain;
 		[&pSwapChain]
