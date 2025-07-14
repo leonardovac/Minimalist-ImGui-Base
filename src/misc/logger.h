@@ -1,5 +1,5 @@
 ﻿#pragma once
-#define ENABLE_LOGGING true
+#define ENABLE_LOGGING 1
 
 #if ENABLE_LOGGING || defined(_DEBUG)
 #define LOGGING_ENABLED 1

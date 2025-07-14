@@ -4,7 +4,6 @@
 
 #include "../overlay.h"
 
-
 namespace Overlay::Discord
 {
 	inline bool Init()
