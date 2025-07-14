@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifdef _WIN64
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -16,6 +16,9 @@ namespace Overlay::DirectX12
 	void ExecuteCommandLists(ID3D12CommandQueue* pCommandQueue, UINT numCommandLists, ID3D12CommandList* ppCommandLists);
 	HRESULT ResizeBuffers(IDXGISwapChain3* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 	HRESULT Present(IDXGISwapChain3* pSwapChain, UINT SyncInterval, UINT uFlags);
+
+	inline std::unique_ptr<VMTHook> commandQueueHook;
+	inline std::unique_ptr<VMTHook> swapChainHook;
 
 	namespace Interface
 	{
@@ -132,9 +135,17 @@ namespace Overlay::DirectX12
 		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
 		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
+#if USE_VMTHOOK_WHEN_AVAILABLE
+		commandQueueHook = std::make_unique<VMTHook>(pvCommandQueue);
+		commandQueueHook->Hook(10, &ExecuteCommandLists);
+		swapChainHook = std::make_unique<VMTHook>(pvSwapChain);
+		swapChainHook->Hook(8, &Present);
+		swapChainHook->Hook(13, &ResizeBuffers);
+#else
 		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
 		HooksManager::Setup<InlineHook>(pvSwapChain[8], FUNCTION(Present));
 		HooksManager::Setup<InlineHook>(pvSwapChain[13], FUNCTION(ResizeBuffers));
+#endif
 		return true;
 	}
 
@@ -159,6 +170,9 @@ namespace Overlay::DirectX12
 
 	inline void CleanupDeviceD3D()
 	{
+		commandQueueHook.reset();
+		swapChainHook.reset();
+
 		ImGui_ImplDX12_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
@@ -268,19 +282,23 @@ namespace Overlay::DirectX12
 			if (FAILED(Interface::pCommandList->Close())) return;
 			Interface::pCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList* const*>(&Interface::pCommandList));
 		}();
-		return HooksManager::GetOriginal(&Present).unsafe_call<long>(pSwapChain, SyncInterval, uFlags);
+
+		static const OriginalFunc originalFunction(&Present);
+		return originalFunction.stdcall<HRESULT>(pSwapChain, SyncInterval, uFlags);
 	}
 
 	inline void ExecuteCommandLists(ID3D12CommandQueue* pCommandQueue, const UINT numCommandLists, ID3D12CommandList* ppCommandLists)
 	{
 		if (!Interface::pCommandQueue) Interface::pCommandQueue = pCommandQueue;
-		return HooksManager::GetOriginal(&ExecuteCommandLists).unsafe_call<void>(pCommandQueue, numCommandLists, ppCommandLists);
+		static const OriginalFunc originalFunction(&ExecuteCommandLists);
+		return originalFunction.stdcall(pCommandQueue, numCommandLists, ppCommandLists);
 	}
 
 	inline HRESULT ResizeBuffers(IDXGISwapChain3* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)
 	{
 		ReleaseMainTargetView();
-		const HRESULT result = HooksManager::GetOriginal(&ResizeBuffers).unsafe_call<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
+		static const OriginalFunc originalFunction(&ResizeBuffers);
+		const HRESULT result = originalFunction.stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
 		CreateMainTargetView();
 		return result;
 	}

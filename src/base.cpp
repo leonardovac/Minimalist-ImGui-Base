@@ -1,7 +1,6 @@
 ﻿#include "base.h"
 
 #include <windows.h>
-#include <SafetyHook/Wrapper.hpp>
 #include <ScreenCleaner/ScreenCleaner.h>
 
 #include "game.h"

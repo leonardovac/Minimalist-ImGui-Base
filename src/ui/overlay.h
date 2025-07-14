@@ -1,12 +1,13 @@
 ﻿#pragma once
 #include <imgui.h>
 #include <windows.h>
+#include <VMTHook/vmthook.h>
 #include <wrl/client.h>
 
 #include "menu.h"
-#include "SafetyHook/Wrapper.hpp"
 #include "../misc/logger.h"
 
+#define USE_VMTHOOK_WHEN_AVAILABLE 1 // Mainly for D3D9, D3D11, and D3D12
 #define HOOK_THIRD_PARTY_OVERLAYS 1 // May use Inline hooking
 
 using Microsoft::WRL::ComPtr;

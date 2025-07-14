@@ -5,11 +5,15 @@
 #include <imgui_impl_win32.h>
 
 #include "../overlay.h"
+#include "../../hooks.h"
+
 
 namespace Overlay::DirectX11
 {
-	long PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags);
+	HRESULT PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT uFlags);
 	HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
+
+	inline std::unique_ptr<VMTHook> swapChainHook;
 
 	namespace Interface
 	{
@@ -65,8 +69,14 @@ namespace Overlay::DirectX11
 
 		uintptr_t** pVTable = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
+#if USE_VMTHOOK_WHEN_AVAILABLE 
+		swapChainHook = std::make_unique<VMTHook>(pVTable);
+		swapChainHook->Hook(8, &PresentHook);
+		swapChainHook->Hook(13, &ResizeBuffersHook);
+#else
 		HooksManager::Setup<InlineHook>(pVTable[8], FUNCTION(PresentHook));
 		HooksManager::Setup<InlineHook>(pVTable[13], FUNCTION(ResizeBuffersHook));
+#endif
 		return true;
 	}
 
@@ -86,6 +96,7 @@ namespace Overlay::DirectX11
 
 	inline void CleanupDeviceD3D()
 	{
+		swapChainHook.reset();
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
@@ -96,9 +107,8 @@ namespace Overlay::DirectX11
 		SafeRelease(Interface::pDevice);
 	}
 
-	inline long PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags)
+	inline HRESULT PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags)
 	{
-		Interface::pSwapChain = pSwapChain;
 		[&pSwapChain]
 		{
 			if (!Overlay::bInitialized)
@@ -132,13 +142,16 @@ namespace Overlay::DirectX11
 			Interface::pDeviceContext->OMSetRenderTargets(1, &Interface::pRenderTargetView, nullptr);
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		}();
-		return HooksManager::GetOriginal(&PresentHook).unsafe_stdcall<long>(pSwapChain, SyncInterval, uFlags);
+
+		static const OriginalFunc originalFunction(&PresentHook);
+		return originalFunction.stdcall<HRESULT>(pSwapChain, SyncInterval, uFlags);
 	}
 
 	inline HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)
 	{
 		ReleaseRenderTargetView();
-		const HRESULT result = HooksManager::GetOriginal(&ResizeBuffersHook).unsafe_stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
+		static const OriginalFunc originalFunction(&ResizeBuffersHook);
+		const HRESULT result = originalFunction.stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
 		CreateMainRenderTargetView(pSwapChain);
 		return result;
 	}

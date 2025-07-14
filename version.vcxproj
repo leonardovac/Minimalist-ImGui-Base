@@ -208,7 +208,9 @@
     <ClCompile Include="include\SafetyHook\safetyhook.cpp" />
     <ClCompile Include="include\SafetyHook\Zydis.c" />
     <ClCompile Include="include\ScreenCleaner\ScreenCleaner.cpp" />
+    <ClCompile Include="include\VMTHook\vmthook.cpp" />
     <ClCompile Include="src\base.cpp" />
+    <ClCompile Include="src\hooks.cpp" />
     <ClCompile Include="src\misc\logger.cpp" />
     <ClCompile Include="src\ui\menu.cpp" />
     <ClCompile Include="src\ui\overlay.cpp" />
@@ -220,9 +222,9 @@
     <ClInclude Include="include\Mem\hook.h" />
     <ClInclude Include="include\Mem\mem.h" />
     <ClInclude Include="include\SafetyHook\safetyhook.hpp" />
-    <ClInclude Include="include\SafetyHook\Wrapper.hpp" />
     <ClInclude Include="include\SafetyHook\Zydis.h" />
     <ClInclude Include="include\ScreenCleaner\ScreenCleaner.h" />
+    <ClInclude Include="include\VMTHook\vmthook.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\base.h" />
     <ClInclude Include="src\game.h" />

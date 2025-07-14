@@ -29,6 +29,12 @@
     <ClCompile Include="src\misc\logger.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="include\VMTHook\vmthook.cpp">
+      <Filter>include\VMTHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hooks.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -38,17 +44,11 @@
     <ClInclude Include="include\SafetyHook\Zydis.h">
       <Filter>include\SafetyHook</Filter>
     </ClInclude>
-    <ClInclude Include="include\SafetyHook\Wrapper.hpp">
-      <Filter>include\SafetyHook</Filter>
-    </ClInclude>
     <ClInclude Include="include\Mem\hook.h">
       <Filter>include\Mem</Filter>
     </ClInclude>
     <ClInclude Include="include\Mem\mem.h">
       <Filter>include\Mem</Filter>
-    </ClInclude>
-    <ClInclude Include="src\hooks.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\misc\keybinds.h">
       <Filter>src\misc</Filter>
@@ -98,6 +98,12 @@
     <ClInclude Include="src\misc\logger.h">
       <Filter>src\misc</Filter>
     </ClInclude>
+    <ClInclude Include="include\VMTHook\vmthook.h">
+      <Filter>include\VMTHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hooks.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
@@ -132,6 +138,9 @@
     </Filter>
     <Filter Include="src\ui\backend">
       <UniqueIdentifier>{dd876da3-8fca-43b3-bfdd-2a3a3fe25762}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\VMTHook">
+      <UniqueIdentifier>{3f58d113-f3a5-4d9c-bb6f-8af842ee80c9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
