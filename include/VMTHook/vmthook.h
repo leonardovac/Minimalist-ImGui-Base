@@ -12,12 +12,12 @@ public:
     bool Unhook(uint32_t index);
     void UnhookAll();
 
-    // Type-safe original function calls
-    class OriginalMethod
+    // Type-safe method calls
+    class VirtualMethod
     {
     public:
-        OriginalMethod() = default;
-        OriginalMethod(void* originalPtr) : pOriginal(originalPtr) {}
+        VirtualMethod() = default;
+        explicit VirtualMethod(void* originalPtr) : pOriginal(originalPtr) {}
 
         template<typename ReturnType = void, typename... Args>
         ReturnType call(Args... args) const
@@ -38,24 +38,27 @@ public:
         }
 
         [[nodiscard]] bool isValid() const { return pOriginal != nullptr; }
+        [[nodiscard]] void* ptr() const { return pOriginal; }
 
+        explicit operator void* () const { return ptr(); }
+        explicit operator bool() const { return isValid(); }
     private:
-        void* pOriginal;
+        void* pOriginal{ nullptr };
     };
 
     // Static function to get originalMethod using hook function pointer
-    static OriginalMethod& GetOriginal(const void* hookFunction);
+    static VirtualMethod& GetOriginal(const void* hookFunction);
 
 private:
     void** pVTable;
     uint32_t tableSize;
 
-    // Store original functions for 'index -> originalMethod'
-    std::unordered_map<uint32_t, void*> mHookedMethods;
+    // Store original methods for 'index -> originalMethod'
+    std::unordered_map<uint32_t, void*> mOriginalMethods;
 
-    // Static storage for 'newMethod -> originalMethod' mapping
-    static std::unordered_map<const void*, OriginalMethod> mOriginalMethods;
-    static OriginalMethod nullMethod;
+    // Static storage for 'newMethod -> oldMethod' mapping
+    static std::unordered_map<const void*, VirtualMethod> mHookChain;
+    static VirtualMethod nullMethod;
 
     [[nodiscard]] uint32_t GetVTableSize() const;
 };

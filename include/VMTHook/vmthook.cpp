@@ -3,8 +3,8 @@
 #include <windows.h>
 
 // Static member definition
-std::unordered_map<const void*, VMTHook::OriginalMethod> VMTHook::mOriginalMethods;
-VMTHook::OriginalMethod VMTHook::nullMethod;
+std::unordered_map<const void*, VMTHook::VirtualMethod> VMTHook::mHookChain;
+VMTHook::VirtualMethod VMTHook::nullMethod;
 
 namespace
 {
@@ -19,42 +19,42 @@ namespace
 
 void* VMTHook::Hook(const uint32_t index, void* newMethod)
 {
-    if (!newMethod || index >= tableSize || mHookedMethods.contains(index)) return nullptr;
+    if (!newMethod || index >= tableSize) return nullptr;
 
     const auto originalMethod = pVTable[index];
-    mOriginalMethods[newMethod] = originalMethod;
+    if (!mOriginalMethods.contains(index)) mOriginalMethods[index] = originalMethod;
+    mHookChain[newMethod] = VirtualMethod(originalMethod);
     Patch(pVTable, index, newMethod);
-    mHookedMethods[index] = originalMethod;
     return originalMethod;
 }
 
 bool VMTHook::Unhook(const uint32_t index)
 {
-    if (index >= tableSize || !mHookedMethods.contains(index)) return false;
+    if (index >= tableSize || !mOriginalMethods.contains(index)) return false;
 
     const auto currentMethod = pVTable[index];
-    Patch(pVTable, index, mHookedMethods[index]);
-    mOriginalMethods.erase(currentMethod);
-    mHookedMethods.erase(index);
+    Patch(pVTable, index, mOriginalMethods[index]);
+    mHookChain.erase(currentMethod);
+    mOriginalMethods.erase(index);
     return true;
 }
 
 void VMTHook::UnhookAll()
 {
-    for (const auto& [index, originalMethod] : mHookedMethods)
+    for (const auto& [index, originalMethod] : mOriginalMethods)
     {
 	    if (const auto currentMethod = pVTable[index]; currentMethod != originalMethod) // Only patch if currently hooked
         {
             Patch(pVTable, index, originalMethod);
-            mOriginalMethods.erase(currentMethod);
+            mHookChain.erase(currentMethod);
         }
     }
-    mHookedMethods.clear();
+    mOriginalMethods.clear();
 }
 
-VMTHook::OriginalMethod& VMTHook::GetOriginal(const void* hookFunction)
+VMTHook::VirtualMethod& VMTHook::GetOriginal(const void* hookFunction)
 {
-    if (const auto it = mOriginalMethods.find(hookFunction); it != mOriginalMethods.end())
+    if (const auto it = mHookChain.find(hookFunction); it != mHookChain.end())
     {
         return it->second;
     }

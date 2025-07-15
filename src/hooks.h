@@ -208,7 +208,7 @@ namespace HooksManager
 	}
 }
 
-using HookVariant = std::variant<VMTHook::OriginalMethod, std::reference_wrapper<InlineHook>>;
+using HookVariant = std::variant<VMTHook::VirtualMethod, std::reference_wrapper<InlineHook>>;
 
 class OriginalFunc
 {
@@ -228,7 +228,7 @@ public:
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::OriginalMethod>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::VirtualMethod>)
 			{
 				return hook.template call<ReturnType>(args...);
 			}
@@ -241,7 +241,7 @@ public:
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::OriginalMethod>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::VirtualMethod>)
 			{
 				return hook.template stdcall<ReturnType>(args...);
 			}
@@ -254,7 +254,7 @@ public:
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::OriginalMethod>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::VirtualMethod>)
 			{
 				return hook.template thiscall<ReturnType>(args...);
 			}
