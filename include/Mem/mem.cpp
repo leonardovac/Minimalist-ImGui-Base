@@ -1,4 +1,4 @@
-#include "mem.h"
+﻿#include "mem.h"
 
 namespace
 {
@@ -33,26 +33,25 @@ void* mem::AllocateMemory(const LPVOID lpAddress, const DWORD flAllocationType)
 {
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo(&sysInfo);
-	const uint64_t PAGE_SIZE = sysInfo.dwPageSize;
 
-	const uint64_t startAddr = reinterpret_cast<uint64_t>(lpAddress) & ~(PAGE_SIZE - 1); //round down to nearest page boundary
+	const uint64_t pageSize = sysInfo.dwPageSize;
+
+	const uint64_t startAddr = reinterpret_cast<uint64_t>(lpAddress) & ~(pageSize - 1); //round down to nearest page boundary
+	const uint64_t startPage = startAddr - startAddr % pageSize;
+
 	const uint64_t minAddr = std::min(startAddr - 0x7FFFFF00, reinterpret_cast<uint64_t>(sysInfo.lpMinimumApplicationAddress));
 	const uint64_t maxAddr = std::max(startAddr + 0x7FFFFF00, reinterpret_cast<uint64_t>(sysInfo.lpMaximumApplicationAddress));
-
-	const uint64_t startPage = startAddr - startAddr % PAGE_SIZE;
 
 	uint64_t pageOffset = 1;
 	while (true)
 	{
-		const uint64_t byteOffset = pageOffset * PAGE_SIZE;
+		const uint64_t byteOffset = pageOffset * pageSize;
 		const uint64_t highAddr = startPage + byteOffset;
 		const uint64_t lowAddr = startPage > byteOffset ? startPage - byteOffset : 0;
 
-		const bool needsExit = highAddr > maxAddr && lowAddr < minAddr;
-
 		if (highAddr < maxAddr)
 		{
-			if (void* outAddr = VirtualAlloc(reinterpret_cast<void*>(highAddr), PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, flAllocationType))
+			if (void* outAddr = VirtualAlloc(reinterpret_cast<void*>(highAddr), static_cast<SIZE_T>(pageSize), MEM_COMMIT | MEM_RESERVE, flAllocationType))
 			{
 				return outAddr;
 			}
@@ -60,7 +59,7 @@ void* mem::AllocateMemory(const LPVOID lpAddress, const DWORD flAllocationType)
 
 		if (lowAddr > minAddr)
 		{
-			if (void* outAddr = VirtualAlloc(reinterpret_cast<void*>(lowAddr), PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, flAllocationType); outAddr != nullptr)
+			if (void* outAddr = VirtualAlloc(reinterpret_cast<void*>(lowAddr), static_cast<SIZE_T>(pageSize), MEM_COMMIT | MEM_RESERVE, flAllocationType))
 			{
 				return outAddr;
 			}
@@ -68,10 +67,7 @@ void* mem::AllocateMemory(const LPVOID lpAddress, const DWORD flAllocationType)
 
 		pageOffset++;
 
-		if (needsExit)
-		{
-			break;
-		}
+		if (lowAddr < minAddr && highAddr > maxAddr) break;
 	}
 
 	return nullptr;
@@ -146,7 +142,7 @@ std::uint8_t* mem::PatternScan(void* hModule, const char* pattern)
 {
 	const auto moduleBase = static_cast<std::uint8_t*>(hModule);
 	const auto ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(moduleBase + static_cast<PIMAGE_DOS_HEADER>(hModule)->e_lfanew);
-	return PatternScanEx(moduleBase, ntHeaders->OptionalHeader.SizeOfImage, pattern);
+	return PatternScan(moduleBase, ntHeaders->OptionalHeader.SizeOfImage, pattern);
 }
 
 // Modified function to handle multiple patterns
@@ -157,7 +153,7 @@ std::uint8_t* mem::PatternScan(void* hModule, const std::vector<const char*>& pa
 
 	for (const auto& pattern : patterns)
 	{
-		if (std::uint8_t* address = PatternScanEx(moduleBase, ntHeaders->OptionalHeader.SizeOfImage, pattern)) return address;
+		if (std::uint8_t* address = PatternScan(moduleBase, ntHeaders->OptionalHeader.SizeOfImage, pattern)) return address;
 	}
 
 	return nullptr;
@@ -167,7 +163,7 @@ std::uint8_t* mem::PatternScan(void* hModule, const std::vector<const char*>& pa
 #define getBits(x)			(INRANGE((x),'0','9') ? ((x) - '0') : (((x)&(~0x20)) - 'A' + 0xa))
 #define getByte(x)			(getBits((x)[0]) << 4 | getBits((x)[1]))
 
-std::uint8_t* mem::PatternScanEx(const PBYTE pBase, const DWORD dwSize, const char* pattern)
+std::uint8_t* mem::PatternScan(const PBYTE pBase, const DWORD dwSize, const char* pattern)
 {
 	const size_t patternSize = strlen(pattern);
 	const auto patternBase = static_cast<PBYTE>(_alloca(patternSize));

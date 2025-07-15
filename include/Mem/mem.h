@@ -17,7 +17,7 @@ namespace mem
 	// Pattern scan function declarations
 	std::uint8_t* PatternScan(void* hModule, const char* pattern);
 	std::uint8_t* PatternScan(void* hModule, const std::vector<const char*>& patterns);
-	std::uint8_t* PatternScanEx(PBYTE pBase, DWORD dwSize, const char* pattern);
+	std::uint8_t* PatternScan(PBYTE pBase, DWORD dwSize, const char* pattern);
 
 	template <typename T>
 	T FindDMAAddy(const uintptr_t uAddress, const std::vector<unsigned int>& offsets)
