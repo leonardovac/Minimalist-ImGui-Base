@@ -31,6 +31,7 @@ void ConsoleManager::create_console()
         {
             std::ios::sync_with_stdio();
             SetConsoleTitleW(L"Log Console");
+			hConsole = GetConsoleWindow();
             allocated_ = true;
         }
     }
