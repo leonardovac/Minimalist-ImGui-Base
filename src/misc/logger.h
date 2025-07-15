@@ -28,7 +28,7 @@ public:
 
 void SetupQuill(char const* logFile);
 
-extern quill::Logger* globalLogger;
+inline quill::Logger* globalLogger;
 
 #define LOG_IMPL(level, fmt, ...) QUILL_LOG_##level(globalLogger, fmt, ##__VA_ARGS__)
 #define LOG_IMPL_DYNAMIC(log_level, fmt, ...) QUILL_LOG_DYNAMIC(globalLogger, log_level, fmt, ##__VA_ARGS__)

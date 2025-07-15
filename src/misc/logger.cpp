@@ -7,9 +7,6 @@
 // Static member definition
 bool ConsoleManager::allocated_ = false;
 
-// Global logger definition
-quill::Logger* globalLogger = nullptr;
-
 void ConsoleManager::create_console()
 {
     if (allocated_) return;
