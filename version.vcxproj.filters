@@ -5,9 +5,6 @@
     <ClCompile Include="include\SafetyHook\safetyhook.cpp">
       <Filter>include\SafetyHook</Filter>
     </ClCompile>
-    <ClCompile Include="include\SafetyHook\Zydis.c">
-      <Filter>include\SafetyHook</Filter>
-    </ClCompile>
     <ClCompile Include="src\base.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -41,9 +38,6 @@
     <ClInclude Include="include\SafetyHook\safetyhook.hpp">
       <Filter>include\SafetyHook</Filter>
     </ClInclude>
-    <ClInclude Include="include\SafetyHook\Zydis.h">
-      <Filter>include\SafetyHook</Filter>
-    </ClInclude>
     <ClInclude Include="include\Mem\hook.h">
       <Filter>include\Mem</Filter>
     </ClInclude>
@@ -52,9 +46,6 @@
     </ClInclude>
     <ClInclude Include="src\misc\keybinds.h">
       <Filter>src\misc</Filter>
-    </ClInclude>
-    <ClInclude Include="src\base.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\menu.h">
       <Filter>src\ui</Filter>

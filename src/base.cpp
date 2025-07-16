@@ -1,6 +1,4 @@
-﻿#include "base.h"
-
-#include <windows.h>
+﻿#include <windows.h>
 #include <ScreenCleaner/ScreenCleaner.h>
 
 #include "game.h"
@@ -10,54 +8,56 @@
 
 namespace
 {
-	void HookPresent()
+	bool CheckWindow(const HWND& hWindow, const DWORD& processId)
 	{
-		const auto startTime = std::chrono::steady_clock::now();
-		constexpr std::chrono::seconds timeout{ 10 };
-
-		while (!Game::hWindow) {
-			const auto EnumWindowsProc = [](const HWND hWindow, const LPARAM lParam) -> BOOL
+		if (hWindow && hWindow != hConsole && IsWindowVisible(hWindow) && !IsIconic(hWindow))
+		{
+			DWORD windowProcess;
+			GetWindowThreadProcessId(hWindow, &windowProcess);
+			if (windowProcess == processId)
 			{
-				const auto gameWindow = reinterpret_cast<HWND*>(lParam);
+				char windowTitle[256];
+				GetWindowTextA(hWindow, windowTitle, sizeof(windowTitle));
 
-				DWORD processId;
-				GetWindowThreadProcessId(hWindow, &processId);
-
-				if (processId == GetCurrentProcessId() && hWindow != GetConsoleWindow() && IsWindowVisible(hWindow) && !IsIconic(hWindow))
+				if (strlen(windowTitle) > 0)
 				{
-					RECT rect;
-					if (GetWindowRect(hWindow, &rect) && rect.right >= rect.left && rect.bottom >= rect.top && rect.right - rect.left > 100 && rect.bottom - rect.top > 100) 
-					{
-						wchar_t windowTitle[256];
-						GetWindowTextW(hWindow, windowTitle, sizeof(windowTitle));
-
-						if (wcslen(windowTitle) > 0)
-						{
-							*gameWindow = hWindow;
-							return FALSE; // Stop
-						}
-					}
-				}
-				return TRUE; // Continue
-			};
-
-			EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&Game::hWindow));
-
-			if (std::chrono::steady_clock::now() - startTime > timeout) 
-			{
-				LOG_WARNING("Window search is taking too long, trying GetForegroundWindow()...");
-				if (!((Game::hWindow = GetForegroundWindow())))
-				{
-					LOG_CRITICAL("Couldn't find game window.");
-					return;
+					LOG_NOTICE("Found game window: {}", windowTitle);
+					Game::hWindow = hWindow;
+					return true;
 				}
 			}
-
-			// When console is created and not hidden, we need to make sure the game window is the main one.
-			SetForegroundWindow(Game::hWindow);
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
+		return false;
+	}
+
+	void HookPresent()
+	{
+		constexpr std::chrono::seconds timeout{ 10 };
+		const auto startTime = std::chrono::steady_clock::now();
+
+		const DWORD currentProcessId = GetCurrentProcessId();
+
+		LOG_INFO("Searching for game window...");
+
+		while (!Game::hWindow) 
+		{
+			const HWND foregroundWindow = GetForegroundWindow();
+			if (CheckWindow(foregroundWindow, currentProcessId)) break;
+
+			const auto EnumWindowsProc = [](const HWND hWindow, const LPARAM lParam) -> BOOL
+			{
+				return !CheckWindow(hWindow, *reinterpret_cast<DWORD*>(lParam));
+			};
+			EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&currentProcessId));
+
+			if (const auto duration = std::chrono::steady_clock::now() - startTime; duration > timeout)
+			{
+				LOG_CRITICAL("Couldn't find game window after {}s.", std::chrono::duration_cast<std::chrono::seconds>(duration).count());
+				return;
+			}
+		}
+
+		std::this_thread::sleep_for(std::chrono::seconds(1)); // Ensuring it has time to initialize
 
 		if (!Overlay::TryAllPresentMethods())
 		{
@@ -67,7 +67,7 @@ namespace
 }
 
 ScreenCleaner screenCleaner(&Overlay::bEnabled);
-void MainThread()
+extern void MainThread()
 {
 #if LOGGING_ENABLED
 	ConsoleManager::create_console();

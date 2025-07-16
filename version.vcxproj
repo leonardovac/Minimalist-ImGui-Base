@@ -206,7 +206,6 @@
     <ClCompile Include="include\Mem\hook.cpp" />
     <ClCompile Include="include\Mem\mem.cpp" />
     <ClCompile Include="include\SafetyHook\safetyhook.cpp" />
-    <ClCompile Include="include\SafetyHook\Zydis.c" />
     <ClCompile Include="include\ScreenCleaner\ScreenCleaner.cpp" />
     <ClCompile Include="include\VMTHook\vmthook.cpp" />
     <ClCompile Include="src\base.cpp" />
@@ -222,11 +221,9 @@
     <ClInclude Include="include\Mem\hook.h" />
     <ClInclude Include="include\Mem\mem.h" />
     <ClInclude Include="include\SafetyHook\safetyhook.hpp" />
-    <ClInclude Include="include\SafetyHook\Zydis.h" />
     <ClInclude Include="include\ScreenCleaner\ScreenCleaner.h" />
     <ClInclude Include="include\VMTHook\vmthook.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\base.h" />
     <ClInclude Include="src\game.h" />
     <ClInclude Include="src\hooks.h" />
     <ClInclude Include="src\misc\fonts\font_awesome.hpp" />
