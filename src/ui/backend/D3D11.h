@@ -80,10 +80,10 @@ namespace Overlay::DirectX11
 		return true;
 	}
 
-	inline void CreateMainRenderTargetView(IDXGISwapChain* pSwapChain)
+	inline void CreateMainRenderTargetView()
 	{
 		ComPtr<ID3D11Texture2D> pBackBuffer;
-		if (SUCCEEDED(pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
+		if (SUCCEEDED(Interface::pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
 		{
 			(void)Interface::pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &Interface::pRenderTargetView);
 		}
@@ -127,7 +127,7 @@ namespace Overlay::DirectX11
 						Menu::SetupImGuiStyle();
 						// Setup Platform/Renderer backends 
 						if (!ImGui_ImplWin32_Init(sd.OutputWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
-						CreateMainRenderTargetView(pSwapChain);
+						CreateMainRenderTargetView();
 						Overlay::bInitialized = true;
 					}
 				}
@@ -154,7 +154,7 @@ namespace Overlay::DirectX11
 		ReleaseRenderTargetView();
 		static const OriginalFunc originalFunction(&ResizeBuffersHook);
 		const HRESULT result = originalFunction.stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
-		CreateMainRenderTargetView(pSwapChain);
+		CreateMainRenderTargetView();
 		return result;
 	}
 }
