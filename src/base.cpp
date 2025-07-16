@@ -48,7 +48,11 @@ namespace
 			{
 				return !CheckWindow(hWindow, *reinterpret_cast<DWORD*>(lParam));
 			};
-			EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&currentProcessId));
+
+			if (!EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&currentProcessId))) // Enumeration stopped (window found)
+			{
+				break;
+			}
 
 			if (const auto duration = std::chrono::steady_clock::now() - startTime; duration > timeout)
 			{
