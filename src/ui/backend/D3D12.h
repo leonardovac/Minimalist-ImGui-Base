@@ -79,41 +79,56 @@ namespace Overlay::DirectX12
 		inline UINT	nBuffersCounts = -1;
 	}
 
+	inline bool CreateFactoryAndCommandQueue(ComPtr<IDXGIFactory>& pFactory, ComPtr<ID3D12CommandQueue>& pCommandQueue)
+	{
+		const HMODULE hD3D12 = GetModuleHandleW(L"d3d12.dll");
+		const HMODULE hDXGI = GetModuleHandleW(L"dxgi.dll");
+		if (!hD3D12 || !hDXGI) return {};
+
+		void* CreateDXGIFactory = GetProcAddress(hDXGI, "CreateDXGIFactory");
+		if (CreateDXGIFactory == nullptr) return {};
+
+		if (FAILED(static_cast<long(*)(const IID&, void**)>(CreateDXGIFactory)(IID_PPV_ARGS(&pFactory)))) return {};
+
+		ComPtr<IDXGIAdapter> pAdapter;
+		if (FAILED(pFactory->EnumAdapters(0, &pAdapter))) return {};
+
+		void* D3D12CreateDevice = GetProcAddress(hD3D12, "D3D12CreateDevice");
+		if (D3D12CreateDevice == nullptr) return {};
+
+		ComPtr<ID3D12Device> pDevice;
+		if (FAILED(static_cast<long(*)(IUnknown*, D3D_FEATURE_LEVEL, const IID&, void**)>(D3D12CreateDevice)(pAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pDevice)))) return {};
+
+		constexpr D3D12_COMMAND_QUEUE_DESC queueDesc{ D3D12_COMMAND_LIST_TYPE_DIRECT, 0, D3D12_COMMAND_QUEUE_FLAG_NONE , 0 };
+		
+		if (FAILED(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)))) return {};
+
+		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
+
+#if USE_VMTHOOK_WHEN_AVAILABLE
+		commandQueueHook = std::make_unique<VMTHook>(pvCommandQueue);
+		commandQueueHook->Hook(10, &ExecuteCommandLists)
+#else
+		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
+#endif
+		return true;
+	}
+
+	inline bool CreateFactoryAndCommandQueue()
+	{
+		ComPtr<IDXGIFactory> pFactory;
+		ComPtr<ID3D12CommandQueue> pCommandQueue;
+		return CreateFactoryAndCommandQueue(pFactory, pCommandQueue);
+	}
 	inline bool Init()
 	{
 		// RAII wrapper to ensure window is deleted on scope exit
-		WinGuard window;
+		const WinGuard window;
 		if (!window) return false;
 
-		const HMODULE hD3D12 = GetModuleHandleW(L"d3d12.dll");
-		const HMODULE hDXGI = GetModuleHandleW(L"dxgi.dll");
-		if (!hD3D12 || !hDXGI) return false;
-
-		void* CreateDXGIFactory = GetProcAddress(hDXGI, "CreateDXGIFactory");
-		if (CreateDXGIFactory == nullptr) return false;
-
-		IDXGIFactory* pFactory;
-		if (FAILED(static_cast<long(*)(const IID&, void**)>(CreateDXGIFactory)(IID_PPV_ARGS(&pFactory)))) return false;
-
-		IDXGIAdapter* pAdapter;
-		if (FAILED(pFactory->EnumAdapters(0, &pAdapter))) return false;
-
-		void* D3D12CreateDevice = GetProcAddress(hD3D12, "D3D12CreateDevice");
-		if (D3D12CreateDevice == nullptr) return false;
-
-		ID3D12Device* pDevice;
-		if (FAILED(static_cast<long(*)(IUnknown*, D3D_FEATURE_LEVEL, const IID&, void**)>(D3D12CreateDevice)(pAdapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pDevice)))) return false;
-
-		constexpr D3D12_COMMAND_QUEUE_DESC queueDesc{ D3D12_COMMAND_LIST_TYPE_DIRECT, 0, D3D12_COMMAND_QUEUE_FLAG_NONE , 0 };
-
+		ComPtr<IDXGIFactory> pFactory;
 		ComPtr<ID3D12CommandQueue> pCommandQueue;
-		if (FAILED(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)))) return false;
-
-		ComPtr<ID3D12CommandAllocator> pCommandAllocator;
-		if (FAILED(pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pCommandAllocator)))) return false;
-
-		ComPtr<ID3D12GraphicsCommandList> pCommandList;
-		if (FAILED(pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, pCommandAllocator.Get(), nullptr, IID_PPV_ARGS(&pCommandList)))) return false;
+		if (!CreateFactoryAndCommandQueue(pFactory, pCommandQueue)) return false;
 
 		constexpr DXGI_RATIONAL refreshRate {60, 1};
 		constexpr DXGI_MODE_DESC bufferDesc {100, 100, refreshRate, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED, DXGI_MODE_SCALING_UNSPECIFIED };
@@ -132,17 +147,13 @@ namespace Overlay::DirectX12
 		ComPtr<IDXGISwapChain> pSwapChain;
 		if (FAILED(pFactory->CreateSwapChain(pCommandQueue.Get(), &swapChainDesc, &pSwapChain))) return false;
 
-		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
 		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		commandQueueHook = std::make_unique<VMTHook>(pvCommandQueue);
-		commandQueueHook->Hook(10, &ExecuteCommandLists);
 		swapChainHook = std::make_unique<VMTHook>(pvSwapChain);
 		swapChainHook->Hook(8, &Present);
 		swapChainHook->Hook(13, &ResizeBuffers);
 #else
-		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
 		HooksManager::Setup<InlineHook>(pvSwapChain[8], FUNCTION(Present));
 		HooksManager::Setup<InlineHook>(pvSwapChain[13], FUNCTION(ResizeBuffers));
 #endif
@@ -249,7 +260,7 @@ namespace Overlay::DirectX12
 							return Interface::heapAllocator.Free(hCpuHeapCurrent, hGpuHeapCurrent);
 						};
 
-						if (!ImGui_ImplDX12_Init(&initInfo) || !ImGui_ImplDX12_CreateDeviceObjects()) return;
+						if (!ImGui_ImplDX12_Init(&initInfo)) return;
 						Overlay::bInitialized = true;
 					}
 				}
@@ -270,15 +281,17 @@ namespace Overlay::DirectX12
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
 			if(FAILED(Interface::pCommandList->Reset(Interface::pCommandAllocator, nullptr))) return;
 			Interface::pCommandList->ResourceBarrier(1, &barrier);
-
 			Interface::pCommandList->OMSetRenderTargets(1, &Interface::pFrameContext[backBufferIndex].pDescriptorHandle, FALSE, nullptr);
 			Interface::pCommandList->SetDescriptorHeaps(1, &Interface::pDescHeapImGuiRender);
+
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), Interface::pCommandList);
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 			Interface::pCommandList->ResourceBarrier(1, &barrier);
+
 			if (FAILED(Interface::pCommandList->Close())) return;
 			Interface::pCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList* const*>(&Interface::pCommandList));
 		}();
@@ -289,7 +302,7 @@ namespace Overlay::DirectX12
 
 	inline void ExecuteCommandLists(ID3D12CommandQueue* pCommandQueue, const UINT numCommandLists, ID3D12CommandList* ppCommandLists)
 	{
-		if (!Interface::pCommandQueue) Interface::pCommandQueue = pCommandQueue;
+		Interface::pCommandQueue = pCommandQueue;
 		static const OriginalFunc originalFunction(&ExecuteCommandLists);
 		return originalFunction.stdcall(pCommandQueue, numCommandLists, ppCommandLists);
 	}
