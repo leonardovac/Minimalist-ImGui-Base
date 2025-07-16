@@ -5,7 +5,7 @@
 
 #include "../misc/logger.h"
 
-#define USE_VMTHOOK_WHEN_AVAILABLE 1 // Mainly for D3D9, D3D11, and D3D12
+#define USE_VMTHOOK_WHEN_AVAILABLE 0 // Mainly for D3D9, D3D11, and D3D12
 #define HOOK_THIRD_PARTY_OVERLAYS 1 // May use Inline hooking
 
 using Microsoft::WRL::ComPtr;

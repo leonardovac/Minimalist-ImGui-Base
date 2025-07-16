@@ -126,8 +126,9 @@ namespace Overlay::DirectX11
 						ImGui::CreateContext();
 						Menu::SetupImGuiStyle();
 						// Setup Platform/Renderer backends 
-						if (!ImGui_ImplWin32_Init(sd.OutputWindow) || !((Overlay::bInitialized = ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)))) return;
+						if (!ImGui_ImplWin32_Init(sd.OutputWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
 						CreateMainRenderTargetView(pSwapChain);
+						Overlay::bInitialized = true;
 					}
 				}
 			}

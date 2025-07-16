@@ -249,8 +249,8 @@ namespace Overlay::DirectX12
 							return Interface::heapAllocator.Free(hCpuHeapCurrent, hGpuHeapCurrent);
 						};
 
-						if (!((Overlay::bInitialized = ImGui_ImplDX12_Init(&initInfo)))) return;
-						ImGui_ImplDX12_CreateDeviceObjects();
+						if (!ImGui_ImplDX12_Init(&initInfo) || !ImGui_ImplDX12_CreateDeviceObjects()) return;
+						Overlay::bInitialized = true;
 					}
 				}
 			}

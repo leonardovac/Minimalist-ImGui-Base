@@ -110,18 +110,18 @@ namespace HooksManager
 	}
 
 	template <typename HookType>
-	void Setup(void* original, void* replacement, const char* detourName = "Unknown", int flags = Default)
+	bool Setup(void* original, void* replacement, const char* detourName = "Unknown", int flags = Default)
 	{
 		if (!original)
 		{
 			LOG_ERROR("Invalid address passed for {}: 0x{:X}", detourName, reinterpret_cast<uintptr_t>(original));
-			RETURN_FAIL()
+			RETURN_FAIL(false)
 		}
 
 		if (!(flags & Duplicated) && hooks.contains(replacement))
 		{
 			LOG_ERROR("Possible unintended duplicated hook for {}.", detourName);
-			RETURN_FAIL()
+			RETURN_FAIL(false)
 		}
 
 		flags &= ~Duplicated; // Clear Duplicated flag as it's not used anymore
@@ -133,17 +133,19 @@ namespace HooksManager
 		if (const uint8_t error = hooks[replacement].back()->getError())
 		{
 			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}", reinterpret_cast<uintptr_t>(original), detourName, ParseError(error));
-			RETURN_FAIL()
+			hooks.erase(replacement);
+			RETURN_FAIL(false)
 		}
 
 		const char* hookType = std::is_same_v<HookType, InlineHook> ? "Inline" : "Mid";
 		LOG_INFO("{}Hook placed at 0x{:X} -> {} (0x{:X})", hookType, reinterpret_cast<uintptr_t>(original), detourName, reinterpret_cast<uintptr_t>(replacement));
+		return true;
 	}
 
 	template <typename HookType>
-	void Setup(void* original, void* replacement, const int flags = Default)
+	bool Setup(void* original, void* replacement, const int flags = Default)
 	{
-		Setup<HookType>(original, replacement, nullptr, flags);
+		return Setup<HookType>(original, replacement, nullptr, flags);
 	}
 
 	template <typename HookType>

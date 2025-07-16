@@ -14,11 +14,8 @@ namespace Overlay::OpenGL
 	{
 		if (const HMODULE opengl32 = GetModuleHandleW(L"opengl32.dll"))
 		{
-			if (const auto wglSwapBuffers = reinterpret_cast<void*>(GetProcAddress(opengl32, "wglSwapBuffers")))
-			{
-				HooksManager::Setup<InlineHook>(wglSwapBuffers, FUNCTION(WglSwapBuffers));
-				return true;
-			}
+			const auto wglSwapBuffers = reinterpret_cast<void*>(GetProcAddress(opengl32, "wglSwapBuffers"));
+			return HooksManager::Setup<InlineHook>(wglSwapBuffers, FUNCTION(WglSwapBuffers));
 		}
 		return false;
 	}
@@ -40,7 +37,8 @@ namespace Overlay::OpenGL
 				Menu::SetupImGuiStyle();
 				const HWND hWindow = WindowFromDC(hdc);
 				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
-				if (!ImGui_ImplWin32_Init(hWindow) || !((Overlay::bInitialized = ImGui_ImplOpenGL3_Init()))) return;
+				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplOpenGL3_Init()) return;
+				Overlay::bInitialized = true;
 			}
 
 			if (!Overlay::bEnabled) return;
