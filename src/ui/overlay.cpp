@@ -40,8 +40,6 @@ bool Overlay::TryAllPresentMethods()
 
 	switch(Overlay::graphicsAPI)
 	{
-	case GraphicsAPI::UNKNOWN:
-		break;
 	case GraphicsAPI::D3D9:
 		break;
 	case GraphicsAPI::D3D11:
@@ -54,6 +52,7 @@ bool Overlay::TryAllPresentMethods()
 		return Overlay::OpenGL::Init();
 	case GraphicsAPI::Vulkan:
 		break;
+	default: break;
 	}
 
 	LOG_WARNING("Graphics API {} currently not implemented.", Overlay::graphicsAPI);
