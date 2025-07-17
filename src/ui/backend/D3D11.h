@@ -56,10 +56,10 @@ namespace Overlay::DirectX11
 		sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-		sd.OutputWindow = hWindow;
+		sd.OutputWindow = window.handle;
 		sd.SampleDesc.Count = 1;
 		sd.SampleDesc.Quality = 0;
-		sd.Windowed = (GetWindowLongPtr(hWindow, GWL_STYLE) & WS_POPUP) == 0;
+		sd.Windowed = (GetWindowLongPtr(window.handle, GWL_STYLE) & WS_POPUP) == 0;
 		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 		ComPtr<IDXGISwapChain> pSwapChain;

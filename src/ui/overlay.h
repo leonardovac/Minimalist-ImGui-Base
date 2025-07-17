@@ -66,7 +66,6 @@ namespace Overlay
 	inline bool bInitialized;
 	inline bool bEnabled{true};
 
-	inline HWND hWindow;
 	inline GraphicsAPI graphicsAPI;
 
 	inline const WNDCLASSEX wndClass{
@@ -89,25 +88,18 @@ namespace Overlay
 	bool TryAllPresentMethods();
 
 	/// Helpers
-	inline bool InitWindow()
-	{
-		RegisterClassExW(&wndClass);
-		hWindow = CreateWindowExW(0L, wndClass.lpszClassName, L"", WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, nullptr, nullptr, wndClass.hInstance, nullptr);
-		return hWindow != nullptr;
-	}
-
-	inline bool DeleteWindow()
-	{
-		DestroyWindow(hWindow);
-		UnregisterClass(wndClass.lpszClassName, wndClass.hInstance);
-		return hWindow == nullptr;
-	}
-
 	struct WinGuard {
-		WinGuard() { result = InitWindow(); }
-		~WinGuard() { DeleteWindow(); }
-		explicit operator bool() const { return result; }
-		bool result;
+		WinGuard() {
+			RegisterClassExW(&wndClass);
+			handle = CreateWindowExW(0L, wndClass.lpszClassName, L"", WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, nullptr, nullptr, wndClass.hInstance, nullptr);
+		}
+		~WinGuard() {
+			DestroyWindow(handle);
+			UnregisterClass(wndClass.lpszClassName, wndClass.hInstance);
+		}
+		explicit operator bool() const { return handle != nullptr; }
+		explicit operator HWND() const { return handle; }
+		HWND handle{ nullptr };
 	};
 
 	inline void CheckGraphicsDriver()

@@ -139,8 +139,8 @@ namespace Overlay::DirectX12
 		swapChainDesc.SampleDesc = sampleDesc;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = 2;
-		swapChainDesc.OutputWindow = hWindow;
-		swapChainDesc.Windowed = (GetWindowLongPtr(hWindow, GWL_STYLE) & WS_POPUP) == 0;
+		swapChainDesc.OutputWindow = window.handle;
+		swapChainDesc.Windowed = (GetWindowLongPtr(window.handle, GWL_STYLE) & WS_POPUP) == 0;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
