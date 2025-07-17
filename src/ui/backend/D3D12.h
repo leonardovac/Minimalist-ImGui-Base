@@ -202,9 +202,9 @@ namespace Overlay::DirectX12
 	{
 		[&pSwapChain]
 		{
+			Interface::pSwapChain = pSwapChain;
 			if (!Overlay::bInitialized)
 			{
-				Interface::pSwapChain = pSwapChain;
 				if (SUCCEEDED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX12::Interface::pDevice))))
 				{
 					DXGI_SWAP_CHAIN_DESC descSwapChain;

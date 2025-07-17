@@ -112,9 +112,9 @@ namespace Overlay::DirectX11
 	{
 		[&pSwapChain]
 		{
+			Interface::pSwapChain = pSwapChain;
 			if (!Overlay::bInitialized)
 			{
-				Interface::pSwapChain = pSwapChain;
 				if (SUCCEEDED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice))))
 				{
 					Interface::pDevice->GetImmediateContext(&Interface::pDeviceContext);
