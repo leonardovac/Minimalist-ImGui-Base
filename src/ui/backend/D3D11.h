@@ -96,15 +96,19 @@ namespace Overlay::DirectX11
 
 	inline void CleanupDeviceD3D()
 	{
+#if USE_VMTHOOK_WHEN_AVAILABLE 
 		swapChainHook.reset();
+#else
+		HooksManager::Unhook(&PresentHook);
+		HooksManager::Unhook(&ResizeBuffersHook);
+#endif
 
-		ImGui_ImplDX11_Shutdown();
+		SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(lpPrevWndFunc));
+
 		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
 
 		ReleaseRenderTargetView();
 		SafeRelease(Interface::pSwapChain);
-		SafeRelease(Interface::pDeviceContext);
 		SafeRelease(Interface::pDevice);
 	}
 
@@ -121,11 +125,12 @@ namespace Overlay::DirectX11
 					DXGI_SWAP_CHAIN_DESC sd;
 					if (SUCCEEDED(pSwapChain->GetDesc(&sd)))
 					{
-						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(sd.OutputWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+						hWindow = sd.OutputWindow;
+						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 						// Setup Dear ImGui context 
 						Menu::SetupImGui();
 						// Setup Platform/Renderer backends 
-						if (!ImGui_ImplWin32_Init(sd.OutputWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
+						if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
 						CreateMainRenderTargetView();
 						Overlay::bInitialized = true;
 					}

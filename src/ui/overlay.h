@@ -68,6 +68,7 @@ namespace Overlay
 	inline bool bEnabled{true};
 
 	inline GraphicsAPI graphicsAPI;
+	inline HWND hWindow;
 
 	inline const WNDCLASSEX wndClass{
 		.cbSize = sizeof(WNDCLASSEX),
@@ -109,6 +110,7 @@ namespace Overlay
 	inline void CheckGraphicsDriver()
 	{
 		if (GetModuleHandleW(L"opengl32.dll")) graphicsAPI = OpenGL;
+		else if (GetModuleHandleW(L"d3d9.dll")) graphicsAPI = D3D9;
 		else if (GetModuleHandleW(L"d3d11.dll")) graphicsAPI = D3D11;
 #ifdef _WIN64
 		else if (GetModuleHandleW(L"d3d12.dll")) graphicsAPI = D3D12;

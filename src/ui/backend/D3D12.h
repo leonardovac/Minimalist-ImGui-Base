@@ -181,18 +181,21 @@ namespace Overlay::DirectX12
 
 	inline void CleanupDeviceD3D()
 	{
+#if USE_VMTHOOK_WHEN_AVAILABLE 
 		commandQueueHook.reset();
 		swapChainHook.reset();
+#else
+		HooksManager::Unhook(&Present);
+		HooksManager::Unhook(&ResizeBuffers);
+#endif
 
-		ImGui_ImplDX12_Shutdown();
+		lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+
 		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
-
 		ReleaseMainTargetView();
+
 		SafeRelease(Interface::pSwapChain);
-		SafeRelease(Interface::pCommandAllocator);
 		SafeRelease(Interface::pCommandQueue);
-		SafeRelease(Interface::pCommandList);
 		SafeRelease(Interface::pDescHeapBackBuffers);
 		SafeRelease(Interface::pDescHeapImGuiRender);
 		SafeRelease(Interface::pDevice);
@@ -210,7 +213,8 @@ namespace Overlay::DirectX12
 					DXGI_SWAP_CHAIN_DESC descSwapChain;
 					if (SUCCEEDED(pSwapChain->GetDesc(&descSwapChain)))
 					{
-						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(descSwapChain.OutputWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+						hWindow = descSwapChain.OutputWindow;
+						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 
 						Interface::nBuffersCounts = descSwapChain.BufferCount;
 						Interface::pFrameContext = new Interface::FrameContext[Interface::nBuffersCounts];
@@ -258,7 +262,7 @@ namespace Overlay::DirectX12
 						{
 							return Interface::heapAllocator.Free(hCpuHeapCurrent, hGpuHeapCurrent);
 						};
-
+						// Setup Renderer backend
 						if (!ImGui_ImplDX12_Init(&initInfo)) return;
 						Overlay::bInitialized = true;
 					}
