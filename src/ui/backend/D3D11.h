@@ -137,7 +137,11 @@ namespace Overlay::DirectX11
 				}
 			}
 
-			if (!bEnabled) return;
+			if (!bEnabled)
+			{
+				SetEvent(screenCleaner.eventPresentSkipped);
+				return;
+			}
 
 			// Draw ImGui
 			ImGui_ImplDX11_NewFrame();

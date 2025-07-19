@@ -1,70 +1,36 @@
-#include "ScreenCleaner.h"
+﻿#include "ScreenCleaner.h"
 
+#include <chrono>
 #include <ShlObj.h>
+#include <thread>
 
 namespace
 {
 	BOOL WINAPI BitBltHook(const HDC hdcDst, const int x, const int y, const int cx, const int cy, const HDC hdcSrc, const int x1, const int y1, const DWORD rop)
 	{
-		BOOL result;
+		static const auto original = HookFramework::IATHook::GetOriginal(&BitBltHook);
 
-		if (*screenCleaner.pOverlayEnabled)
-		{
-			// Disable internal drawing
-			*screenCleaner.pOverlayEnabled = false;
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		// Disable drawing
+		*screenCleaner.pDrawingEnabled = false;
+		
+		// Capture the clean screenshot data
+		WaitForSingleObject(screenCleaner.eventPresentSkipped, 50);
+		const BOOL result = original.stdcall<BOOL>(hdcDst, x, y, cx, cy, hdcSrc, x1, y1, rop);
 
-			// Capture the clean screenshot data
-			result = screenCleaner.hook.call<BOOL>(hdcDst, x, y, cx, cy, hdcSrc, x1, y1, rop);
-
-			// Re-enable internal drawing
-			*screenCleaner.pOverlayEnabled = true;
-		}
-		else result = screenCleaner.hook.call<BOOL>(hdcDst, x, y, cx, cy, hdcSrc, x1, y1, rop);
+		// Re-enable drawing
+		*screenCleaner.pDrawingEnabled = true;
 
 		return result;
 	}
 }
 
-
-ScreenCleaner::ScreenCleaner() = default;
-
-ScreenCleaner::ScreenCleaner(bool* pDrawEnabled)
-{
-	this->pOverlayEnabled = pDrawEnabled;
-}
-
 bool ScreenCleaner::Init()
 {
-	const HMODULE hGdi32 = GetModuleHandleW(L"Gdi32.dll");
-	if (!hGdi32) return false;
-
-	const auto address = GetProcAddress(hGdi32, "BitBlt");
-	this->hook = safetyhook::create_inline(reinterpret_cast<void*>(address), reinterpret_cast<void*>(&BitBltHook));
-
-	bInitComplete = true;
-	return true;
-}
-
-void ScreenCleaner::Enable()
-{
-	auto result = this->hook.enable();
-	this->bEnabled = true;
-}
-
-void ScreenCleaner::Disable()
-{
-	auto result = this->hook.disable();
-	this->bEnabled = false;
-}
-
-void ScreenCleaner::Toggle()
-{
-	if (this->bEnabled) Disable();
-	else Enable();
+	this->IAT = new HookFramework::IATHook();
+	return this->IAT->Hook("BitBlt", &BitBltHook);
 }
 
 ScreenCleaner::~ScreenCleaner()
 {
-	if (this->bEnabled) Disable();
+	delete this->IAT;
 }

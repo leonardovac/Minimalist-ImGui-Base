@@ -269,7 +269,12 @@ namespace Overlay::DirectX12
 				}
 			}
 
-			if (!bEnabled || Interface::pCommandQueue == nullptr) return;
+			if (!bEnabled)
+			{
+				SetEvent(screenCleaner.eventPresentSkipped);
+				return;
+			}
+			if (!Interface::pCommandQueue) return;
 
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();

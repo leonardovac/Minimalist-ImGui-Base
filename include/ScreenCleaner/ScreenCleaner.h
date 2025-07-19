@@ -1,22 +1,19 @@
-#pragma once
-#include <SafetyHook/safetyhook.hpp>
+﻿#pragma once
+#include "VMTHook/iathook.h"
+
 
 class ScreenCleaner
 {
 public:
-	bool bInitComplete = false;
-	bool bEnabled = false;
-	bool* pOverlayEnabled = nullptr;
+	bool* pDrawingEnabled = nullptr;
+	HANDLE eventPresentSkipped = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
-	SafetyHookInline hook;
+	HookFramework::IATHook* IAT = nullptr;
 
-	ScreenCleaner();
-	ScreenCleaner(bool* pDrawEnabled);
+	ScreenCleaner() = default;
+	explicit ScreenCleaner(bool* pDrawEnabled) : pDrawingEnabled(pDrawEnabled) {}
 
 	bool Init();
-	void Enable();
-	void Disable();
-	void Toggle();
 
 	~ScreenCleaner();
 };
