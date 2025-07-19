@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 
 namespace Menu
 {
 	inline bool bOpen = true;
 	inline bool bExample = true;
 
-	void SetupImGuiStyle();
+	void SetupImGui();
 	void DrawMenu();
 
 	namespace Functions

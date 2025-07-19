@@ -236,9 +236,8 @@ namespace Overlay::DirectX12
 						CreateMainTargetView();
 
 						// Setup Dear ImGui context
-						ImGui::CreateContext();
-						Menu::SetupImGuiStyle();
-						// Setup Platform/Renderer backends
+						Menu::SetupImGui();
+						// Setup Platform backend
 						if (!ImGui_ImplWin32_Init(descSwapChain.OutputWindow)) return;
 
 						ImGui_ImplDX12_InitInfo initInfo = {};

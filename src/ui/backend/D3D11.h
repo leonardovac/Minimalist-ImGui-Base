@@ -123,8 +123,7 @@ namespace Overlay::DirectX11
 					{
 						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(sd.OutputWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 						// Setup Dear ImGui context 
-						ImGui::CreateContext();
-						Menu::SetupImGuiStyle();
+						Menu::SetupImGui();
 						// Setup Platform/Renderer backends 
 						if (!ImGui_ImplWin32_Init(sd.OutputWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
 						CreateMainRenderTargetView();

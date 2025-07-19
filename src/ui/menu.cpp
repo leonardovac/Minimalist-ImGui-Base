@@ -1,4 +1,4 @@
-#include "menu.h"
+﻿#include "menu.h"
 
 #include <imgui.h>
 #include <windows.h>
@@ -8,10 +8,11 @@
 #include "../misc/fonts/font_awesome.hpp"
 #include "../misc/fonts/roboto_mono.hpp"
 
-void Menu::SetupImGuiStyle()
+void Menu::SetupImGui()
 {
+	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-
+	
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuiStyle& style = ImGui::GetStyle();
 
@@ -127,7 +128,7 @@ void Menu::SetupImGuiStyle()
 void Menu::DrawMenu()
 {
 	ImGui::SetNextWindowSizeConstraints({ 400, 300 }, { 960, 900 });
-	
+
 	if (ImGui::Begin("Minimalist ImGui Base", &Menu::bOpen, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Hello, world!");

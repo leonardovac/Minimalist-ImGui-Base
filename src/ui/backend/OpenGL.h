@@ -33,10 +33,13 @@ namespace Overlay::OpenGL
 		{
 			if (!Overlay::bInitialized)
 			{
-				ImGui::CreateContext();
-				Menu::SetupImGuiStyle();
+				// Setup Dear ImGui context
+				Menu::SetupImGui();
+
 				const HWND hWindow = WindowFromDC(hdc);
 				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+
+				// Setup Platform/Renderer backends 
 				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplOpenGL3_Init()) return;
 				Overlay::bInitialized = true;
 			}
