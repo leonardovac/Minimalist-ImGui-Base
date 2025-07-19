@@ -1,16 +1,24 @@
-﻿#include <thread>
+﻿#pragma comment(linker,"/export:GetFileVersionInfoA=c:\\windows\\system32\\version.GetFileVersionInfoA,@1")
+#pragma comment(linker,"/export:GetFileVersionInfoByHandle=c:\\windows\\system32\\version.GetFileVersionInfoByHandle,@2")
+#pragma comment(linker,"/export:GetFileVersionInfoExA=c:\\windows\\system32\\version.GetFileVersionInfoExA,@3")
+#pragma comment(linker,"/export:GetFileVersionInfoExW=c:\\windows\\system32\\version.GetFileVersionInfoExW,@4")
+#pragma comment(linker,"/export:GetFileVersionInfoSizeA=c:\\windows\\system32\\version.GetFileVersionInfoSizeA,@5")
+#pragma comment(linker,"/export:GetFileVersionInfoSizeExA=c:\\windows\\system32\\version.GetFileVersionInfoSizeExA,@6")
+#pragma comment(linker,"/export:GetFileVersionInfoSizeExW=c:\\windows\\system32\\version.GetFileVersionInfoSizeExW,@7")
+#pragma comment(linker,"/export:GetFileVersionInfoSizeW=c:\\windows\\system32\\version.GetFileVersionInfoSizeW,@8")
+#pragma comment(linker,"/export:GetFileVersionInfoW=c:\\windows\\system32\\version.GetFileVersionInfoW,@9")
+#pragma comment(linker,"/export:VerFindFileA=c:\\windows\\system32\\version.VerFindFileA,@10")
+#pragma comment(linker,"/export:VerFindFileW=c:\\windows\\system32\\version.VerFindFileW,@11")
+#pragma comment(linker,"/export:VerInstallFileA=c:\\windows\\system32\\version.VerInstallFileA,@12")
+#pragma comment(linker,"/export:VerInstallFileW=c:\\windows\\system32\\version.VerInstallFileW,@13")
+#pragma comment(linker,"/export:VerLanguageNameA=c:\\windows\\system32\\version.VerLanguageNameA,@14")
+#pragma comment(linker,"/export:VerLanguageNameW=c:\\windows\\system32\\version.VerLanguageNameW,@15")
+#pragma comment(linker,"/export:VerQueryValueA=c:\\windows\\system32\\version.VerQueryValueA,@16")
+#pragma comment(linker,"/export:VerQueryValueW=c:\\windows\\system32\\version.VerQueryValueW,@17")
+
+#include <thread>
 #include <windows.h>
 
-typedef DWORD(*GetFileVersionInfoSizeA_Type)(LPCSTR lptstrFilename, LPDWORD lpdwHandle);
-typedef DWORD(*GetFileVersionInfoSizeW_Type)(LPCWSTR lptstrFilename, LPDWORD lpdwHandle);
-typedef DWORD(*GetFileVersionInfoSizeExW_Type)(DWORD dwFlags, LPCWSTR lptstrFilename, LPDWORD lpdwHandle);
-typedef BOOL(*GetFileVersionInfoA_Type)(LPCSTR lptstrFilename, DWORD dwHandle, DWORD dwLen, LPVOID lpData);
-typedef BOOL(*GetFileVersionInfoW_Type)(LPCWSTR lptstrFilename, DWORD dwHandle, DWORD dwLen, LPVOID lpData);
-typedef BOOL(*GetFileVersionInfoExW_Type)(DWORD dwFlags, LPCWSTR lptstrFilename, DWORD dwHandle, DWORD dwLen, LPVOID lpData);
-typedef BOOL(*VerQueryValueA_Type)(LPCVOID pBlock, LPCSTR lpSubBlock, LPVOID* lplpBuffer, PUINT puLen);
-typedef BOOL(*VerQueryValueW_Type)(LPCVOID pBlock, LPCWSTR lpSubBlock, LPVOID* lplpBuffer, PUINT puLen);
-
-static HMODULE hModule = LoadLibraryW(L"c:\\windows\\system32\\version.dll");
 extern void MainThread();
 
 BOOL WINAPI DllMain(const HMODULE hinstDLL, const DWORD fdwReason, LPVOID)
@@ -21,45 +29,4 @@ BOOL WINAPI DllMain(const HMODULE hinstDLL, const DWORD fdwReason, LPVOID)
 		std::thread(MainThread).detach();
 	}
 	return TRUE;
-}
-
-DWORD GetFileVersionInfoSizeA_Proxy(const LPCSTR lptstrFilename, const LPDWORD lpdwHandle)
-{
-	static const auto original = reinterpret_cast<GetFileVersionInfoSizeA_Type>(GetProcAddress(hModule, "GetFileVersionInfoSizeA"));
-	return original(lptstrFilename, lpdwHandle);
-}
-DWORD GetFileVersionInfoSizeW_Proxy(const LPCWSTR lptstrFilename, const LPDWORD lpdwHandle)
-{
-	static const auto original = reinterpret_cast<GetFileVersionInfoSizeW_Type>(GetProcAddress(hModule, "GetFileVersionInfoSizeW"));
-	return original(lptstrFilename, lpdwHandle);
-}
-DWORD GetFileVersionInfoSizeExW_Proxy(const DWORD dwFlags, const LPCWSTR lptstrFilename, const LPDWORD lpdwHandle)
-{
-	static const auto original = reinterpret_cast<GetFileVersionInfoSizeExW_Type>(GetProcAddress(hModule, "GetFileVersionInfoSizeExW"));
-	return original(dwFlags, lptstrFilename, lpdwHandle);
-}
-BOOL GetFileVersionInfoA_Proxy(const LPCSTR lptstrFilename, const DWORD dwHandle, const DWORD dwLen, const LPVOID lpData)
-{
-	static const auto original = reinterpret_cast<GetFileVersionInfoA_Type>(GetProcAddress(hModule, "GetFileVersionInfoA"));
-	return original(lptstrFilename, dwHandle, dwLen, lpData);
-}
-BOOL GetFileVersionInfoW_Proxy(const LPCWSTR lptstrFilename, const DWORD dwHandle, const DWORD dwLen, const LPVOID lpData)
-{
-	static const auto original = reinterpret_cast<GetFileVersionInfoW_Type>(GetProcAddress(hModule, "GetFileVersionInfoW"));
-	return original(lptstrFilename, dwHandle, dwLen, lpData);
-}
-BOOL GetFileVersionInfoExW_Proxy(const DWORD dwFlags, const LPCWSTR lptstrFilename, const DWORD dwHandle, const DWORD dwLen, const LPVOID lpData)
-{
-	static const auto original = reinterpret_cast<GetFileVersionInfoExW_Type>(GetProcAddress(hModule, "GetFileVersionInfoExW"));
-	return original(dwFlags, lptstrFilename, dwHandle, dwLen, lpData);
-}
-BOOL VerQueryValueA_Proxy(const LPCVOID pBlock, const LPCSTR lpSubBlock, LPVOID* lplpBuffer, const PUINT puLen)
-{
-	static const auto original = reinterpret_cast<VerQueryValueA_Type>(GetProcAddress(hModule, "VerQueryValueA"));
-	return original(pBlock, lpSubBlock, lplpBuffer, puLen);
-}
-BOOL VerQueryValueW_Proxy(const LPCVOID pBlock, const LPCWSTR lpSubBlock, LPVOID* lplpBuffer, const PUINT puLen)
-{
-	static const auto original = reinterpret_cast<VerQueryValueW_Type>(GetProcAddress(hModule, "VerQueryValueW"));
-	return original(pBlock, lpSubBlock, lplpBuffer, puLen);
 }

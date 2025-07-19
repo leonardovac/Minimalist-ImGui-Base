@@ -34,7 +34,8 @@ enum GraphicsAPI : UINT8
 };
 
 #if LOGGING_ENABLED
-static const char* GraphicsAPIStrings[] = {
+static const char* GraphicsAPIStrings[] = 
+{
 	"UNKNOWN",
 	"D3D9",
 	"D3D11",
@@ -88,12 +89,15 @@ namespace Overlay
 	bool TryAllPresentMethods();
 
 	/// Helpers
-	struct WinGuard {
-		WinGuard() {
+	struct WinGuard
+	{
+		WinGuard()
+		{
 			RegisterClassExW(&wndClass);
 			handle = CreateWindowExW(0L, wndClass.lpszClassName, L"", WS_OVERLAPPEDWINDOW, 0, 0, 100, 100, nullptr, nullptr, wndClass.hInstance, nullptr);
 		}
-		~WinGuard() {
+		~WinGuard()
+		{
 			DestroyWindow(handle);
 			UnregisterClass(wndClass.lpszClassName, wndClass.hInstance);
 		}
