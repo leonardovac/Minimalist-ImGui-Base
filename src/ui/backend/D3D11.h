@@ -6,6 +6,7 @@
 
 #include "../overlay.h"
 #include "../../hooks.h"
+#include "ScreenCleaner/ScreenCleaner.h"
 
 
 namespace Overlay::DirectX11
@@ -13,7 +14,7 @@ namespace Overlay::DirectX11
 	HRESULT PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT uFlags);
 	HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 
-	inline std::unique_ptr<VMTHook> swapChainHook;
+	inline std::unique_ptr<TinyHook::VMTHook> swapChainHook;
 
 	namespace Interface
 	{
@@ -70,7 +71,7 @@ namespace Overlay::DirectX11
 		uintptr_t** pVTable = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE 
-		swapChainHook = std::make_unique<VMTHook>(pVTable);
+		swapChainHook = std::make_unique<HookFramework::VMTHook>(pVTable);
 		swapChainHook->Hook(8, &PresentHook);
 		swapChainHook->Hook(13, &ResizeBuffersHook);
 #else

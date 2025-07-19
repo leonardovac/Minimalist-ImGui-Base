@@ -80,5 +80,5 @@ extern void MainThread()
 
 	Hooks::SetupAllHooks();
 	std::thread(HookPresent).detach();
-	if (screenCleaner.Init()) screenCleaner.Enable();
+	screenCleaner.Init();
 }

@@ -2,7 +2,7 @@
 #include <shared_mutex>
 #include <variant>
 #include <SafetyHook/safetyhook.hpp>
-#include <VMTHook/vmthook.h>
+#include <TinyHook/tinyhook.h>
 
 #include "misc/logger.h"
 
@@ -110,7 +110,7 @@ namespace HooksManager
 	}
 
 	template <typename HookType>
-	bool Setup(void* original, void* replacement, const char* detourName = "Unknown", int flags = Default)
+	bool Setup(void* original, void* replacement, const char* detourName, int flags = Default)
 	{
 		if (!original)
 		{
@@ -145,7 +145,7 @@ namespace HooksManager
 	template <typename HookType>
 	bool Setup(void* original, void* replacement, const int flags = Default)
 	{
-		return Setup<HookType>(original, replacement, nullptr, flags);
+		return Setup<HookType>(original, replacement, "Unknown", flags);
 	}
 
 	template <typename HookType>
@@ -210,7 +210,7 @@ namespace HooksManager
 	}
 }
 
-using HookVariant = std::variant<VMTHook::VirtualMethod, std::reference_wrapper<InlineHook>>;
+using HookVariant = std::variant<TinyHook::OriginalFunction, std::reference_wrapper<InlineHook>>;
 
 class OriginalFunc
 {
@@ -220,47 +220,47 @@ public:
 	OriginalFunc(HookType* hookIdentifier)
 	{
 		// Try VMT first, fall back to inline
-		auto vmtHook = VMTHook::GetOriginal(hookIdentifier);
+		auto vmtHook = TinyHook::Manager::GetOriginal(hookIdentifier);
 		if (vmtHook.isValid()) hookVariant = vmtHook;
 		else hookVariant = std::ref(HooksManager::GetOriginal(hookIdentifier));
 	}
 
-	template <typename ReturnType = void, typename... Args>
+	template <typename ReturnType, typename... Args>
 	ReturnType call(Args... args) const
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::VirtualMethod>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::OriginalFunction>)
 			{
 				return hook.template call<ReturnType>(args...);
 			}
-			else return hook.get().template unsafe_call<ReturnType>(args...);
+			else return hook.get().template call<ReturnType>(args...);
 		}, hookVariant);
 	}
 
-	template <typename ReturnType = void, typename... Args>
+	template <typename ReturnType, typename... Args>
 	ReturnType stdcall(Args... args) const
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::VirtualMethod>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::OriginalFunction>)
 			{
 				return hook.template stdcall<ReturnType>(args...);
 			}
-			else return hook.get().template unsafe_stdcall<ReturnType>(args...);
+			else return hook.get().template stdcall<ReturnType>(args...);
 		}, hookVariant);
 	}
 
-	template <typename ReturnType = void, typename... Args>
+	template <typename ReturnType, typename... Args>
 	ReturnType thiscall(Args... args) const
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, VMTHook::VirtualMethod>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::OriginalFunction>)
 			{
 				return hook.template thiscall<ReturnType>(args...);
 			}
-			else return hook.get().template unsafe_thiscall<ReturnType>(args...);
+			else return hook.get().template thiscall<ReturnType>(args...);
 		}, hookVariant);
 	}
 

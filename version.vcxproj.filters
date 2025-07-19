@@ -26,9 +26,6 @@
     <ClCompile Include="src\misc\logger.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
-    <ClCompile Include="include\VMTHook\vmthook.cpp">
-      <Filter>include\VMTHook</Filter>
-    </ClCompile>
     <ClCompile Include="src\hooks.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -89,18 +86,27 @@
     <ClInclude Include="src\misc\logger.h">
       <Filter>src\misc</Filter>
     </ClInclude>
-    <ClInclude Include="include\VMTHook\vmthook.h">
-      <Filter>include\VMTHook</Filter>
-    </ClInclude>
     <ClInclude Include="src\hooks.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TinyHook\eathook.h">
+      <Filter>include\TinyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TinyHook\iathook.h">
+      <Filter>include\TinyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TinyHook\tinyhook.h">
+      <Filter>include\TinyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TinyHook\vmthook.h">
+      <Filter>include\TinyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TinyHook\shared.h">
+      <Filter>include\TinyHook</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="version.def" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -130,7 +136,7 @@
     <Filter Include="src\ui\backend">
       <UniqueIdentifier>{dd876da3-8fca-43b3-bfdd-2a3a3fe25762}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\VMTHook">
+    <Filter Include="include\TinyHook">
       <UniqueIdentifier>{3f58d113-f3a5-4d9c-bb6f-8af842ee80c9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

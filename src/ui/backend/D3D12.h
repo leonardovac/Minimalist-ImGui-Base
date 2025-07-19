@@ -10,6 +10,7 @@
 
 #include "../menu.h"
 #include "../overlay.h"
+#include "ScreenCleaner/ScreenCleaner.h"
 
 namespace Overlay::DirectX12
 {
@@ -17,8 +18,8 @@ namespace Overlay::DirectX12
 	HRESULT ResizeBuffers(IDXGISwapChain3* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 	HRESULT Present(IDXGISwapChain3* pSwapChain, UINT SyncInterval, UINT uFlags);
 
-	inline std::unique_ptr<VMTHook> commandQueueHook;
-	inline std::unique_ptr<VMTHook> swapChainHook;
+	inline std::unique_ptr<TinyHook::VMTHook> commandQueueHook;
+	inline std::unique_ptr<TinyHook::VMTHook> swapChainHook;
 
 	namespace Interface
 	{
@@ -83,31 +84,31 @@ namespace Overlay::DirectX12
 	{
 		const HMODULE hD3D12 = GetModuleHandleW(L"d3d12.dll");
 		const HMODULE hDXGI = GetModuleHandleW(L"dxgi.dll");
-		if (!hD3D12 || !hDXGI) return {};
+		if (!hD3D12 || !hDXGI) return false;
 
 		void* CreateDXGIFactory = GetProcAddress(hDXGI, "CreateDXGIFactory");
-		if (CreateDXGIFactory == nullptr) return {};
+		if (CreateDXGIFactory == nullptr) return false;
 
-		if (FAILED(static_cast<long(*)(const IID&, void**)>(CreateDXGIFactory)(IID_PPV_ARGS(&pFactory)))) return {};
+		if (FAILED(static_cast<long(*)(const IID&, void**)>(CreateDXGIFactory)(IID_PPV_ARGS(&pFactory)))) return false;
 
 		ComPtr<IDXGIAdapter> pAdapter;
-		if (FAILED(pFactory->EnumAdapters(0, &pAdapter))) return {};
+		if (FAILED(pFactory->EnumAdapters(0, &pAdapter))) return false;
 
 		void* D3D12CreateDevice = GetProcAddress(hD3D12, "D3D12CreateDevice");
-		if (D3D12CreateDevice == nullptr) return {};
+		if (D3D12CreateDevice == nullptr) return false;
 
 		ComPtr<ID3D12Device> pDevice;
-		if (FAILED(static_cast<long(*)(IUnknown*, D3D_FEATURE_LEVEL, const IID&, void**)>(D3D12CreateDevice)(pAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pDevice)))) return {};
+		if (FAILED(static_cast<long(*)(IUnknown*, D3D_FEATURE_LEVEL, const IID&, void**)>(D3D12CreateDevice)(pAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pDevice)))) return false;
 
 		constexpr D3D12_COMMAND_QUEUE_DESC queueDesc{ D3D12_COMMAND_LIST_TYPE_DIRECT, 0, D3D12_COMMAND_QUEUE_FLAG_NONE , 0 };
 		
-		if (FAILED(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)))) return {};
+		if (FAILED(pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&pCommandQueue)))) return false;
 
 		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		commandQueueHook = std::make_unique<VMTHook>(pvCommandQueue);
-		commandQueueHook->Hook(10, &ExecuteCommandLists)
+		commandQueueHook = std::make_unique<HookFramework::VMTHook>(pvCommandQueue);
+		commandQueueHook->Hook(10, &ExecuteCommandLists);
 #else
 		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
 #endif
@@ -150,7 +151,7 @@ namespace Overlay::DirectX12
 		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		swapChainHook = std::make_unique<VMTHook>(pvSwapChain);
+		swapChainHook = std::make_unique<HookFramework::VMTHook>(pvSwapChain);
 		swapChainHook->Hook(8, &Present);
 		swapChainHook->Hook(13, &ResizeBuffers);
 #else
@@ -312,7 +313,7 @@ namespace Overlay::DirectX12
 	{
 		Interface::pCommandQueue = pCommandQueue;
 		static const OriginalFunc originalFunction(&ExecuteCommandLists);
-		return originalFunction.stdcall(pCommandQueue, numCommandLists, ppCommandLists);
+		return originalFunction.stdcall<void>(pCommandQueue, numCommandLists, ppCommandLists);
 	}
 
 	inline HRESULT ResizeBuffers(IDXGISwapChain3* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)

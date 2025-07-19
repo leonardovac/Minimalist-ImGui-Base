@@ -8,7 +8,7 @@ namespace
 {
 	BOOL WINAPI BitBltHook(const HDC hdcDst, const int x, const int y, const int cx, const int cy, const HDC hdcSrc, const int x1, const int y1, const DWORD rop)
 	{
-		static const auto original = HookFramework::IATHook::GetOriginal(&BitBltHook);
+		static const auto original = TinyHook::IATHook::GetOriginal(&BitBltHook);
 
 		// Disable drawing
 		*screenCleaner.pDrawingEnabled = false;
@@ -26,7 +26,7 @@ namespace
 
 bool ScreenCleaner::Init()
 {
-	this->IAT = new HookFramework::IATHook();
+	this->IAT = new TinyHook::IATHook();
 	return this->IAT->Hook("BitBlt", &BitBltHook);
 }
 
