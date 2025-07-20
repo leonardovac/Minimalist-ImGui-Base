@@ -233,6 +233,7 @@
     <ClInclude Include="src\misc\logger.h" />
     <ClInclude Include="src\ui\backend\D3D11.h" />
     <ClInclude Include="src\ui\backend\D3D12.h" />
+    <ClInclude Include="src\ui\backend\D3D9.h" />
     <ClInclude Include="src\ui\backend\Discord.h" />
     <ClInclude Include="src\ui\backend\OpenGL.h" />
     <ClInclude Include="src\ui\backend\Steam.h" />

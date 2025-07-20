@@ -89,6 +89,9 @@
     <ClInclude Include="src\hooks.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\backend\D3D9.h">
+      <Filter>src\ui\backend</Filter>
+    </ClInclude>
     <ClInclude Include="include\TinyHook\eathook.h">
       <Filter>include\TinyHook</Filter>
     </ClInclude>

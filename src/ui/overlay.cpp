@@ -3,6 +3,7 @@
 #include "../misc/Keybinds.h"
 #include "backend/D3D11.h"
 #include "backend/D3D12.h"
+#include "backend/D3D9.h"
 #include "backend/Discord.h"
 #include "backend/OpenGL.h"
 #include "backend/Steam.h"
@@ -41,7 +42,7 @@ bool Overlay::TryAllPresentMethods()
 	switch(Overlay::graphicsAPI)
 	{
 	case GraphicsAPI::D3D9:
-		break;
+		return Overlay::DirectX9::Init();
 	case GraphicsAPI::D3D11:
 		return Overlay::DirectX11::Init();
 #ifdef _WIN64
