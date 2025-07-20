@@ -54,6 +54,7 @@ namespace Overlay::OpenGL
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}();
 
-		return HooksManager::GetOriginal(&WglSwapBuffers).unsafe_stdcall<BOOL>(hdc);
+		static const auto original = OriginalFunc(&WglSwapBuffers);
+		return original.stdcall<BOOL>(hdc);
 	}
 }
