@@ -64,8 +64,8 @@ namespace Overlay::DirectX9
 		HooksManager::Unhook(&Present);
 #endif
 
-		lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
-		ImGui_ImplWin32_Shutdown();
+        Menu::CleanupImGui();
+
 		SafeRelease(Interface::pDevice);
 	}
 
@@ -76,14 +76,10 @@ namespace Overlay::DirectX9
 	    	Interface::pDevice = pDevice;
 		    if (!Overlay::bInitialized)
 		    {
-			    D3DDEVICE_CREATION_PARAMETERS cp = {};
-			    if (FAILED(pDevice->GetCreationParameters(&cp))) return;
-
-			    lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(cp.hFocusWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 			    // Setup Dear ImGui context
 			    Menu::SetupImGui();
 			    // Setup Platform/Renderer backends 
-			    if (!ImGui_ImplWin32_Init(cp.hFocusWindow) || !ImGui_ImplDX9_Init(pDevice)) return;
+			    if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX9_Init(pDevice)) return;
 			    Overlay::bInitialized = true;
 		    }
 

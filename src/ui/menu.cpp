@@ -1,8 +1,10 @@
 ﻿#include "menu.h"
 
 #include <imgui.h>
+#include <imgui_impl_win32.h>
 #include <windows.h>
 
+#include "overlay.h"
 #include "widgets.h"
 #include "../game.h"
 #include "../misc/fonts/font_awesome.hpp"
@@ -10,6 +12,8 @@
 
 void Menu::SetupImGui()
 {
+	lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(Overlay::hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	
@@ -123,6 +127,12 @@ void Menu::SetupImGui()
 	style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.4980392158031464f, 0.5137255191802979f, 1.0f, 1.0f);
 	style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.196078434586525f, 0.1764705926179886f, 0.5450980663299561f,0.501960813999176f);
 	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.196078434586525f, 0.1764705926179886f, 0.5450980663299561f,0.501960813999176f);
+}
+
+void Menu::CleanupImGui()
+{
+	SetWindowLongPtr(Overlay::hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(lpPrevWndFunc));
+	ImGui_ImplWin32_Shutdown();
 }
 
 void Menu::DrawMenu()

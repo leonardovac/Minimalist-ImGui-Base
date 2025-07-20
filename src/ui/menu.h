@@ -6,6 +6,7 @@ namespace Menu
 	inline bool bExample = true;
 
 	void SetupImGui();
+	void CleanupImGui();
 	void DrawMenu();
 
 	namespace Functions

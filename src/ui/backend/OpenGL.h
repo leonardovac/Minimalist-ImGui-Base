@@ -23,8 +23,7 @@ namespace Overlay::OpenGL
 	inline void Cleanup()
 	{
 		HooksManager::Unhook(&WglSwapBuffers);
-		SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(lpPrevWndFunc));
-		ImGui_ImplWin32_Shutdown();
+		Menu::CleanupImGui();
 	}
 
 	inline BOOL WINAPI WglSwapBuffers(const HDC hdc)
@@ -35,9 +34,6 @@ namespace Overlay::OpenGL
 			{
 				// Setup Dear ImGui context
 				Menu::SetupImGui();
-
-				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
-
 				// Setup Platform/Renderer backends 
 				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplOpenGL3_Init()) return;
 				Overlay::bInitialized = true;

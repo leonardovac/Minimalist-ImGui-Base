@@ -104,9 +104,7 @@ namespace Overlay::DirectX11
 		HooksManager::Unhook(&ResizeBuffersHook);
 #endif
 
-		SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(lpPrevWndFunc));
-
-		ImGui_ImplWin32_Shutdown();
+		Menu::CleanupImGui();
 
 		ReleaseRenderTargetView();
 		SafeRelease(Interface::pSwapChain);
@@ -122,8 +120,6 @@ namespace Overlay::DirectX11
 			{
 				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice)))) return;
 				Interface::pDevice->GetImmediateContext(&Interface::pDeviceContext);
-
-				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 
 				// Setup Dear ImGui context 
 				Menu::SetupImGui();

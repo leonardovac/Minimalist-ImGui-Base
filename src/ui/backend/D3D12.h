@@ -189,9 +189,8 @@ namespace Overlay::DirectX12
 		HooksManager::Unhook(&ResizeBuffers);
 #endif
 
-		lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+		Menu::CleanupImGui();
 
-		ImGui_ImplWin32_Shutdown();
 		ReleaseMainTargetView();
 
 		SafeRelease(Interface::pSwapChain);
