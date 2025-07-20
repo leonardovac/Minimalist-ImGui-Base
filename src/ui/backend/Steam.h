@@ -1,46 +1,85 @@
 ﻿#pragma once
 #include <windows.h>
 #include <Mem/mem.h>
+#include <TinyHook/tinyhook.h>
 
 #include "../overlay.h"
 
 namespace Overlay::Steam
 {
+
+	static void SwapPointer(uintptr_t* pAddress, const void* newAddress, const char* functionName = "Unknown")
+	{
+		if (!pAddress || !newAddress)
+		{
+			LOG_ERROR("Invalid pointer passed, pAddress: {} | newAddress: {} ({})", reinterpret_cast<uintptr_t>(pAddress), reinterpret_cast<uintptr_t>(newAddress), functionName);
+			return;
+		}
+		const uintptr_t pOriginal = *pAddress;
+		// Map the original function to our detour, so we call use GetOriginal
+		TinyHook::Manager::RegisterHook(newAddress, pOriginal);
+		*pAddress = reinterpret_cast<uintptr_t>(newAddress);
+		LOG_INFO("Swapped pointer at 0x{:X} from 0x{:X} to 0x{:X} ({})", reinterpret_cast<uintptr_t>(pAddress), pOriginal, reinterpret_cast<uintptr_t>(newAddress), functionName);
+	}
+
 #ifdef _WIN64
-	constexpr auto moduleName = "GameOverlayRenderer64.dll";
-	constexpr auto d3dPresentPattern = "48 89 ?? ?? ?? 48 89 ?? ?? ?? 48 ?? 74 24 ?? ?? 41 56 ?? 57 48 83 EC ?? 41 8B E8";
-	constexpr auto d3dResizeBuffersPattern = "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 44 8B FA";
-	constexpr auto oglSwapBuffersPattern = "40 53 48 83 EC ?? 48 8B D9 48 8D 54 24 ?? 48 8B 0D";
+	constexpr auto module_name = "GameOverlayRenderer64.dll";
+	constexpr auto d3d_present_pattern = "48 8B 05 ? ? ? ? 44 8B C5 8B D6";
+	constexpr auto d3d_resize_buffers_pattern = "4C 8B 15 ? ? ? ? 45 8B C6";
+	constexpr auto d3d9_device_present_pattern = "48 8B 05 ? ? ? ? 4C 8B C5 49 8B D7";
+	constexpr auto opengl_swap_buffers_pattern = "48 8B 05 ? ? ? ? 48 8B CB FF D0 80 3D";
+
+	static uintptr_t* GetAddressFromRef(const uintptr_t instructionStart)
+	{
+		return reinterpret_cast<uintptr_t*>(instructionStart + 7 + *reinterpret_cast<int32_t*>(instructionStart + 3));
+	}
 #else
-	constexpr auto moduleName = "GameOverlayRenderer.dll";
-	constexpr auto d3dPresentPattern = "55 8B EC 64 A1 ? ? ? ? 6A ? 68 ? ? ? ? 50 64 89 25 ? ? ? ? 53 8B 5D ? 56 57 F6 C3 ? 74 ? A1";
-	constexpr auto d3dResizeBuffersPattern = "55 8B EC 53 8B 5D ? B9 ? ? ? ? 56 57 53 E8 ? ? ? ? 53 B9 ? ? ? ? 8B F8 E8 ? ? ? ? 8B F0 85 FF 74 ? 8B CF E8 ? ? ? ? 85 F6 74 ? 8B CE E8 ? ? ? ? B9 ? ? ? ? E8 ? ? ? ? FF 75 ? A1 ? ? ? ? FF 75 ? FF 75";
-	constexpr auto oglSwapBuffersPattern = "55 8B EC 83 EC ?? 8D 45 ?? 50 FF 35";
+	constexpr auto module_name = "GameOverlayRenderer.dll";
+	constexpr auto d3d_present_pattern = "A1 ? ? ? ? 53 FF 75 ? FF 75 ? FF D0 8B 4D ? 64 89 0D ? ? ? ? 5F 5E 5B 8B E5 5D C2 ? ? 68 ? ? ? ? C7 45 ? ? ? ? ? FF 15 ? ? ? ? 8B 75";
+	constexpr auto d3d_resize_buffers_pattern = "A1 ? ? ? ? FF 75 ? FF 75 ? FF 75 ? FF 75 ? 53 FF D0";
+	constexpr auto d3d9_device_present_pattern = "A1 ? ? ? ? 51 53 FF D0";
+	constexpr auto opengl_swap_buffers_pattern = "A1 ? ? ? ? 56 FF D0 80 3D";
+
+	static uintptr_t* GetAddressFromRef(const uintptr_t instructionStart)
+	{
+		return *reinterpret_cast<uintptr_t**>(instructionStart + 1);
+	}
 #endif
 
 	inline bool Init()
 	{
-		if (const auto hModule = GetModuleHandleA(moduleName))
+		if (const auto hModule = GetModuleHandleA(module_name))
 		{
 			LOG_NOTICE("Detected Steam overlay...");
-			if (Overlay::graphicsAPI == D3D11 || Overlay::graphicsAPI == D3D12)
+			if (Overlay::graphicsAPI == D3D9)
 			{
-				if (void* pPresent = mem::PatternScan(hModule, d3dPresentPattern))
+				if (const uintptr_t xRefDevicePresent = mem::PatternScan<uintptr_t>(hModule, d3d9_device_present_pattern))
 				{
-					if (void* pResizeBuffers = mem::PatternScan(hModule, d3dResizeBuffersPattern))
+					const auto pOriginalPresent = GetAddressFromRef(xRefDevicePresent);
+					SwapPointer(pOriginalPresent, FUNCTION(DirectX9::Present));
+					return true;
+				}
+			}
+			else if (Overlay::graphicsAPI == D3D11 || Overlay::graphicsAPI == D3D12)
+			{
+				if (const uintptr_t xRefPresent = mem::PatternScan<uintptr_t>(hModule, d3d_present_pattern))
+				{
+					if (const uintptr_t xRefResizeBuffers = mem::PatternScan<uintptr_t>(hModule, d3d_resize_buffers_pattern))
 					{
+						const auto pOriginalPresent = GetAddressFromRef(xRefPresent);
+						const auto pOriginalResizeBuffers = GetAddressFromRef(xRefResizeBuffers);
 						if (Overlay::graphicsAPI == D3D11)
 						{
-							const bool presentStatus		= HooksManager::Setup<InlineHook>(pPresent, FUNCTION(DirectX11::PresentHook));
-							const bool resizeBuffersStatus	= HooksManager::Setup<InlineHook>(pResizeBuffers, FUNCTION(DirectX11::ResizeBuffersHook));
-							return presentStatus && resizeBuffersStatus;
+							SwapPointer(pOriginalPresent, FUNCTION(DirectX11::PresentHook));
+							SwapPointer(pOriginalResizeBuffers, FUNCTION(DirectX11::ResizeBuffersHook));
+							return true;
 						}
 #ifdef _WIN64
 						if (Overlay::graphicsAPI == D3D12 && DirectX12::CreateFactoryAndCommandQueue())
 						{
-							const bool presentStatus		= HooksManager::Setup<InlineHook>(pPresent, FUNCTION(DirectX12::Present));
-							const bool resizeBuffersStatus	= HooksManager::Setup<InlineHook>(pResizeBuffers, FUNCTION(DirectX12::ResizeBuffers));
-							return presentStatus && resizeBuffersStatus;
+							SwapPointer(pOriginalPresent, FUNCTION(DirectX12::Present));
+							SwapPointer(pOriginalResizeBuffers, FUNCTION(DirectX12::ResizeBuffers));
+							return true;
 						}
 #endif
 					}
@@ -48,11 +87,15 @@ namespace Overlay::Steam
 			}
 			else if (Overlay::graphicsAPI == GraphicsAPI::OpenGL)
 			{
-				if (void* wglSwapBuffers = mem::PatternScan(hModule, oglSwapBuffersPattern))
+				if (const uintptr_t xRefSwapBuffers = mem::PatternScan<uintptr_t>(hModule, opengl_swap_buffers_pattern))
 				{
-					return HooksManager::Setup<InlineHook>(wglSwapBuffers, FUNCTION(OpenGL::WglSwapBuffers));
+					const auto pOriginalPresent = GetAddressFromRef(xRefSwapBuffers);
+					SwapPointer(pOriginalPresent, FUNCTION(OpenGL::WglSwapBuffers));
+					return true;
 				}
 			}
+
+			LOG_WARNING("Couldn't find Steam Overlay's function addresses...");
 		}
 		return false;
 	}
