@@ -30,7 +30,7 @@ namespace
 		return false;
 	}
 
-	void HookPresent()
+	void HookRendering()
 	{
 		constexpr std::chrono::seconds timeout{ 10 };
 		const auto startTime = std::chrono::steady_clock::now();
@@ -79,6 +79,6 @@ extern void MainThread()
 #endif
 
 	Hooks::SetupAllHooks();
-	std::thread(HookPresent).detach();
-	screenCleaner.Init();
+	ScreenCleaner::Init();
+	std::thread(HookRendering).detach();
 }
