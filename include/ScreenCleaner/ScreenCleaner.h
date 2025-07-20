@@ -1,6 +1,5 @@
 ﻿#pragma once
-#include "TinyHook/tinyhook.h"
-
+#include <windows.h>
 
 class ScreenCleaner
 {
@@ -8,14 +7,12 @@ public:
 	bool* pDrawingEnabled = nullptr;
 	HANDLE eventPresentSkipped = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
-	TinyHook::IATHook* IAT = nullptr;
-
 	ScreenCleaner() = default;
 	explicit ScreenCleaner(bool* pDrawEnabled) : pDrawingEnabled(pDrawEnabled) {}
 
-	bool Init();
+	static bool Init();
 
-	~ScreenCleaner();
+	~ScreenCleaner() = default;
 };
 
 extern ScreenCleaner screenCleaner;
