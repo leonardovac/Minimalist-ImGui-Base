@@ -8,14 +8,14 @@ void Hook::SetupHook() const
 	this->detour = static_cast<UINT8*>(mem::AllocateMemory(this->address, PAGE_READWRITE));
 
 	/// Detouring (near)
-	if (const int64_t distance = static_cast<int64_t>(reinterpret_cast<uintptr_t>(this->detour) - reinterpret_cast<uintptr_t>(this->address) - REL_JMP_SIZE); distance >= INT32_MIN && distance <= INT32_MAX)
+	if (const intptr_t distance = static_cast<intptr_t>(reinterpret_cast<uintptr_t>(this->detour) - reinterpret_cast<uintptr_t>(this->address) - REL_JMP_SIZE); distance >= INT32_MIN && distance <= INT32_MAX)
 	{
 		size_t nWritten = 0;
 
 		// Detour Function
 		mem::Write(this->detour, this->code, this->codeLen, &nWritten);													// DETOUR CODE
 		mem::Write(this->detour + nWritten, this->originalBytes, this->len.relative, &nWritten);					// ORIGINAL CODE
-		mem::RelativeJump(this->detour + nWritten, -static_cast<int64_t>(distance + nWritten + REL_JMP_SIZE));	// jmp original
+		mem::RelativeJump(this->detour + nWritten, -static_cast<intptr_t>(distance + nWritten + REL_JMP_SIZE));	// jmp original
 
         // Original
 		mem::RelativeJump(this->address, distance);																		// jmp detour
@@ -40,7 +40,7 @@ void Hook::SetupHook() const
 		nWritten = 0;
 
 		// Original
-		mem::AbsoluteJump(this->address, &this->detour, &nWritten);											// jmp detour
+		mem::AbsoluteJump(this->address, this->detour, &nWritten);											// jmp detour
 		mem::Patch(this->address + nWritten, pop_rax, sizeof(pop_rax));						// pop rax
 		mem::Nop(this->address + ABS_JMP_SIZE, diff);
 	}
@@ -51,7 +51,7 @@ void Hook::SetupHook() const
 
 Hook::Hook(void* moduleHandle, const char* pattern, const size_t length): code(nullptr)
 {
-	this->address = mem::PatternScan(moduleHandle, pattern);
+	this->address = mem::PatternScan<std::uint8_t*>(moduleHandle, pattern);
 	if (!this->address) return;
 
 	this->bDisabled = false;
@@ -61,7 +61,7 @@ Hook::Hook(void* moduleHandle, const char* pattern, const size_t length): code(n
 
 Hook::Hook(void* moduleHandle, const char* pattern, const LengthPatched length, BYTE* code, const size_t codeLen)
 {
-	this->address = mem::PatternScan(moduleHandle, pattern);
+	this->address = mem::PatternScan<std::uint8_t*>(moduleHandle, pattern);
 	if (!this->address) return;
 
 	this->bDisabled = false;
@@ -73,7 +73,7 @@ Hook::Hook(void* moduleHandle, const char* pattern, const LengthPatched length, 
 
 Hook::Hook(void* moduleHandle, const char* pattern, BYTE* code, const size_t codeLen)
 {
-	this->address = mem::PatternScan(moduleHandle, pattern);
+	this->address = mem::PatternScan<std::uint8_t*>(moduleHandle, pattern);
 	if (!this->address) return;
 
 	this->bDisabled = false;
