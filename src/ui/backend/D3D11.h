@@ -120,22 +120,17 @@ namespace Overlay::DirectX11
 			Interface::pSwapChain = pSwapChain;
 			if (!Overlay::bInitialized)
 			{
-				if (SUCCEEDED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice))))
-				{
-					Interface::pDevice->GetImmediateContext(&Interface::pDeviceContext);
-					DXGI_SWAP_CHAIN_DESC sd;
-					if (SUCCEEDED(pSwapChain->GetDesc(&sd)))
-					{
-						hWindow = sd.OutputWindow;
-						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
-						// Setup Dear ImGui context 
-						Menu::SetupImGui();
-						// Setup Platform/Renderer backends 
-						if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
-						CreateMainRenderTargetView();
-						Overlay::bInitialized = true;
-					}
-				}
+				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice)))) return;
+				Interface::pDevice->GetImmediateContext(&Interface::pDeviceContext);
+
+				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+
+				// Setup Dear ImGui context 
+				Menu::SetupImGui();
+				// Setup Platform/Renderer backends 
+				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
+				CreateMainRenderTargetView();
+				Overlay::bInitialized = true;
 			}
 
 			if (!bEnabled)

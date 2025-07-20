@@ -29,14 +29,13 @@ namespace Overlay::OpenGL
 
 	inline BOOL WINAPI WglSwapBuffers(const HDC hdc)
 	{
-		[&hdc]
+		[]
 		{
 			if (!Overlay::bInitialized)
 			{
 				// Setup Dear ImGui context
 				Menu::SetupImGui();
 
-				const HWND hWindow = WindowFromDC(hdc);
 				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 
 				// Setup Platform/Renderer backends 

@@ -1,7 +1,6 @@
 ﻿#include <windows.h>
 #include <ScreenCleaner/ScreenCleaner.h>
 
-#include "game.h"
 #include "hooks.h"
 #include "misc/logger.h"
 #include "ui/overlay.h"
@@ -22,7 +21,7 @@ namespace
 				if (strlen(windowTitle) > 0)
 				{
 					LOG_NOTICE("Found game window: {}", windowTitle);
-					Game::hWindow = hWindow;
+					Overlay::hWindow = hWindow;
 					return true;
 				}
 			}
@@ -39,7 +38,7 @@ namespace
 
 		LOG_INFO("Searching for game window...");
 
-		while (!Game::hWindow) 
+		while (!Overlay::hWindow) 
 		{
 			const HWND foregroundWindow = GetForegroundWindow();
 			if (CheckWindow(foregroundWindow, currentProcessId)) break;

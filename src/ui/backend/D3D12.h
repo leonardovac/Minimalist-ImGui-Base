@@ -6,7 +6,6 @@
 #include <imgui_impl_dx12.h>
 #include <imgui_impl_win32.h>
 #include <windows.h>
-#include <Mem/mem.h>
 
 #include "../menu.h"
 #include "../overlay.h"
@@ -209,65 +208,63 @@ namespace Overlay::DirectX12
 			Interface::pSwapChain = pSwapChain;
 			if (!Overlay::bInitialized)
 			{
-				if (SUCCEEDED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX12::Interface::pDevice))))
+				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX12::Interface::pDevice)))) return;
+			
+				DXGI_SWAP_CHAIN_DESC descSwapChain;
+				if (FAILED(pSwapChain->GetDesc(&descSwapChain))) return;
+				
+				hWindow = descSwapChain.OutputWindow;
+				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+
+				Interface::nBuffersCounts = descSwapChain.BufferCount;
+				Interface::pFrameContext = new Interface::FrameContext[Interface::nBuffersCounts];
+
+				const D3D12_DESCRIPTOR_HEAP_DESC descBackBuffers { D3D12_DESCRIPTOR_HEAP_TYPE_RTV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 1 };
+				if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descBackBuffers, IID_PPV_ARGS(&Interface::pDescHeapBackBuffers)))) return;
+
+				const D3D12_DESCRIPTOR_HEAP_DESC descImGuiRender = { D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1};
+				if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descImGuiRender, IID_PPV_ARGS(&Interface::pDescHeapImGuiRender)))) return;
+
+				if (FAILED(Interface::pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Interface::pCommandAllocator)))) return;
+
+				if (FAILED(Interface::pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Interface::pCommandAllocator, nullptr, IID_PPV_ARGS(&Interface::pCommandList))) || FAILED(Interface::pCommandList->Close())) return;
+
+				const auto rtvDescriptorSize = Interface::pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+				D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = Interface::pDescHeapBackBuffers->GetCPUDescriptorHandleForHeapStart();
+				for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 				{
-					DXGI_SWAP_CHAIN_DESC descSwapChain;
-					if (SUCCEEDED(pSwapChain->GetDesc(&descSwapChain)))
-					{
-						hWindow = descSwapChain.OutputWindow;
-						lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
-
-						Interface::nBuffersCounts = descSwapChain.BufferCount;
-						Interface::pFrameContext = new Interface::FrameContext[Interface::nBuffersCounts];
-
-						const D3D12_DESCRIPTOR_HEAP_DESC descBackBuffers { D3D12_DESCRIPTOR_HEAP_TYPE_RTV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 1 };
-						if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descBackBuffers, IID_PPV_ARGS(&Interface::pDescHeapBackBuffers)))) return;
-
-						const D3D12_DESCRIPTOR_HEAP_DESC descImGuiRender = { D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1};
-						if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descImGuiRender, IID_PPV_ARGS(&Interface::pDescHeapImGuiRender)))) return;
-
-						if (FAILED(Interface::pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Interface::pCommandAllocator)))) return;
-
-						if (FAILED(Interface::pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Interface::pCommandAllocator, nullptr, IID_PPV_ARGS(&Interface::pCommandList))) || FAILED(Interface::pCommandList->Close())) return;
-
-						const auto rtvDescriptorSize = Interface::pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-						D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = Interface::pDescHeapBackBuffers->GetCPUDescriptorHandleForHeapStart();
-						for (UINT i = 0; i < Interface::nBuffersCounts; i++)
-						{
-							Interface::pFrameContext[i].pDescriptorHandle = rtvHandle;
-							rtvHandle.ptr += rtvDescriptorSize;
-						}
-
-						CreateMainTargetView();
-
-						// Setup Dear ImGui context
-						Menu::SetupImGui();
-						// Setup Platform backend
-						if (!ImGui_ImplWin32_Init(descSwapChain.OutputWindow)) return;
-
-						ImGui_ImplDX12_InitInfo initInfo = {};
-						initInfo.Device = Interface::pDevice;
-						initInfo.CommandQueue = Interface::pCommandQueue;
-						initInfo.NumFramesInFlight = static_cast<int>(Interface::nBuffersCounts);
-						initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-						initInfo.SrvDescriptorHeap = Interface::pDescHeapImGuiRender;
-
-						Interface::heapAllocator.Create(Interface::pDevice, Interface::pDescHeapImGuiRender);
-
-						initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* phCpuDesc, D3D12_GPU_DESCRIPTOR_HANDLE* phGpuDesc)
-						{
-							return Interface::heapAllocator.Alloc(phCpuDesc, phGpuDesc);
-						};
-
-						initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, const D3D12_CPU_DESCRIPTOR_HANDLE hCpuHeapCurrent, const D3D12_GPU_DESCRIPTOR_HANDLE hGpuHeapCurrent)
-						{
-							return Interface::heapAllocator.Free(hCpuHeapCurrent, hGpuHeapCurrent);
-						};
-						// Setup Renderer backend
-						if (!ImGui_ImplDX12_Init(&initInfo)) return;
-						Overlay::bInitialized = true;
-					}
+					Interface::pFrameContext[i].pDescriptorHandle = rtvHandle;
+					rtvHandle.ptr += rtvDescriptorSize;
 				}
+
+				CreateMainTargetView();
+
+				// Setup Dear ImGui context
+				Menu::SetupImGui();
+				// Setup Platform backend
+				if (!ImGui_ImplWin32_Init(descSwapChain.OutputWindow)) return;
+
+				ImGui_ImplDX12_InitInfo initInfo = {};
+				initInfo.Device = Interface::pDevice;
+				initInfo.CommandQueue = Interface::pCommandQueue;
+				initInfo.NumFramesInFlight = static_cast<int>(Interface::nBuffersCounts);
+				initInfo.RTVFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+				initInfo.SrvDescriptorHeap = Interface::pDescHeapImGuiRender;
+
+				Interface::heapAllocator.Create(Interface::pDevice, Interface::pDescHeapImGuiRender);
+
+				initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* phCpuDesc, D3D12_GPU_DESCRIPTOR_HANDLE* phGpuDesc)
+				{
+					return Interface::heapAllocator.Alloc(phCpuDesc, phGpuDesc);
+				};
+
+				initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo*, const D3D12_CPU_DESCRIPTOR_HANDLE hCpuHeapCurrent, const D3D12_GPU_DESCRIPTOR_HANDLE hGpuHeapCurrent)
+				{
+					return Interface::heapAllocator.Free(hCpuHeapCurrent, hGpuHeapCurrent);
+				};
+				// Setup Renderer backend
+				if (!ImGui_ImplDX12_Init(&initInfo)) return;
+				Overlay::bInitialized = true;
 			}
 
 			if (!bEnabled)
@@ -275,6 +272,7 @@ namespace Overlay::DirectX12
 				SetEvent(screenCleaner.eventPresentSkipped);
 				return;
 			}
+
 			if (!Interface::pCommandQueue) return;
 
 			ImGui_ImplDX12_NewFrame();
