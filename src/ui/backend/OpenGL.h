@@ -22,9 +22,9 @@ namespace Overlay::OpenGL
 
 	inline void Cleanup()
 	{
-		ImGui_ImplOpenGL3_Shutdown();
+		HooksManager::Unhook(&WglSwapBuffers);
+		SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(lpPrevWndFunc));
 		ImGui_ImplWin32_Shutdown();
-		ImGui::DestroyContext();
 	}
 
 	inline BOOL WINAPI WglSwapBuffers(const HDC hdc)
@@ -54,6 +54,7 @@ namespace Overlay::OpenGL
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}();
 
-		return HooksManager::GetOriginal(&WglSwapBuffers).unsafe_stdcall<BOOL>(hdc);
+		static const auto original = OriginalFunc(&WglSwapBuffers);
+		return original.stdcall<BOOL>(hdc);
 	}
 }
