@@ -32,30 +32,22 @@ void Overlay::RenderLogic()
 
 bool Overlay::TryAllPresentMethods()
 {
-	Overlay::CheckGraphicsDriver();
+	// Only if we couldn't get it from the window title
+	if (!graphicsAPI) Overlay::CheckGraphicsDriver();
 
 #if HOOK_THIRD_PARTY_OVERLAYS
 	if (Overlay::Discord::Init() || Overlay::Steam::Init())
 		return true;
 #endif
 
-	switch(Overlay::graphicsAPI)
-	{
-	case GraphicsAPI::D3D9:
-		return Overlay::DirectX9::Init();
-	case GraphicsAPI::D3D11:
-		return Overlay::DirectX11::Init();
+	// Some games (most won't) load multiple modules, so we hook all present.
+	bool anySuccess = false;
+	if (graphicsAPI & GraphicsAPI::D3D9) anySuccess = Overlay::DirectX9::Init() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::D3D11) anySuccess = Overlay::DirectX11::Init() || anySuccess;
 #ifdef _WIN64
-	case GraphicsAPI::D3D12:
-		return Overlay::DirectX12::Init();
+	if (graphicsAPI & GraphicsAPI::D3D12) anySuccess = Overlay::DirectX12::Init() || anySuccess;
 #endif
-	case GraphicsAPI::OpenGL:
-		return Overlay::OpenGL::Init();
-	case GraphicsAPI::Vulkan:
-		break;
-	default: break;
-	}
-
-	LOG_WARNING("Graphics API {} currently not implemented.", Overlay::graphicsAPI);
-	return false;
+	if (graphicsAPI & GraphicsAPI::OpenGL) anySuccess = Overlay::OpenGL::Init() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::Vulkan) LOG_WARNING("Vulkan currently not implemented.");
+	return anySuccess;
 }
