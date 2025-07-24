@@ -6,7 +6,7 @@
 #include "../misc/logger.h"
 
 #define USE_VMTHOOK_WHEN_AVAILABLE 0 // Mainly for D3D9, D3D11, and D3D12
-#define HOOK_THIRD_PARTY_OVERLAYS 0 // May use Inline hooking
+#define HOOK_THIRD_PARTY_OVERLAYS 1
 
 using Microsoft::WRL::ComPtr;
 
@@ -25,30 +25,47 @@ void SafeRelease(T*& ptr)
 
 enum GraphicsAPI : UINT8
 {
-	UNKNOWN,
-	D3D9,
-	D3D11,
-	D3D12,
-	OpenGL,
-	Vulkan
+	UNKNOWN = 0,
+	D3D9 = 1,
+	D3D11 = 2,
+	D3D12 = 4,
+	OpenGL = 8,
+	Vulkan = 16
 };
+
+inline GraphicsAPI operator|(const GraphicsAPI a, const GraphicsAPI b)
+{
+	return static_cast<GraphicsAPI>(static_cast<UINT8>(a) | static_cast<UINT8>(b));
+}
+
+inline GraphicsAPI& operator|=(GraphicsAPI& a, const GraphicsAPI b)
+{
+	a = a | b;
+	return a;
+}
 
 #if LOGGING_ENABLED
-static const char* GraphicsAPIStrings[] = 
+inline std::string GetLoadedAPIsString(const GraphicsAPI loadedModules)
 {
-	"UNKNOWN",
-	"D3D9",
-	"D3D11",
-	"D3D12",
-	"OpenGL",
-	"Vulkan"
-};
+	std::vector<std::string> modules;
 
-inline const char* GraphicsAPIToString(const GraphicsAPI api)
-{
-	if (api < std::size(GraphicsAPIStrings)) 
-		return GraphicsAPIStrings[api];
-	return "UNKNOWN";
+	if (loadedModules & D3D9) modules.emplace_back("D3D9");
+	if (loadedModules & D3D11) modules.emplace_back("D3D11");
+#ifdef _WIN64
+	if (loadedModules & D3D12) modules.emplace_back("D3D12");
+#endif
+	if (loadedModules & OpenGL) modules.emplace_back("OpenGL");
+	if (loadedModules & Vulkan) modules.emplace_back("Vulkan");
+
+	if (modules.empty()) return "UNKNOWN";
+
+	std::string result = modules.front();
+	for (size_t i = 1; i < modules.size() - 1; ++i)
+	{
+		result += ", " + modules[i];
+	}
+	if (modules.size() > 1) result += " and " + modules.back();
+	return result;
 }
 
 template<>
@@ -57,7 +74,7 @@ struct fmtquill::formatter<GraphicsAPI>
 	static constexpr auto parse(const format_parse_context& ctx) { return ctx.begin(); }
 
 	template<typename FormatContext>
-	auto format(const GraphicsAPI& api, FormatContext& ctx) const { return fmtquill::format_to(ctx.out(), "{}", GraphicsAPIToString(api)); }
+	auto format(const GraphicsAPI& api, FormatContext& ctx) const { return fmtquill::format_to(ctx.out(), "{}", GetLoadedAPIsString(api)); }
 };
 #endif
 
@@ -67,7 +84,7 @@ namespace Overlay
 	inline bool bInitialized;
 	inline bool bEnabled{true};
 
-	inline GraphicsAPI graphicsAPI;
+	inline GraphicsAPI graphicsAPI = UNKNOWN;
 	inline HWND hWindow;
 
 	inline const WNDCLASSEX wndClass{
@@ -109,15 +126,14 @@ namespace Overlay
 
 	inline void CheckGraphicsDriver()
 	{
-		if (GetModuleHandleW(L"opengl32.dll")) graphicsAPI = OpenGL;
-		else if (GetModuleHandleW(L"d3d9.dll")) graphicsAPI = D3D9;
-		else if (GetModuleHandleW(L"d3d11.dll")) graphicsAPI = D3D11;
+		if (GetModuleHandleW(L"d3d9.dll")) graphicsAPI |= D3D9;
+		if (GetModuleHandleW(L"d3d11.dll")) graphicsAPI |= D3D11;
 #ifdef _WIN64
-		else if (GetModuleHandleW(L"d3d12.dll")) graphicsAPI = D3D12;
+		if (GetModuleHandleW(L"d3d12.dll")) graphicsAPI |= D3D12;
 #endif
-		else if (GetModuleHandleW(L"vulkan-1.dll")) graphicsAPI = Vulkan;
-		else graphicsAPI = UNKNOWN;
+		if (GetModuleHandleW(L"opengl32.dll")) graphicsAPI |= OpenGL;
+		if (GetModuleHandleW(L"vulkan-1.dll")) graphicsAPI |= Vulkan;
 
-		LOG_NOTICE("Graphics API: {}", graphicsAPI);
+		LOG_NOTICE("Detected API(s): {}.", graphicsAPI);
 	}
 }

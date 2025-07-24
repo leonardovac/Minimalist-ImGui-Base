@@ -48,19 +48,20 @@ namespace Overlay::Steam
 
 	inline bool Init()
 	{
+		bool anySuccess = false;
 		if (const auto hModule = GetModuleHandleA(module_name))
 		{
 			LOG_NOTICE("Detected Steam overlay...");
-			if (Overlay::graphicsAPI == D3D9)
+			if (Overlay::graphicsAPI & D3D9)
 			{
 				if (const uintptr_t xRefDevicePresent = mem::PatternScan<uintptr_t>(hModule, d3d9_device_present_pattern))
 				{
 					const auto pOriginalPresent = GetAddressFromRef(xRefDevicePresent);
 					SwapPointer(pOriginalPresent, FUNCTION(DirectX9::Present));
-					return true;
+					anySuccess = true;
 				}
 			}
-			else if (Overlay::graphicsAPI == D3D11 || Overlay::graphicsAPI == D3D12)
+			if (Overlay::graphicsAPI & D3D11 || Overlay::graphicsAPI & D3D12)
 			{
 				if (const uintptr_t xRefPresent = mem::PatternScan<uintptr_t>(hModule, d3d_present_pattern))
 				{
@@ -68,35 +69,34 @@ namespace Overlay::Steam
 					{
 						const auto pOriginalPresent = GetAddressFromRef(xRefPresent);
 						const auto pOriginalResizeBuffers = GetAddressFromRef(xRefResizeBuffers);
-						if (Overlay::graphicsAPI == D3D11)
+						if (Overlay::graphicsAPI & D3D11)
 						{
 							SwapPointer(pOriginalPresent, FUNCTION(DirectX11::PresentHook));
 							SwapPointer(pOriginalResizeBuffers, FUNCTION(DirectX11::ResizeBuffersHook));
-							return true;
+							anySuccess = true;
 						}
 #ifdef _WIN64
-						if (Overlay::graphicsAPI == D3D12 && DirectX12::CreateFactoryAndCommandQueue())
+						if (Overlay::graphicsAPI & D3D12 && DirectX12::CreateFactoryAndCommandQueue())
 						{
 							SwapPointer(pOriginalPresent, FUNCTION(DirectX12::Present));
 							SwapPointer(pOriginalResizeBuffers, FUNCTION(DirectX12::ResizeBuffers));
-							return true;
+							anySuccess = true;
 						}
 #endif
 					}
 				}
 			}
-			else if (Overlay::graphicsAPI == GraphicsAPI::OpenGL)
+			if (Overlay::graphicsAPI & GraphicsAPI::OpenGL)
 			{
 				if (const uintptr_t xRefSwapBuffers = mem::PatternScan<uintptr_t>(hModule, opengl_swap_buffers_pattern))
 				{
 					const auto pOriginalPresent = GetAddressFromRef(xRefSwapBuffers);
 					SwapPointer(pOriginalPresent, FUNCTION(OpenGL::WglSwapBuffers));
-					return true;
+					anySuccess = true;
 				}
 			}
-
-			LOG_WARNING("Couldn't find Steam Overlay's function addresses...");
 		}
-		return false;
+		if (!anySuccess) LOG_WARNING("Couldn't find Steam Overlay's function addresses...");
+		return anySuccess;
 	}
 }
