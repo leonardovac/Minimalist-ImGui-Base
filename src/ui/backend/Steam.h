@@ -95,8 +95,8 @@ namespace Overlay::Steam
 					anySuccess = true;
 				}
 			}
+			if (!anySuccess) LOG_WARNING("Couldn't find Steam Overlay's function addresses...");
 		}
-		if (!anySuccess) LOG_WARNING("Couldn't find Steam Overlay's function addresses...");
 		return anySuccess;
 	}
 }
