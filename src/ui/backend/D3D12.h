@@ -9,7 +9,6 @@
 
 #include "../menu.h"
 #include "../overlay.h"
-#include "ScreenCleaner/ScreenCleaner.h"
 
 namespace Overlay::DirectX12
 {
@@ -181,23 +180,28 @@ namespace Overlay::DirectX12
 
 	inline void CleanupDeviceD3D()
 	{
-#if USE_VMTHOOK_WHEN_AVAILABLE 
-		commandQueueHook.reset();
-		swapChainHook.reset();
+		std::thread([]
+		{
+#if USE_VMTHOOK_WHEN_AVAILABLE
+			commandQueueHook.reset();
+			swapChainHook.reset();
 #else
-		HooksManager::Unhook(&Present);
-		HooksManager::Unhook(&ResizeBuffers);
+			HooksManager::Unhook(&Present);
+			HooksManager::Unhook(&ResizeBuffers);
 #endif
 
-		Menu::CleanupImGui();
+			DisableRendering();
 
-		ReleaseMainTargetView();
+			ImGui_ImplDX12_Shutdown();
+			Menu::CleanupImGui();
 
-		SafeRelease(Interface::pSwapChain);
-		SafeRelease(Interface::pCommandQueue);
-		SafeRelease(Interface::pDescHeapBackBuffers);
-		SafeRelease(Interface::pDescHeapImGuiRender);
-		SafeRelease(Interface::pDevice);
+			ReleaseMainTargetView();
+			SafeRelease(Interface::pSwapChain);
+			SafeRelease(Interface::pCommandQueue);
+			SafeRelease(Interface::pDescHeapBackBuffers);
+			SafeRelease(Interface::pDescHeapImGuiRender);
+			SafeRelease(Interface::pDevice);
+		}).detach();
 	}
 
 	inline HRESULT Present(IDXGISwapChain3* pSwapChain, const UINT SyncInterval, const UINT uFlags)
@@ -266,7 +270,7 @@ namespace Overlay::DirectX12
 				Overlay::bInitialized = true;
 			}
 
-			if (!bEnabled)
+			if (!Overlay::bEnabled)
 			{
 				SetEvent(screenCleaner.eventPresentSkipped);
 				return;

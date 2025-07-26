@@ -4,6 +4,7 @@
 #include <wrl/client.h>
 
 #include "../misc/logger.h"
+#include "ScreenCleaner/ScreenCleaner.h"
 
 #define USE_VMTHOOK_WHEN_AVAILABLE 0 // Mainly for D3D9, D3D11, and D3D12
 #define HOOK_THIRD_PARTY_OVERLAYS 1
@@ -135,5 +136,11 @@ namespace Overlay
 		if (GetModuleHandleW(L"vulkan-1.dll")) graphicsAPI |= Vulkan;
 
 		LOG_NOTICE("Detected API(s): {}.", graphicsAPI);
+	}
+
+	inline void DisableRendering()
+	{
+		Overlay::bEnabled = false;
+		WaitForSingleObject(screenCleaner.eventPresentSkipped, 50); // Assuming FPS is at least 20, this should wait for at least 1 frame.
 	}
 }

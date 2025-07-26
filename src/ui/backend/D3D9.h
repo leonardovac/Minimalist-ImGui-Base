@@ -7,19 +7,14 @@
 #include "../menu.h"
 #include "../overlay.h"
 #include "../../hooks.h"
-#include "ScreenCleaner/ScreenCleaner.h"
 
 namespace Overlay::DirectX9
 {
-	HRESULT Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion);
+    HRESULT Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, DWORD dwFlags);
+	HRESULT Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
 	HRESULT SwapChainPresent(IDirect3DSwapChain9* pSwapChain, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
 
     inline TinyHook::VMTHook* deviceHook;
-
-	namespace Interface
-    {
-        inline IDirect3DDevice9* pDevice;
-    }
 
     static bool Init()
 	{
@@ -45,35 +40,55 @@ namespace Overlay::DirectX9
         ComPtr<IDirect3DDevice9> pDevice;
         if (FAILED(pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_NULLREF, window.handle, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &parameters, &pDevice))) return false;
 
+        ComPtr<IDirect3DDevice9Ex> pDeviceEx;
+        const bool isD3D9Ex = SUCCEEDED(pDevice.As(&pDeviceEx));
+
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE 
         deviceHook = new HookFramework::VMTHook(pVTable);
-        deviceHook->Hook(17, &Present);
+    	deviceHook->Hook(isD3D9Ex ? 132 : 16, &Reset);
+    	deviceHook->Hook(isD3D9Ex ? 121 : 17, &Present);
 #else
-        HooksManager::Setup<InlineHook>(pVTable[17], FUNCTION(Present));
+        HooksManager::Setup<InlineHook>(pVTable[isD3D9Ex ? 132 : 16], FUNCTION(Reset));
+        HooksManager::Setup<InlineHook>(pVTable[isD3D9Ex ? 121 : 17], FUNCTION(Present));
 #endif
         return true;
     }
 
     inline void CleanupDeviceD3D()
 	{
-#if USE_VMTHOOK_WHEN_AVAILABLE 
-        deviceHook.reset();
+		std::thread([]
+		{
+#if USE_VMTHOOK_WHEN_AVAILABLE
+			deviceHook.reset();
 #else
-		HooksManager::Unhook(&Present);
+			HooksManager::Unhook(&Reset);
+			HooksManager::Unhook(&Present);
 #endif
 
-        Menu::CleanupImGui();
+			DisableRendering();
 
-		SafeRelease(Interface::pDevice);
+			ImGui_ImplDX9_Shutdown();
+			Menu::CleanupImGui();
+		}).detach();
 	}
 
-    inline HRESULT Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion)
+    inline HRESULT Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, const DWORD dwFlags)
+    {
+	    ImGui_ImplDX9_InvalidateDeviceObjects();
+
+        static const OriginalFunc originalFunction(&Reset);
+		const auto& result = originalFunction.stdcall<HRESULT>(pDevice, pPresentationParameters, dwFlags);
+    
+		ImGui_ImplDX9_CreateDeviceObjects();
+        return result;
+    }
+
+    inline HRESULT Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, const DWORD dwFlags)
     {
 	    [&pDevice]
 	    {
-	    	Interface::pDevice = pDevice;
 		    if (!Overlay::bInitialized)
 		    {
 			    // Setup Dear ImGui context
@@ -88,6 +103,8 @@ namespace Overlay::DirectX9
                 SetEvent(screenCleaner.eventPresentSkipped);
                 return;
             }
+
+            if (!ImGui::GetIO().BackendRendererUserData) return;
 
             // ImGui expects linear color space (D3DFMT_A8R8G8B8), e.g:
 	    	// https://stackoverflow.com/questions/69327444/the-data-rendered-of-imgui-within-window-get-a-lighter-color
@@ -104,6 +121,6 @@ namespace Overlay::DirectX9
             (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, oldValue);
 	    }();
 	    static const OriginalFunc originalFunction(&Present);
-	    return originalFunction.stdcall<HRESULT>(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+	    return originalFunction.stdcall<HRESULT>(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
     }
 }

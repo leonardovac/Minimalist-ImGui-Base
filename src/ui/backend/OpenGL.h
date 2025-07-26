@@ -22,8 +22,15 @@ namespace Overlay::OpenGL
 
 	inline void Cleanup()
 	{
-		HooksManager::Unhook(&WglSwapBuffers);
-		Menu::CleanupImGui();
+		std::thread([]
+		{
+			HooksManager::Unhook(&WglSwapBuffers);
+
+			DisableRendering();
+
+			ImGui_ImplOpenGL3_Shutdown();
+			Menu::CleanupImGui();
+		}).detach();
 	}
 
 	inline BOOL WINAPI WglSwapBuffers(const HDC hdc)
@@ -39,7 +46,11 @@ namespace Overlay::OpenGL
 				Overlay::bInitialized = true;
 			}
 
-			if (!Overlay::bEnabled) return;
+			if (!Overlay::bEnabled)
+			{
+				SetEvent(screenCleaner.eventPresentSkipped);
+				return;
+			}
 
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplWin32_NewFrame();

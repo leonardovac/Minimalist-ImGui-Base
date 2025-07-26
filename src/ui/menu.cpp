@@ -133,6 +133,7 @@ void Menu::CleanupImGui()
 {
 	SetWindowLongPtr(Overlay::hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(lpPrevWndFunc));
 	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void Menu::DrawMenu()

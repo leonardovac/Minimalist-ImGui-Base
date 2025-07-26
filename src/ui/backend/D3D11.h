@@ -6,7 +6,6 @@
 
 #include "../overlay.h"
 #include "../../hooks.h"
-#include "ScreenCleaner/ScreenCleaner.h"
 
 
 namespace Overlay::DirectX11
@@ -97,18 +96,25 @@ namespace Overlay::DirectX11
 
 	inline void CleanupDeviceD3D()
 	{
-#if USE_VMTHOOK_WHEN_AVAILABLE 
-		swapChainHook.reset();
+		std::thread([]
+		{
+#if USE_VMTHOOK_WHEN_AVAILABLE
+			swapChainHook.reset();
 #else
-		HooksManager::Unhook(&PresentHook);
-		HooksManager::Unhook(&ResizeBuffersHook);
+			HooksManager::Unhook(&PresentHook);
+			HooksManager::Unhook(&ResizeBuffersHook);
 #endif
 
-		Menu::CleanupImGui();
+			DisableRendering();
 
-		ReleaseRenderTargetView();
-		SafeRelease(Interface::pSwapChain);
-		SafeRelease(Interface::pDevice);
+			ImGui_ImplDX11_Shutdown();
+			Menu::CleanupImGui();
+
+			ReleaseRenderTargetView();
+			SafeRelease(Interface::pDevice);
+			SafeRelease(Interface::pDeviceContext);
+			SafeRelease(Interface::pSwapChain);
+		}).detach();
 	}
 
 	inline HRESULT PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags)
@@ -129,7 +135,7 @@ namespace Overlay::DirectX11
 				Overlay::bInitialized = true;
 			}
 
-			if (!bEnabled)
+			if (!Overlay::bEnabled)
 			{
 				SetEvent(screenCleaner.eventPresentSkipped);
 				return;
