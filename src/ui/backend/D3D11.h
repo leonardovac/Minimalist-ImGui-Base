@@ -10,8 +10,8 @@
 
 namespace Overlay::DirectX11
 {
-	HRESULT PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT uFlags);
-	HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
+	HRESULT WINAPI PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT uFlags);
+	HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 
 	inline std::unique_ptr<TinyHook::VMTHook> swapChainHook;
 
@@ -117,7 +117,7 @@ namespace Overlay::DirectX11
 		}).detach();
 	}
 
-	inline HRESULT PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags)
+	inline HRESULT WINAPI PresentHook(IDXGISwapChain* pSwapChain, const UINT SyncInterval, const UINT uFlags)
 	{
 		[&pSwapChain]
 		{
@@ -155,7 +155,7 @@ namespace Overlay::DirectX11
 		return originalFunction.stdcall<HRESULT>(pSwapChain, SyncInterval, uFlags);
 	}
 
-	inline HRESULT ResizeBuffersHook(IDXGISwapChain* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)
+	inline HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain* pSwapChain, const UINT bufferCount, const UINT width, const UINT height, const DXGI_FORMAT newFormat, const UINT swapChainFlags)
 	{
 		ReleaseRenderTargetView();
 		static const OriginalFunc originalFunction(&ResizeBuffersHook);

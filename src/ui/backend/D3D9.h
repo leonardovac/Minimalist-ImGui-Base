@@ -10,9 +10,8 @@
 
 namespace Overlay::DirectX9
 {
-    HRESULT Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, DWORD dwFlags);
-	HRESULT Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
-	HRESULT SwapChainPresent(IDirect3DSwapChain9* pSwapChain, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
+    HRESULT WINAPI Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, DWORD dwFlags);
+	HRESULT WINAPI Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
 
     inline TinyHook::VMTHook* deviceHook;
 
@@ -40,18 +39,15 @@ namespace Overlay::DirectX9
         ComPtr<IDirect3DDevice9> pDevice;
         if (FAILED(pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_NULLREF, window.handle, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &parameters, &pDevice))) return false;
 
-        ComPtr<IDirect3DDevice9Ex> pDeviceEx;
-        const bool isD3D9Ex = SUCCEEDED(pDevice.As(&pDeviceEx));
-
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE 
         deviceHook = new HookFramework::VMTHook(pVTable);
-    	deviceHook->Hook(isD3D9Ex ? 132 : 16, &Reset);
-    	deviceHook->Hook(isD3D9Ex ? 121 : 17, &Present);
+    	deviceHook->Hook(16, &Reset);
+    	deviceHook->Hook(17, &Present);
 #else
-        HooksManager::Setup<InlineHook>(pVTable[isD3D9Ex ? 132 : 16], FUNCTION(Reset));
-        HooksManager::Setup<InlineHook>(pVTable[isD3D9Ex ? 121 : 17], FUNCTION(Present));
+        HooksManager::Setup<InlineHook>(pVTable[16], FUNCTION(Reset));
+        HooksManager::Setup<InlineHook>(pVTable[17], FUNCTION(Present));
 #endif
         return true;
     }
@@ -74,7 +70,7 @@ namespace Overlay::DirectX9
 		}).detach();
 	}
 
-    inline HRESULT Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, const DWORD dwFlags)
+    inline HRESULT WINAPI Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, const DWORD dwFlags)
     {
 	    ImGui_ImplDX9_InvalidateDeviceObjects();
 
@@ -85,7 +81,7 @@ namespace Overlay::DirectX9
         return result;
     }
 
-    inline HRESULT Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, const DWORD dwFlags)
+    inline HRESULT WINAPI Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, const DWORD dwFlags)
     {
 	    [&pDevice]
 	    {
@@ -98,19 +94,19 @@ namespace Overlay::DirectX9
 			    Overlay::bInitialized = true;
 		    }
 
-		    if (!Overlay::bEnabled) 
-            {
-                SetEvent(screenCleaner.eventPresentSkipped);
-                return;
-            }
+		    if (!Overlay::bEnabled)
+		    {
+			    SetEvent(screenCleaner.eventPresentSkipped);
+			    return;
+		    }
 
-            if (!ImGui::GetIO().BackendRendererUserData) return;
+		    if (!ImGui::GetIO().BackendRendererUserData) return;
 
-            // ImGui expects linear color space (D3DFMT_A8R8G8B8), e.g:
-	    	// https://stackoverflow.com/questions/69327444/the-data-rendered-of-imgui-within-window-get-a-lighter-color
-            DWORD oldValue;
-            (void)pDevice->GetRenderState(D3DRS_SRGBWRITEENABLE, &oldValue);
-            (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, false);
+		    // ImGui expects linear color space (D3DFMT_A8R8G8B8), e.g:
+		    // https://stackoverflow.com/questions/69327444/the-data-rendered-of-imgui-within-window-get-a-lighter-color
+		    DWORD oldValue;
+		    (void)pDevice->GetRenderState(D3DRS_SRGBWRITEENABLE, &oldValue);
+		    (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, false);
 
 		    ImGui_ImplDX9_NewFrame();
 		    ImGui_ImplWin32_NewFrame();
@@ -118,7 +114,7 @@ namespace Overlay::DirectX9
 		    Overlay::RenderLogic();
 
 		    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
-            (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, oldValue);
+		    (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, oldValue);
 	    }();
 	    static const OriginalFunc originalFunction(&Present);
 	    return originalFunction.stdcall<HRESULT>(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
