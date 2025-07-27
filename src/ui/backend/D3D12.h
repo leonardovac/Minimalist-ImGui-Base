@@ -1,5 +1,6 @@
 ﻿#pragma once
-#ifdef _WIN64
+#include <WinSDKVer.h>
+#if defined(_WIN64) && (_WIN32_WINNT >= _WIN32_WINNT_WIN10) // DirectX 12 is supported on Windows 10 and later operating systems.
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <imgui.h>
