@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include <windows.h>
-#include <Mem/mem.h>
-#include <TinyHook/tinyhook.h>
 
 #include "../overlay.h"
+#include "Mem/mem.h"
+#include "TinyHook/tinyhook.h"
 
 namespace Overlay::Steam
 {

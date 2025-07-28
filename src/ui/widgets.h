@@ -1,11 +1,11 @@
 ﻿#pragma once
 #include <algorithm>
 #include <format>
-#include <imgui.h>
 #include <string>
 
-#include "../misc/fonts/font_awesome.hpp"
+#include "imgui.h"
 #include "../misc/keybinds.h"
+#include "../misc/fonts/font_awesome.hpp"
 
 namespace Utils
 {

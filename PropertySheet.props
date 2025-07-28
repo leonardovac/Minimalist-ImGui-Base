@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ImportGroup Label="PropertySheets" />
+	<PropertyGroup Label="UserMacros" />
+	<PropertyGroup>
+		<ConfigurationType>DynamicLibrary</ConfigurationType>
+		<OutDir>$(SolutionDir)build\$(Configuration)-$(Platform)\</OutDir>
+		<IntDir>output\$(Configuration)-$(Platform)\</IntDir>
+		<TargetName>version</TargetName>
+	</PropertyGroup>
+	<ItemDefinitionGroup>
+		<ClCompile>
+			<AdditionalIncludeDirectories>$(MSBuildProjectDirectory)/include/ImGui/backends;$(MSBuildProjectDirectory)/include/ImGui;$(MSBuildProjectDirectory)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+			<LanguageStandard>stdcpp23</LanguageStandard>
+			<LanguageStandard_C>stdc17</LanguageStandard_C>
+			<PreprocessorDefinitions>IMGUI_USER_CONFIG="custom_imconfig.h";VERSION_EXPORTS;_WINDOWS;_USRDLL;WIN32_LEAN_AND_MEAN;NOMINMAX;NOSERVICE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>$(SolutionDir)lib\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+			<SubSystem>Windows</SubSystem>
+		</Link>
+		<PostBuildEvent>
+			<Command>powershell.exe -c "$target = Get-ChildItem '$(TargetPath)'; $source = Get-ChildItem 'c:\windows\system32\version.dll'; $target.CreationTime = $source.CreationTime; $target.LastWriteTime = $source.LastWriteTime"</Command>
+			<Message>Copying CreationTime/LastWriteTime from original version.dll...</Message>
+		</PostBuildEvent>
+	</ItemDefinitionGroup>
+	<ItemGroup />
+</Project>

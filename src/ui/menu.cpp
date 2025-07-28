@@ -1,9 +1,9 @@
 ﻿#include "menu.h"
 
-#include <imgui.h>
-#include <imgui_impl_win32.h>
 #include <windows.h>
 
+#include "imgui.h"
+#include "imgui_impl_win32.h"
 #include "overlay.h"
 #include "widgets.h"
 #include "../game.h"
@@ -12,6 +12,7 @@
 
 void Menu::SetupImGui()
 {
+	IMGUI_CHECKVERSION();
 	lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(Overlay::hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 
 	ImGui::CreateContext();
@@ -40,9 +41,8 @@ void Menu::SetupImGui()
 
 	io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome.data(), (int)font_awesome.size(), fontSize * sizeScale, &icons_config, icon_ranges);
 
-	// Build our font atlas
-	io.FontGlobalScale = 1.0f / sizeScale;
-	io.Fonts->Build();
+	// Set the font scaling to 1.0f / sizeScale, so the font is rendered at our desired fontSize
+	style.FontScaleMain = 1.0f / sizeScale;
 
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;
@@ -109,9 +109,9 @@ void Menu::SetupImGui()
 	style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.2352941185235977f, 0.2156862765550613f, 0.5960784554481506f,1.0f);
 	style.Colors[ImGuiCol_Tab] = ImVec4(0.0470588244497776f, 0.05490196123719215f, 0.07058823853731155f, 1.0f);
 	style.Colors[ImGuiCol_TabHovered] = ImVec4(0.1176470592617989f, 0.1333333402872086f, 0.1490196138620377f, 1.0f);
-	style.Colors[ImGuiCol_TabActive] = ImVec4(0.09803921729326248f, 0.105882354080677f, 0.1215686276555061f, 1.0f);
-	style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.0470588244497776f, 0.05490196123719215f, 0.07058823853731155f,1.0f);
-	style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.0784313753247261f, 0.08627451211214066f,0.1019607856869698f, 1.0f);
+	style.Colors[ImGuiCol_TabSelected] = ImVec4(0.09803921729326248f, 0.105882354080677f, 0.1215686276555061f, 1.0f);
+	style.Colors[ImGuiCol_TabDimmed] = ImVec4(0.0470588244497776f, 0.05490196123719215f, 0.07058823853731155f,1.0f);
+	style.Colors[ImGuiCol_TabDimmedSelected] = ImVec4(0.0784313753247261f, 0.08627451211214066f,0.1019607856869698f, 1.0f);
 	style.Colors[ImGuiCol_PlotLines] = ImVec4(0.5215686559677124f, 0.6000000238418579f, 0.7019608020782471f, 1.0f);
 	style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.03921568766236305f, 0.9803921580314636f, 0.9803921580314636f,1.0f);
 	style.Colors[ImGuiCol_PlotHistogram] = ImVec4(1.0f, 0.2901960909366608f, 0.5960784554481506f, 1.0f);
@@ -123,7 +123,7 @@ void Menu::SetupImGui()
 	style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(0.09803921729326248f, 0.105882354080677f, 0.1215686276555061f,1.0f);
 	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.2352941185235977f, 0.2156862765550613f, 0.5960784554481506f,1.0f);
 	style.Colors[ImGuiCol_DragDropTarget] = ImVec4(0.4980392158031464f, 0.5137255191802979f, 1.0f, 1.0f);
-	style.Colors[ImGuiCol_NavHighlight] = ImVec4(0.4980392158031464f, 0.5137255191802979f, 1.0f, 1.0f);
+	style.Colors[ImGuiCol_NavCursor] = ImVec4(0.4980392158031464f, 0.5137255191802979f, 1.0f, 1.0f);
 	style.Colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.4980392158031464f, 0.5137255191802979f, 1.0f, 1.0f);
 	style.Colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.196078434586525f, 0.1764705926179886f, 0.5450980663299561f,0.501960813999176f);
 	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.196078434586525f, 0.1764705926179886f, 0.5450980663299561f,0.501960813999176f);
@@ -163,5 +163,5 @@ void Menu::DrawMenu()
 	}
 	ImGui::End();
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 }
