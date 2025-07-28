@@ -100,8 +100,7 @@ namespace Overlay::DirectX11
 #if USE_VMTHOOK_WHEN_AVAILABLE
 			swapChainHook.reset();
 #else
-			HooksManager::Unhook(&PresentHook);
-			HooksManager::Unhook(&ResizeBuffersHook);
+			HooksManager::Unhook(&PresentHook, &ResizeBuffersHook);
 #endif
 
 			DisableRendering();

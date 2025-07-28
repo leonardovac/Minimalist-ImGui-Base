@@ -185,8 +185,7 @@ namespace Overlay::DirectX12
 			commandQueueHook.reset();
 			swapChainHook.reset();
 #else
-			HooksManager::Unhook(&Present);
-			HooksManager::Unhook(&ResizeBuffers);
+			HooksManager::Unhook(&Present, &ResizeBuffers);
 #endif
 
 			DisableRendering();

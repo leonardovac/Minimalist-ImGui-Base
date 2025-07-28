@@ -59,8 +59,7 @@ namespace Overlay::DirectX9
 #if USE_VMTHOOK_WHEN_AVAILABLE
 			deviceHook.reset();
 #else
-			HooksManager::Unhook(&Reset);
-			HooksManager::Unhook(&Present);
+			HooksManager::Unhook(&Reset, &Present);
 #endif
 
 			DisableRendering();
