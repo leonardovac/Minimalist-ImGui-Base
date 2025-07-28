@@ -13,7 +13,7 @@ namespace Overlay::DirectX9
     HRESULT WINAPI Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, DWORD dwFlags);
 	HRESULT WINAPI Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
 
-    inline TinyHook::VMTHook* deviceHook;
+    inline std::unique_ptr<TinyHook::VMTHook> deviceHook;
 
     static bool Hook()
 	{
@@ -42,7 +42,7 @@ namespace Overlay::DirectX9
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE 
-        deviceHook = new HookFramework::VMTHook(pVTable);
+        deviceHook = std::make_unique<TinyHook::VMTHook>(pVTable);
     	deviceHook->Hook(16, &Reset);
     	deviceHook->Hook(17, &Present);
 #else

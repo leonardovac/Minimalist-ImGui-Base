@@ -105,7 +105,7 @@ namespace Overlay::DirectX12
 		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		commandQueueHook = std::make_unique<HookFramework::VMTHook>(pvCommandQueue);
+		commandQueueHook = std::make_unique<TinyHook::VMTHook>(pvCommandQueue);
 		commandQueueHook->Hook(10, &ExecuteCommandLists);
 #else
 		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
@@ -149,7 +149,7 @@ namespace Overlay::DirectX12
 		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		swapChainHook = std::make_unique<HookFramework::VMTHook>(pvSwapChain);
+		swapChainHook = std::make_unique<TinyHook::VMTHook>(pvSwapChain);
 		swapChainHook->Hook(8, &Present);
 		swapChainHook->Hook(13, &ResizeBuffers);
 #else

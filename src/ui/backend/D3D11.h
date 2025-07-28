@@ -69,7 +69,7 @@ namespace Overlay::DirectX11
 		uintptr_t** pVTable = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE 
-		swapChainHook = std::make_unique<HookFramework::VMTHook>(pVTable);
+		swapChainHook = std::make_unique<TinyHook::VMTHook>(pVTable);
 		swapChainHook->Hook(8, &PresentHook);
 		swapChainHook->Hook(13, &ResizeBuffersHook);
 #else
