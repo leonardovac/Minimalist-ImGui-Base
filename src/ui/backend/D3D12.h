@@ -159,7 +159,7 @@ namespace Overlay::DirectX12
 		return true;
 	}
 
-	static void CreateMainTargetView(IDXGISwapChain3* pSwapChain)
+	inline void CreateMainTargetView(IDXGISwapChain3* pSwapChain)
 	{
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{
@@ -170,7 +170,7 @@ namespace Overlay::DirectX12
 		}
 	}
 
-	static void ReleaseMainTargetView()
+	inline void ReleaseMainTargetView()
 	{
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{

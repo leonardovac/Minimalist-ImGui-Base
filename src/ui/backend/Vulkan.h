@@ -13,26 +13,26 @@
 
 namespace Overlay::Vulkan
 {
-	static VkResult VKAPI_CALL vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex);
-	static VkResult VKAPI_CALL vkAcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex);
-	static VkResult VKAPI_CALL vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain);
-	static VkResult VKAPI_CALL vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
+	VkResult VKAPI_CALL vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex);
+	VkResult VKAPI_CALL vkAcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex);
+	VkResult VKAPI_CALL vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain);
+	VkResult VKAPI_CALL vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
 
 	namespace Interface
 	{
-		inline VkAllocationCallbacks* pAllocator {nullptr};
+		inline const VkAllocationCallbacks* pAllocator {nullptr};
 		inline VkInstance vkInstance {VK_NULL_HANDLE};
 
 		inline VkPhysicalDevice vkPhysicalDevice {VK_NULL_HANDLE};
-		static uint32_t queueFamily {UINT32_MAX};
+		inline uint32_t queueFamily {UINT32_MAX};
 
-		static VkDevice vkDevice {nullptr};
-		static VkQueue vkQueue {nullptr};
+		inline VkDevice vkDevice {nullptr};
+		inline VkQueue vkQueue {nullptr};
 
-        static VkDescriptorPool vkDescriptorPool {VK_NULL_HANDLE};
-        static VkRenderPass vkRenderPass {VK_NULL_HANDLE};
-		static std::vector<ImGui_ImplVulkanH_Frame> vkFrames(1, {});
-		static VkExtent2D vkExtent{ 1920, 1080 }; // Initial default, will be updated before buffer creation
+		inline VkDescriptorPool vkDescriptorPool {VK_NULL_HANDLE};
+		inline VkRenderPass vkRenderPass {VK_NULL_HANDLE};
+		inline std::vector<ImGui_ImplVulkanH_Frame> vkFrames(1, {});
+		inline VkExtent2D vkExtent{ 1920, 1080 }; // Initial default, will be updated before buffer creation
 	}
 
 	inline bool Hook()
@@ -83,7 +83,7 @@ namespace Overlay::Vulkan
 		return true;
 	}
 
-	static void LoadDevice(const VkDevice device)
+	inline void LoadDevice(const VkDevice device)
 	{
 		if (Interface::vkDevice != device)
 		{
@@ -92,7 +92,7 @@ namespace Overlay::Vulkan
 		}
 	}
 
-	static void CreateRenderTarget(const VkDevice device, const VkSwapchainKHR swapchain)
+	inline void CreateRenderTarget(const VkDevice device, const VkSwapchainKHR swapchain)
 	{
 		uint32_t imageCount;
 		vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr);
@@ -211,7 +211,7 @@ namespace Overlay::Vulkan
 		}
 	}
 
-	static void CleanupRenderTarget()
+	inline void CleanupRenderTarget()
 	{
 		for (auto& vkFrame : Interface::vkFrames)
 		{
@@ -264,21 +264,21 @@ namespace Overlay::Vulkan
 			}).detach();
 	}
 
-	static VkResult VKAPI_CALL vkAcquireNextImageKHR(const VkDevice device, const VkSwapchainKHR swapchain, const uint64_t timeout, const VkSemaphore semaphore, const VkFence fence, uint32_t* pImageIndex)
+	inline VkResult VKAPI_CALL vkAcquireNextImageKHR(const VkDevice device, const VkSwapchainKHR swapchain, const uint64_t timeout, const VkSemaphore semaphore, const VkFence fence, uint32_t* pImageIndex)
 	{
 		LoadDevice(device);
 		static auto& original = HooksManager::GetOriginal(&vkAcquireNextImageKHR);
 		return original.stdcall<VkResult>(device, swapchain, timeout, semaphore, fence, pImageIndex);
 	}
 
-	static VkResult VKAPI_CALL vkAcquireNextImage2KHR(const VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex)
+	inline VkResult VKAPI_CALL vkAcquireNextImage2KHR(const VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex)
 	{
 		LoadDevice(device);
 		static auto& original = HooksManager::GetOriginal(&vkAcquireNextImage2KHR);
 		return original.stdcall<VkResult>(device, pAcquireInfo, pImageIndex);
 	}
 
-	static VkResult VKAPI_CALL vkCreateSwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
+	inline VkResult VKAPI_CALL vkCreateSwapchainKHR(const VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
 	{
 		Interface::vkExtent = pCreateInfo->imageExtent;
 
@@ -289,7 +289,7 @@ namespace Overlay::Vulkan
 		return result;
 	}
 
-	static VkResult VKAPI_CALL vkQueuePresentKHR(const VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
+	inline VkResult VKAPI_CALL vkQueuePresentKHR(const VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 	{
 		[&pPresentInfo]
 		{

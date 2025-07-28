@@ -79,7 +79,7 @@ namespace Overlay::DirectX11
 		return true;
 	}
 
-	static void CreateMainRenderTargetView(IDXGISwapChain* pSwapChain)
+	inline void CreateMainRenderTargetView(IDXGISwapChain* pSwapChain)
 	{
 		ComPtr<ID3D11Texture2D> pBackBuffer;
 		if (SUCCEEDED(pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
@@ -88,7 +88,7 @@ namespace Overlay::DirectX11
 		}
 	}
 
-	static void ReleaseRenderTargetView()
+	inline void ReleaseRenderTargetView()
 	{
 		SafeRelease(Interface::pRenderTargetView);
 	}
