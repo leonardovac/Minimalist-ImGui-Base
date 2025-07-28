@@ -15,7 +15,7 @@ namespace Overlay::DirectX9
 
     inline TinyHook::VMTHook* deviceHook;
 
-    static bool Init()
+    static bool Hook()
 	{
         // RAII wrapper to ensure window is deleted on scope exit
         const WinGuard window;

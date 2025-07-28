@@ -46,7 +46,7 @@ namespace Overlay::Steam
 	}
 #endif
 
-	inline bool Init()
+	inline bool Hook()
 	{
 		bool anySuccess = false;
 		if (const auto hModule = GetModuleHandleA(module_name))

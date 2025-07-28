@@ -119,7 +119,7 @@ namespace Overlay::DirectX12
 		ComPtr<ID3D12CommandQueue> pCommandQueue;
 		return CreateFactoryAndCommandQueue(pFactory, pCommandQueue);
 	}
-	inline bool Init()
+	inline bool Hook()
 	{
 		// RAII wrapper to ensure window is deleted on scope exit
 		const WinGuard window;

@@ -38,7 +38,7 @@ namespace Overlay::DirectX11
 		inline ID3D11RenderTargetView* pRenderTargetView = nullptr;
 	}
 
-	inline bool Init()
+	inline bool Hook()
 	{
 		// RAII wrapper to ensure window is deleted on scope exit
 		WinGuard window;

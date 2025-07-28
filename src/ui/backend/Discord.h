@@ -6,7 +6,7 @@
 
 namespace Overlay::Discord
 {
-	inline bool Init()
+	inline bool Hook()
 	{
 		if (const auto hModule = GetModuleHandleA("DiscordHook64.dll"))
 		{

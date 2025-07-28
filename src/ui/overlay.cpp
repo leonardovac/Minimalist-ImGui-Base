@@ -37,18 +37,18 @@ bool Overlay::TryAllPresentMethods()
 	if (!graphicsAPI) Overlay::CheckGraphicsDriver();
 
 #if HOOK_THIRD_PARTY_OVERLAYS
-	if (Overlay::Discord::Init() || Overlay::Steam::Init())
+	if (Overlay::Discord::Hook() || Overlay::Steam::Hook())
 		return true;
 #endif
 
 	// Some games (most won't) load multiple modules, so we hook all present.
 	bool anySuccess = false;
-	if (graphicsAPI & GraphicsAPI::D3D9) anySuccess = Overlay::DirectX9::Init() || anySuccess;
-	if (graphicsAPI & GraphicsAPI::D3D11) anySuccess = Overlay::DirectX11::Init() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::D3D9) anySuccess = Overlay::DirectX9::Hook() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::D3D11) anySuccess = Overlay::DirectX11::Hook() || anySuccess;
 #ifdef D3D12_SUPPORTED
-	if (graphicsAPI & GraphicsAPI::D3D12) anySuccess = Overlay::DirectX12::Init() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::D3D12) anySuccess = Overlay::DirectX12::Hook() || anySuccess;
 #endif
-	if (graphicsAPI & GraphicsAPI::OpenGL) anySuccess = Overlay::OpenGL::Init() || anySuccess;
-	if (graphicsAPI & GraphicsAPI::Vulkan) anySuccess = Overlay::Vulkan::Init() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::OpenGL) anySuccess = Overlay::OpenGL::Hook() || anySuccess;
+	if (graphicsAPI & GraphicsAPI::Vulkan) anySuccess = Overlay::Vulkan::Hook() || anySuccess;
 	return anySuccess;
 }

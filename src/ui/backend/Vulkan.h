@@ -35,7 +35,7 @@ namespace Overlay::Vulkan
 		static VkExtent2D vkExtent{ 1920, 1080 }; // Initial default, will be updated before buffer creation
 	}
 
-	inline bool Init()
+	inline bool Hook()
 	{
 		if (FAILED(volkInitialize())) return false;
 

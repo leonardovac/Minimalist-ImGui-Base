@@ -10,7 +10,7 @@ namespace Overlay::OpenGL
 {
 	BOOL WINAPI WglSwapBuffers(HDC hdc);
 
-	inline bool Init()
+	inline bool Hook()
 	{
 		if (const HMODULE opengl32 = GetModuleHandleW(L"opengl32.dll"))
 		{
