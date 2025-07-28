@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="include\SafetyHook\safetyhook.cpp">
-      <Filter>include\SafetyHook</Filter>
-    </ClCompile>
     <ClCompile Include="src\base.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -32,9 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="include\SafetyHook\safetyhook.hpp">
-      <Filter>include\SafetyHook</Filter>
-    </ClInclude>
     <ClInclude Include="include\Mem\hook.h">
       <Filter>include\Mem</Filter>
     </ClInclude>
@@ -117,9 +111,6 @@
     </Filter>
     <Filter Include="include">
       <UniqueIdentifier>{ee6ca8f5-a787-446e-a744-1fbff4ead29f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\SafetyHook">
-      <UniqueIdentifier>{38878c2c-ec09-4051-a252-61712216cd1d}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\Mem">
       <UniqueIdentifier>{23f98cef-f878-4114-9597-0ff5fb134495}</UniqueIdentifier>

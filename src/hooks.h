@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <shared_mutex>
 #include <variant>
-#include <SafetyHook/safetyhook.hpp>
+#include <safetyhook.hpp>
 #include <TinyHook/tinyhook.h>
 
 #include "misc/logger.h"
