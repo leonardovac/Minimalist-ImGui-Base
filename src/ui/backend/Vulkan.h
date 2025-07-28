@@ -4,8 +4,6 @@
 #include <volk.h>
 #include <windows.h>
 
-#include <algorithm>
-
 #include "imgui.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_impl_win32.h"
