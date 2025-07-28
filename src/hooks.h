@@ -208,6 +208,19 @@ namespace HooksManager
 			hooks.erase(replacement);
 		}
 	}
+
+	inline void Unhook(const std::vector<const void*>& replacements)
+	{
+		for (const auto& replacement : replacements)
+		{
+			Unhook(replacement);
+		}
+	}
+
+	template<typename... Args>
+	static void Unhook(Args... args) {
+		Unhook({ static_cast<const void*>(args)... });
+	}
 }
 
 using HookVariant = std::variant<TinyHook::OriginalFunction, std::reference_wrapper<InlineHook>>;
