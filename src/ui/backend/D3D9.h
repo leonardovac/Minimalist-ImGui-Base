@@ -12,10 +12,10 @@ namespace Overlay::DirectX9
 {
     HRESULT WINAPI Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, DWORD dwFlags);
 	HRESULT WINAPI Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
+	HRESULT WINAPI SwapChainPresent(IDirect3DSwapChain9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
+	HRESULT WINAPI EndScene(IDirect3DDevice9* pDevice);
 
-    inline std::unique_ptr<TinyHook::VMTHook> deviceHook;
-
-    static bool Hook()
+	inline bool Hook()
 	{
         // RAII wrapper to ensure window is deleted on scope exit
         const WinGuard window;
@@ -41,14 +41,8 @@ namespace Overlay::DirectX9
 
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
-#if USE_VMTHOOK_WHEN_AVAILABLE 
-        deviceHook = std::make_unique<TinyHook::VMTHook>(pVTable);
-    	deviceHook->Hook(16, &Reset);
-    	deviceHook->Hook(17, &Present);
-#else
         HooksManager::Setup<InlineHook>(pVTable[16], FUNCTION(Reset));
-        HooksManager::Setup<InlineHook>(pVTable[17], FUNCTION(Present));
-#endif
+        HooksManager::Setup<InlineHook>(pVTable[42], FUNCTION(EndScene));
         return true;
     }
 
@@ -56,11 +50,7 @@ namespace Overlay::DirectX9
 	{
 		std::thread([]
 		{
-#if USE_VMTHOOK_WHEN_AVAILABLE
-			deviceHook.reset();
-#else
 			HooksManager::Unhook(&Reset, &Present);
-#endif
 
 			DisableRendering();
 
@@ -80,42 +70,61 @@ namespace Overlay::DirectX9
         return result;
     }
 
+	inline void RenderOverlay(IDirect3DDevice9* pDevice)
+    {
+		if (!Overlay::bEnabled)
+		{
+			SetEvent(screenCleaner.eventPresentSkipped);
+			return;
+		}
+
+		if (!Overlay::bInitialized)
+		{
+			// Setup Dear ImGui context
+			Menu::SetupImGui();
+			// Setup Platform/Renderer backends 
+			if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX9_Init(pDevice)) return;
+			Overlay::bInitialized = true;
+		}
+
+		if (!ImGui::GetIO().BackendRendererUserData) return;
+
+		// ImGui expects linear color space (D3DFMT_A8R8G8B8), e.g:
+		// https://stackoverflow.com/questions/69327444/the-data-rendered-of-imgui-within-window-get-a-lighter-color
+		DWORD oldValue;
+		(void)pDevice->GetRenderState(D3DRS_SRGBWRITEENABLE, &oldValue);
+		(void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, false);
+
+		ImGui_ImplDX9_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+
+		Overlay::RenderLogic();
+
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+		(void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, oldValue);
+    }
+
+    inline HRESULT WINAPI EndScene(IDirect3DDevice9* pDevice)
+    {
+		RenderOverlay(pDevice);
+	    static const OriginalFunc originalFunction(&EndScene);
+	    return originalFunction.stdcall<HRESULT>(pDevice);
+    }
+
     inline HRESULT WINAPI Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, const DWORD dwFlags)
     {
-	    [&pDevice]
-	    {
-		    if (!Overlay::bEnabled)
-		    {
-			    SetEvent(screenCleaner.eventPresentSkipped);
-			    return;
-		    }
-
-		    if (!Overlay::bInitialized)
-		    {
-			    // Setup Dear ImGui context
-			    Menu::SetupImGui();
-			    // Setup Platform/Renderer backends 
-			    if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX9_Init(pDevice)) return;
-			    Overlay::bInitialized = true;
-		    }
-
-		    if (!ImGui::GetIO().BackendRendererUserData) return;
-
-		    // ImGui expects linear color space (D3DFMT_A8R8G8B8), e.g:
-		    // https://stackoverflow.com/questions/69327444/the-data-rendered-of-imgui-within-window-get-a-lighter-color
-		    DWORD oldValue;
-		    (void)pDevice->GetRenderState(D3DRS_SRGBWRITEENABLE, &oldValue);
-		    (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, false);
-
-		    ImGui_ImplDX9_NewFrame();
-		    ImGui_ImplWin32_NewFrame();
-
-		    Overlay::RenderLogic();
-
-		    ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
-		    (void)pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, oldValue);
-	    }();
+		RenderOverlay(pDevice);
 	    static const OriginalFunc originalFunction(&Present);
 	    return originalFunction.stdcall<HRESULT>(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
     }
+
+	inline HRESULT WINAPI SwapChainPresent(IDirect3DSwapChain9* pSwapChain, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, const DWORD dwFlags)
+	{
+		static IDirect3DDevice9* pDevice {nullptr};
+		if (pDevice) RenderOverlay(pDevice);
+		else (void)pSwapChain->GetDevice(&pDevice);
+
+		static const OriginalFunc originalFunction(&SwapChainPresent);
+		return originalFunction.stdcall<HRESULT>(pSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
+	}
 }
