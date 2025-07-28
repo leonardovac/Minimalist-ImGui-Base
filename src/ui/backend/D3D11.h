@@ -35,7 +35,6 @@ namespace Overlay::DirectX11
 
 		inline ID3D11Device* pDevice = nullptr;
 		inline ID3D11DeviceContext* pDeviceContext = nullptr;
-		inline IDXGISwapChain* pSwapChain = nullptr;
 		inline ID3D11RenderTargetView* pRenderTargetView = nullptr;
 	}
 
@@ -80,10 +79,10 @@ namespace Overlay::DirectX11
 		return true;
 	}
 
-	static void CreateMainRenderTargetView()
+	static void CreateMainRenderTargetView(IDXGISwapChain* pSwapChain)
 	{
 		ComPtr<ID3D11Texture2D> pBackBuffer;
-		if (SUCCEEDED(Interface::pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
+		if (SUCCEEDED(pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
 		{
 			(void)Interface::pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &Interface::pRenderTargetView);
 		}
@@ -113,7 +112,6 @@ namespace Overlay::DirectX11
 			ReleaseRenderTargetView();
 			SafeRelease(Interface::pDevice);
 			SafeRelease(Interface::pDeviceContext);
-			SafeRelease(Interface::pSwapChain);
 		}).detach();
 	}
 
@@ -121,7 +119,12 @@ namespace Overlay::DirectX11
 	{
 		[&pSwapChain]
 		{
-			Interface::pSwapChain = pSwapChain;
+			if (!Overlay::bEnabled)
+			{
+				SetEvent(screenCleaner.eventPresentSkipped);
+				return;
+			}
+
 			if (!Overlay::bInitialized)
 			{
 				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice)))) return;
@@ -131,14 +134,8 @@ namespace Overlay::DirectX11
 				Menu::SetupImGui();
 				// Setup Platform/Renderer backends 
 				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
-				CreateMainRenderTargetView();
+				CreateMainRenderTargetView(pSwapChain);
 				Overlay::bInitialized = true;
-			}
-
-			if (!Overlay::bEnabled)
-			{
-				SetEvent(screenCleaner.eventPresentSkipped);
-				return;
 			}
 
 			// Draw ImGui
@@ -160,7 +157,7 @@ namespace Overlay::DirectX11
 		ReleaseRenderTargetView();
 		static const OriginalFunc originalFunction(&ResizeBuffersHook);
 		const HRESULT result = originalFunction.stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
-		CreateMainRenderTargetView();
+		CreateMainRenderTargetView(pSwapChain);
 		return result;
 	}
 }

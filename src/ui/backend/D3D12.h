@@ -29,8 +29,6 @@ namespace Overlay::DirectX12
 		inline ID3D12DescriptorHeap* pDescHeapBackBuffers;
 		inline ID3D12DescriptorHeap* pDescHeapImGuiRender;
 
-		inline IDXGISwapChain3* pSwapChain;
-
 		struct HeapAllocator
 		{
 			D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapStart;
@@ -160,11 +158,11 @@ namespace Overlay::DirectX12
 		return true;
 	}
 
-	static void CreateMainTargetView()
+	static void CreateMainTargetView(IDXGISwapChain3* pSwapChain)
 	{
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{
-			if (SUCCEEDED(Interface::pSwapChain->GetBuffer(i, IID_PPV_ARGS(&Interface::pFrameContext[i].pResource))))
+			if (SUCCEEDED(pSwapChain->GetBuffer(i, IID_PPV_ARGS(&Interface::pFrameContext[i].pResource))))
 			{
 				Interface::pDevice->CreateRenderTargetView(Interface::pFrameContext[i].pResource, nullptr, Interface::pFrameContext[i].pDescriptorHandle);
 			}
@@ -197,7 +195,6 @@ namespace Overlay::DirectX12
 			Menu::CleanupImGui();
 
 			ReleaseMainTargetView();
-			SafeRelease(Interface::pSwapChain);
 			SafeRelease(Interface::pCommandQueue);
 			SafeRelease(Interface::pDescHeapBackBuffers);
 			SafeRelease(Interface::pDescHeapImGuiRender);
@@ -209,7 +206,12 @@ namespace Overlay::DirectX12
 	{
 		[&pSwapChain]
 		{
-			Interface::pSwapChain = pSwapChain;
+			if (!Overlay::bEnabled)
+			{
+				SetEvent(screenCleaner.eventPresentSkipped);
+				return;
+			}
+
 			if (!Overlay::bInitialized)
 			{
 				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX12::Interface::pDevice)))) return;
@@ -241,7 +243,7 @@ namespace Overlay::DirectX12
 					rtvHandle.ptr += rtvDescriptorSize;
 				}
 
-				CreateMainTargetView();
+				CreateMainTargetView(pSwapChain);
 
 				// Setup Dear ImGui context
 				Menu::SetupImGui();
@@ -269,12 +271,6 @@ namespace Overlay::DirectX12
 				// Setup Renderer backend
 				if (!ImGui_ImplDX12_Init(&initInfo)) return;
 				Overlay::bInitialized = true;
-			}
-
-			if (!Overlay::bEnabled)
-			{
-				SetEvent(screenCleaner.eventPresentSkipped);
-				return;
 			}
 
 			if (!Interface::pCommandQueue) return;
@@ -323,7 +319,7 @@ namespace Overlay::DirectX12
 		ReleaseMainTargetView();
 		static const OriginalFunc originalFunction(&ResizeBuffers);
 		const HRESULT result = originalFunction.stdcall<HRESULT>(pSwapChain, bufferCount, width, height, newFormat, swapChainFlags);
-		CreateMainTargetView();
+		CreateMainTargetView(pSwapChain);
 		return result;
 	}
 }

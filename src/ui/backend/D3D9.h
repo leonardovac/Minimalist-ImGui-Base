@@ -85,6 +85,12 @@ namespace Overlay::DirectX9
     {
 	    [&pDevice]
 	    {
+		    if (!Overlay::bEnabled)
+		    {
+			    SetEvent(screenCleaner.eventPresentSkipped);
+			    return;
+		    }
+
 		    if (!Overlay::bInitialized)
 		    {
 			    // Setup Dear ImGui context
@@ -92,12 +98,6 @@ namespace Overlay::DirectX9
 			    // Setup Platform/Renderer backends 
 			    if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX9_Init(pDevice)) return;
 			    Overlay::bInitialized = true;
-		    }
-
-		    if (!Overlay::bEnabled)
-		    {
-			    SetEvent(screenCleaner.eventPresentSkipped);
-			    return;
 		    }
 
 		    if (!ImGui::GetIO().BackendRendererUserData) return;
