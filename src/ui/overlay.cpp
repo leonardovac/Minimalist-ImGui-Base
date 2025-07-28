@@ -7,6 +7,7 @@
 #include "backend/Discord.h"
 #include "backend/OpenGL.h"
 #include "backend/Steam.h"
+#include "backend/Vulkan.h"
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
@@ -48,6 +49,6 @@ bool Overlay::TryAllPresentMethods()
 	if (graphicsAPI & GraphicsAPI::D3D12) anySuccess = Overlay::DirectX12::Init() || anySuccess;
 #endif
 	if (graphicsAPI & GraphicsAPI::OpenGL) anySuccess = Overlay::OpenGL::Init() || anySuccess;
-	if (graphicsAPI & GraphicsAPI::Vulkan) LOG_WARNING("Vulkan currently not implemented.");
+	if (graphicsAPI & GraphicsAPI::Vulkan) anySuccess = Overlay::Vulkan::Init() || anySuccess;
 	return anySuccess;
 }
