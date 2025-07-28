@@ -45,7 +45,7 @@ bool Overlay::TryAllPresentMethods()
 	bool anySuccess = false;
 	if (graphicsAPI & GraphicsAPI::D3D9) anySuccess = Overlay::DirectX9::Init() || anySuccess;
 	if (graphicsAPI & GraphicsAPI::D3D11) anySuccess = Overlay::DirectX11::Init() || anySuccess;
-#ifdef _WIN64
+#ifdef D3D12_SUPPORTED
 	if (graphicsAPI & GraphicsAPI::D3D12) anySuccess = Overlay::DirectX12::Init() || anySuccess;
 #endif
 	if (graphicsAPI & GraphicsAPI::OpenGL) anySuccess = Overlay::OpenGL::Init() || anySuccess;
