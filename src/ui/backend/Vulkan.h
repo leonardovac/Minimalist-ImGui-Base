@@ -83,6 +83,15 @@ namespace Overlay::Vulkan
 		return true;
 	}
 
+	static void LoadDevice(const VkDevice device)
+	{
+		if (Interface::vkDevice != device)
+		{
+			Interface::vkDevice = device;
+			volkLoadDevice(device);
+		}
+	}
+
 	static void CreateRenderTarget(const VkDevice device, const VkSwapchainKHR swapchain)
 	{
 		uint32_t imageCount;
@@ -257,14 +266,14 @@ namespace Overlay::Vulkan
 
 	static VkResult VKAPI_CALL vkAcquireNextImageKHR(const VkDevice device, const VkSwapchainKHR swapchain, const uint64_t timeout, const VkSemaphore semaphore, const VkFence fence, uint32_t* pImageIndex)
 	{
-		Interface::vkDevice = device;
+		LoadDevice(device);
 		static auto& original = HooksManager::GetOriginal(&vkAcquireNextImageKHR);
 		return original.stdcall<VkResult>(device, swapchain, timeout, semaphore, fence, pImageIndex);
 	}
 
 	static VkResult VKAPI_CALL vkAcquireNextImage2KHR(const VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex)
 	{
-		Interface::vkDevice = device;
+		LoadDevice(device);
 		static auto& original = HooksManager::GetOriginal(&vkAcquireNextImage2KHR);
 		return original.stdcall<VkResult>(device, pAcquireInfo, pImageIndex);
 	}
