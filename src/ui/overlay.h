@@ -6,8 +6,8 @@
 #include "../misc/logger.h"
 #include "ScreenCleaner/ScreenCleaner.h"
 
-#define USE_VMTHOOK_WHEN_AVAILABLE 0 // Mainly for D3D9, D3D11, and D3D12
 #define HOOK_THIRD_PARTY_OVERLAYS 1
+#define USE_VMTHOOK_WHEN_AVAILABLE 0 // For D3D11 or D3D12
 
 using Microsoft::WRL::ComPtr;
 
