@@ -160,7 +160,7 @@ namespace Overlay::DirectX12
 		return true;
 	}
 
-	inline void CreateMainTargetView()
+	static void CreateMainTargetView()
 	{
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{
@@ -171,7 +171,7 @@ namespace Overlay::DirectX12
 		}
 	}
 
-	inline void ReleaseMainTargetView()
+	static void ReleaseMainTargetView()
 	{
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{

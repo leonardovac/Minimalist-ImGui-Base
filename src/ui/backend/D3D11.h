@@ -80,7 +80,7 @@ namespace Overlay::DirectX11
 		return true;
 	}
 
-	inline void CreateMainRenderTargetView()
+	static void CreateMainRenderTargetView()
 	{
 		ComPtr<ID3D11Texture2D> pBackBuffer;
 		if (SUCCEEDED(Interface::pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
@@ -89,7 +89,7 @@ namespace Overlay::DirectX11
 		}
 	}
 
-	inline void ReleaseRenderTargetView()
+	static void ReleaseRenderTargetView()
 	{
 		SafeRelease(Interface::pRenderTargetView);
 	}
