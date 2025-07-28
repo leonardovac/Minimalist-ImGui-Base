@@ -29,8 +29,8 @@ namespace Overlay::Vulkan
 		static VkDevice vkDevice {nullptr};
 		static VkQueue vkQueue {nullptr};
 
-        static VkDescriptorPool vkDescriptorPool = VK_NULL_HANDLE;
-        static VkRenderPass vkRenderPass = VK_NULL_HANDLE;
+        static VkDescriptorPool vkDescriptorPool {VK_NULL_HANDLE};
+        static VkRenderPass vkRenderPass {VK_NULL_HANDLE};
 		static std::vector<ImGui_ImplVulkanH_Frame> vkFrames(1, {});
 		static VkExtent2D vkExtent{ 1920, 1080 }; // Initial default, will be updated before buffer creation
 	}
@@ -218,27 +218,27 @@ namespace Overlay::Vulkan
 			if (vkFrame.Fence)
 			{
 				vkDestroyFence(Interface::vkDevice, vkFrame.Fence, Interface::pAllocator);
-				vkFrame.Fence = nullptr;
+				vkFrame.Fence = VK_NULL_HANDLE;
 			}
 			if (vkFrame.CommandBuffer)
 			{
 				vkFreeCommandBuffers(Interface::vkDevice, vkFrame.CommandPool, 1, &vkFrame.CommandBuffer);
-				vkFrame.CommandBuffer = nullptr;
+				vkFrame.CommandBuffer = VK_NULL_HANDLE;
 			}
 			if (vkFrame.CommandPool)
 			{
 				vkDestroyCommandPool(Interface::vkDevice, vkFrame.CommandPool, Interface::pAllocator);
-				vkFrame.CommandPool = nullptr;
+				vkFrame.CommandPool = VK_NULL_HANDLE;
 			}
 			if (vkFrame.BackbufferView)
 			{
 				vkDestroyImageView(Interface::vkDevice, vkFrame.BackbufferView, Interface::pAllocator);
-				vkFrame.BackbufferView = nullptr;
+				vkFrame.BackbufferView = VK_NULL_HANDLE;
 			}
 			if (vkFrame.Framebuffer)
 			{
 				vkDestroyFramebuffer(Interface::vkDevice, vkFrame.Framebuffer, Interface::pAllocator);
-				vkFrame.Framebuffer = nullptr;
+				vkFrame.Framebuffer = VK_NULL_HANDLE;
 			}
 		}
 		Interface::vkFrames.clear();
