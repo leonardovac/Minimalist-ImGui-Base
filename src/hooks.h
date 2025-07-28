@@ -1,10 +1,10 @@
 ﻿#pragma once
+#include <safetyhook.hpp>
 #include <shared_mutex>
 #include <variant>
-#include <safetyhook.hpp>
-#include <TinyHook/tinyhook.h>
 
 #include "misc/logger.h"
+#include "TinyHook/tinyhook.h"
 
 using safetyhook::InlineHook;
 using safetyhook::MidHook;
