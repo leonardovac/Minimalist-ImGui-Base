@@ -4,7 +4,8 @@
 <a href="https://en.wikipedia.org/wiki/C++23"><img src="https://img.shields.io/badge/Language-C%2B%2B23-f44c7c?style=flat-square" alt="Static Badge"></a>
 <a href="https://github.com/leonardovac/Minimalistic-ImGui-Base/blob/main/LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="Static Badge"></a>
 <a href=""><img src="https://img.shields.io/github/stars/leonardovac/Minimalistic-ImGui-Base" alt="Repo stars"></a>
-
+</div>
+<div>
 <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalistic-ImGui-Base">
 <img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalistic-ImGui-Base&label=Repo.%20Visits&countColor=%23ba68c8&style=flat-square" alt="Visitors"></a>
 <a href="https://app.deepsource.com/gh/leonardovac/Minimalistic-ImGui-Base/"><img alt="DeepSource" title="DeepSource" src="https://app.deepsource.com/gh/leonardovac/Minimalistic-ImGui-Base.svg/?label=active+issues&show_trend=false&token=VEY-dCFd7Zvez753JFNRKMHy"/></a>
@@ -45,7 +46,7 @@ This is a simple project that I visit once in a while during my free time. Contr
 
 2. **Navigate to the project folder and run the setup script:**
 
-    > [!NOTICE]  
+    > ℹ️ **Note:**   
     > This script uses vcpkg to install dependencies (`x86`/`x64-windows-static`) and runs [git sparse-checkout](https://git-scm.com/docs/git-sparse-checkout) to reduce submodule size.
 
     ```bash 
