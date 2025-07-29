@@ -120,7 +120,7 @@ namespace HooksManager
 
 		if (!(flags & Duplicated) && hooks.contains(replacement))
 		{
-			LOG_ERROR("Possible unintended duplicated hook for {}.", detourName);
+			LOG_WARNING("Possible unintended duplicated hook for {}.", detourName);
 			RETURN_FAIL(false)
 		}
 
@@ -146,6 +146,12 @@ namespace HooksManager
 	bool Setup(void* original, void* replacement, const int flags = Default)
 	{
 		return Setup<HookType>(original, replacement, "Unknown", flags);
+	}
+
+	template <typename HookType, typename... Args>
+	bool Setup(const uintptr_t original, void* replacement, Args&&... args)
+	{
+		return Setup<HookType>(reinterpret_cast<void*>(original), replacement, std::forward<Args>(args)...);
 	}
 
 	template <typename HookType>
