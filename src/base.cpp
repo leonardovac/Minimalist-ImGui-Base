@@ -7,30 +7,21 @@
 
 namespace
 {
-	const char* stristr(const char* haystack, const char* needle)
+	std::string_view stristr(std::string_view haystack, const std::string_view needle)
 	{
-		if (!haystack || !needle) return nullptr;
-		if (*needle == '\0') return haystack;
+		if (needle.empty()) return haystack;
 
-		const size_t needleLen = strlen(needle);
-
-		for (const char* p = haystack; *p; ++p)
-		{
-			if (_strnicmp(p, needle, needleLen) == 0)
-			{
-				return p;
-			}
-		}
-		return nullptr;
+		const auto pos = haystack.find(needle);
+		return pos != std::string_view::npos ? haystack.substr(pos) : std::string_view{};
 	}
 
-	void ParseTitleForGraphicsAPI(const char* windowTitle)
+	void ParseTitleForGraphicsAPI(const std::string_view windowTitle)
 	{
-		if (stristr(windowTitle, "DX9")) Overlay::graphicsAPI = GraphicsAPI::D3D9;
-		else if (stristr(windowTitle, "DX11")) Overlay::graphicsAPI = GraphicsAPI::D3D11;
-		else if (stristr(windowTitle, "DX12")) Overlay::graphicsAPI = GraphicsAPI::D3D12;
-		else if (stristr(windowTitle, "OpenGL")) Overlay::graphicsAPI = GraphicsAPI::OpenGL;
-		else if (stristr(windowTitle, "Vulkan")) Overlay::graphicsAPI = GraphicsAPI::Vulkan;
+		if (stristr(windowTitle, "DX9").data()) Overlay::graphicsAPI = GraphicsAPI::D3D9;
+		else if (stristr(windowTitle, "DX11").data()) Overlay::graphicsAPI = GraphicsAPI::D3D11;
+		else if (stristr(windowTitle, "DX12").data()) Overlay::graphicsAPI = GraphicsAPI::D3D12;
+		else if (stristr(windowTitle, "OpenGL").data()) Overlay::graphicsAPI = GraphicsAPI::OpenGL;
+		else if (stristr(windowTitle, "Vulkan").data()) Overlay::graphicsAPI = GraphicsAPI::Vulkan;
 	}
 
 	bool CheckWindow(const HWND& hWindow, const DWORD& processId)
@@ -41,13 +32,11 @@ namespace
 			GetWindowThreadProcessId(hWindow, &windowProcess);
 			if (windowProcess == processId)
 			{
-				char windowTitle[256];
-				GetWindowTextA(hWindow, windowTitle, sizeof(windowTitle));
-
-				if (strlen(windowTitle) > 0)
+				std::array<char, 256> windowTitle{};
+				if (GetWindowTextA(hWindow, windowTitle.data(), windowTitle.size()))
 				{
-					LOG_NOTICE("Found game window: {}", windowTitle);
-					ParseTitleForGraphicsAPI(windowTitle); // Just in case...
+					LOG_NOTICE("Found game window: {}", windowTitle.data());
+					ParseTitleForGraphicsAPI(windowTitle.data()); // Just in case...
 					Overlay::hWindow = hWindow;
 					return true;
 				}
