@@ -15,7 +15,7 @@ namespace // Some utility functions
 
 		if (const HMODULE handle = GetModuleHandleA(moduleName))
 		{
-			moduleRegistry[moduleName] = handle;
+			return moduleRegistry[moduleName] = handle;
 		}
 		return nullptr;
 	}
