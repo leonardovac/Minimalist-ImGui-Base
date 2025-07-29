@@ -12,7 +12,7 @@
 using Microsoft::WRL::ComPtr;
 
 LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-inline WNDPROC lpPrevWndFunc;
+inline WNDPROC lpPrevWndFunc{nullptr};
 
 template<typename T>
 void SafeRelease(T*& ptr) 
@@ -82,11 +82,11 @@ struct fmtquill::formatter<GraphicsAPI>
 namespace Overlay
 {
 	/// Declarations
-	inline bool bInitialized;
+	inline bool bInitialized{false};
 	inline bool bEnabled{true};
 
-	inline GraphicsAPI graphicsAPI = UNKNOWN;
-	inline HWND hWindow;
+	inline GraphicsAPI graphicsAPI{UNKNOWN};
+	inline HWND hWindow{nullptr};
 
 	inline const WNDCLASSEX wndClass{
 		.cbSize = sizeof(WNDCLASSEX),

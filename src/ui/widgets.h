@@ -39,9 +39,9 @@ namespace ImGui
 	    const std::string labelText = std::string("##") + label;
 		const float itemSize = ImGui::CalcTextSize(visibleText.c_str()).x * 1.02f;	// increasing size, otherwise the last letter will get cropped
 
-	    if (useCheckbox && keyBind->function != nullptr)
+	    if (useCheckbox && keyBind->pFunction != nullptr)
 	    {
-		    Checkbox(visibleText.c_str(), keyBind->function);
+		    Checkbox(visibleText.c_str(), keyBind->pFunction);
 	    }
 	    else
 	    {
@@ -93,27 +93,27 @@ namespace ImGui
 	    }
 
 	    ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1);
-	    return keyBind->function != nullptr ? *(keyBind->function) : true;
+	    return keyBind->pFunction != nullptr ? *(keyBind->pFunction) : true;
     }
 
-    inline bool CustomBindKey(const char* label, bool* function, const bool useCheckbox = false)
+    inline bool CustomBindKey(const char* label, bool* pFunction, const bool useCheckbox = false)
     {
-	    if (!function) return false;
+	    if (pFunction == nullptr) return false;
 
-	    if (Keybinds::KeyBind* existingKeyBind = Keybinds::GetKeyBind(function))
+	    if (Keybinds::KeyBind* existingKeyBind = Keybinds::GetKeyBind(pFunction))
 	    {
 		    return CustomBindKeyEx(label, existingKeyBind, useCheckbox);
 	    }
 
-	    Keybinds::kbList.emplace_back(Utils::ToSnakeCase(label), function);
+	    Keybinds::kbList.emplace_back(Utils::ToSnakeCase(label), pFunction);
 	    return CustomBindKeyEx(label, &Keybinds::kbList.back(), useCheckbox);
     }
 
     inline bool CustomBindKey(const char* label, const Keybinds::KeyBind& keyBind, const bool useCheckbox = false)
     {
-	    if (!keyBind.function) return false;
+	    if (keyBind.pFunction == nullptr) return false;
 	    
-	    if (Keybinds::KeyBind* existingKeyBind = Keybinds::GetKeyBind(keyBind.function))
+	    if (Keybinds::KeyBind* existingKeyBind = Keybinds::GetKeyBind(keyBind.pFunction))
 	    {
 		    return CustomBindKeyEx(label, existingKeyBind, useCheckbox);
 	    }

@@ -79,7 +79,7 @@ namespace Keybinds
 		};
 
 		std::string		name;
-		bool*			function;
+		bool*			pFunction;
 		std::uint16_t	key = 0;
 		Type			type = TOGGLE;
 		std::uint16_t	modifiers = 0;
@@ -87,7 +87,7 @@ namespace Keybinds
 		std::string		keyName;
 		bool			isWaiting = false;
 
-		KeyBind(std::string name, bool* function, const std::uint16_t key = 0, Type	type = TOGGLE, const std::uint16_t modifiers = 0) : name(std::move(name)), function(function), key(key), type(type), modifiers(modifiers), keyName(GetKeyName(key, modifiers)) {}
+		KeyBind(std::string name, bool* function, const std::uint16_t key = 0, Type	type = TOGGLE, const std::uint16_t modifiers = 0) : name(std::move(name)), pFunction(function), key(key), type(type), modifiers(modifiers), keyName(GetKeyName(key, modifiers)) {}
 
         void ChangeType()
         {
@@ -96,7 +96,7 @@ namespace Keybinds
 
 		void Check(const std::uint16_t currentModifiers) const
 		{
-			if (!function) return;
+			if (!pFunction) return;
 
 			const std::uint16_t ownModifier = Modifiers::keys.contains(key) ? Modifiers::keys.at(key) : 0;
 			const bool isMatchingModifiers = (modifiers | ownModifier) == currentModifiers;
@@ -107,11 +107,11 @@ namespace Keybinds
 			case TOGGLE:
 				if (ImGui::IsKeyPressed(static_cast<ImGuiKey>(key), false))
 				{
-					*function = !*function;
+					*pFunction = !*pFunction;
 				}
 				break;
 			case HOLD:
-				*function = ImGui::IsKeyDown(static_cast<ImGuiKey>(key));
+				*pFunction = ImGui::IsKeyDown(static_cast<ImGuiKey>(key));
 				break;
 			}
 		}
@@ -134,7 +134,7 @@ namespace Keybinds
 	{
 		for (KeyBind& keyBind : kbList)
 		{
-			if (keyBind.function == function)
+			if (keyBind.pFunction == function)
 			{
 				return &keyBind;
 			}

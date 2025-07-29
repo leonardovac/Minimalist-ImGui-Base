@@ -14,7 +14,7 @@ LRESULT WndProc(const HWND hWnd, const UINT uMsg, const WPARAM wParam, const LPA
 {
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-	if (const ImGuiIO& io = ImGui::GetIO(); io.WantCaptureMouse || io.WantCaptureKeyboard) return true;
+	if (const ImGuiIO& io = ImGui::GetIO(); io.WantCaptureMouse || io.WantCaptureKeyboard) return 1;
 
 	return CallWindowProc(lpPrevWndFunc, hWnd, uMsg, wParam, lParam);
 }
@@ -34,7 +34,7 @@ void Overlay::RenderLogic()
 bool Overlay::TryAllPresentMethods()
 {
 	// Only if we couldn't get it from the window title
-	if (!graphicsAPI) Overlay::CheckGraphicsDriver();
+	if (graphicsAPI == UNKNOWN) Overlay::CheckGraphicsDriver();
 
 #if HOOK_THIRD_PARTY_OVERLAYS
 	if (Overlay::Discord::Hook() || Overlay::Steam::Hook())
