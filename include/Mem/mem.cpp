@@ -73,7 +73,7 @@ void* mem::AllocateMemory(const LPVOID lpAddress, const DWORD flAllocationType)
 	return nullptr;
 }
 
-void mem::AbsoluteJump(void* pSource, const void* pDestination, size_t* nWritten)
+void mem::AbsoluteJump(void* const pSource, const void* pDestination, size_t* const nWritten)
 {
 	BYTE opcodes[] = {
 		0x50,														// push rax
@@ -88,7 +88,7 @@ void mem::AbsoluteJump(void* pSource, const void* pDestination, size_t* nWritten
 	if (nWritten) *nWritten += instructionsSize;
 }
 
-void mem::RelativeJump(void* pSource, const uintptr_t ulDistance)
+void mem::RelativeJump(void* const pSource, const uintptr_t ulDistance)
 {
 	BYTE opcodes[] = {
 		0xE9, 0x00, 0x00, 0x00, 0x00 // jmp address
@@ -99,7 +99,7 @@ void mem::RelativeJump(void* pSource, const uintptr_t ulDistance)
 	Patch(pSource, opcodes, instructionsSize);
 }
 
-void mem::Patch(void* pAddress, const BYTE* pCode, const size_t nSize, size_t* nWritten)
+void mem::Patch(void* const pAddress, const BYTE* pCode, const size_t nSize, size_t* const nWritten)
 {
 	DWORD flOldProtect;
 	VirtualProtect(pAddress, nSize, PAGE_EXECUTE_READWRITE, &flOldProtect);
@@ -116,7 +116,7 @@ void mem::PatchEx(const HANDLE hProcess, void* pAddress, const BYTE* pCode, cons
 	VirtualProtectEx(hProcess, pAddress, nSize, flOldProtect, &flOldProtect);
 }
 
-void mem::Nop(void* pAddress, const size_t nSize)
+void mem::Nop(void* const pAddress, const size_t nSize)
 {
 	DWORD flOldProtect;
 	VirtualProtect(pAddress, nSize, PAGE_EXECUTE_READWRITE, &flOldProtect);
@@ -132,7 +132,7 @@ void mem::NopEx(const HANDLE hProcess, void* pAddress, const size_t nSize)
 	delete[] nopArray;
 }
 
-void mem::Write(void* pAddress, const BYTE* pData, const size_t nSize, size_t* nWritten)
+void mem::Write(void* pAddress, const BYTE* pData, const size_t nSize, size_t* const nWritten)
 {
 	memcpy(pAddress, pData, nSize);
 	if (nWritten) *nWritten += nSize;
