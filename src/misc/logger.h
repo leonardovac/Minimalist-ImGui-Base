@@ -13,8 +13,6 @@
 #include <quill/Logger.h>
 #include <quill/LogMacros.h>
 
-
-
 class ConsoleManager
 {
     static bool allocated_;

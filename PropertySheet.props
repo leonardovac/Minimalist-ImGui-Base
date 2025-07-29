@@ -13,7 +13,7 @@
 			<AdditionalIncludeDirectories>$(MSBuildProjectDirectory)/include/ImGui/backends;$(MSBuildProjectDirectory)/include/ImGui;$(MSBuildProjectDirectory)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<LanguageStandard>stdcpp23</LanguageStandard>
 			<LanguageStandard_C>stdc17</LanguageStandard_C>
-			<PreprocessorDefinitions>IMGUI_USER_CONFIG="custom_imconfig.h";VERSION_EXPORTS;_WINDOWS;_USRDLL;WIN32_LEAN_AND_MEAN;NOMINMAX;NOSERVICE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+			<PreprocessorDefinitions>IMGUI_USER_CONFIG="custom_imconfig.h";VERSION_EXPORTS;_WINDOWS;_USRDLL;WIN32_LEAN_AND_MEAN;NOMINMAX;NOSERVICE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
 		</ClCompile>
 		<Link>
 			<AdditionalLibraryDirectories>$(SolutionDir)lib\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
