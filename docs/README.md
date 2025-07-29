@@ -45,7 +45,7 @@ This is a simple project that I visit once in a while during my free time. Contr
 
 2. **Navigate to the project folder and run the setup script:**
 
-    > [!NOTICE]  
+    > ℹ️ **Note:**   
     > This script uses vcpkg to install dependencies (`x86`/`x64-windows-static`) and runs [git sparse-checkout](https://git-scm.com/docs/git-sparse-checkout) to reduce submodule size.
 
     ```bash 
