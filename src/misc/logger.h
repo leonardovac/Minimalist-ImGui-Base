@@ -8,9 +8,7 @@
 #endif
 
 #if LOGGING_ENABLED
-#define _CRT_SECURE_NO_WARNINGS
 #define QUILL_DISABLE_NON_PREFIXED_MACROS
-
 #include <quill/Backend.h>
 #include <quill/Logger.h>
 #include <quill/LogMacros.h>
