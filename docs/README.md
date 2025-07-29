@@ -3,7 +3,7 @@
 <div>
 <a href="https://en.wikipedia.org/wiki/C++23"><img src="https://img.shields.io/badge/Language-C%2B%2B23-f44c7c?style=flat-square" alt="Static Badge"></a>
 <a href="https://github.com/leonardovac/Minimalistic-ImGui-Base/blob/main/LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="Static Badge"></a>
-<a href=""><img src="https://img.shields.io/github/stars/leonardovac/Minimalistic-ImGui-Base" alt="Repo stars"></a>
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/leonardovac/Minimalistic-ImGui-Base">
 </div>
 <div>
 <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalistic-ImGui-Base">
