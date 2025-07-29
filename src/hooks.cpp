@@ -64,19 +64,19 @@ namespace Hooks
 		HookEntry(void* address, T detour, const HookType hookType) : HookEntry(address, detour, nullptr, hookType) {}
 
 		template<typename T>
-		HookEntry(T detour, const char* name, const HMODULE& module, const char* pattern, const HookType hookType) : detour(reinterpret_cast<void*>(detour)), name(name), type(hookType)
+		HookEntry(const HMODULE& module, const char* pattern, T detour, const char* name, const HookType hookType) : detour(reinterpret_cast<void*>(detour)), name(name), type(hookType)
 		{
 			if (module) address = mem::PatternScan(module, pattern);
 		}
 
 		template<typename T>
-		HookEntry(T detour, const char* name, const char* moduleName, const char* pattern, const HookType hookType) : HookEntry(detour, name, TryGetModuleHandle(moduleName), pattern, hookType) {}
+		HookEntry(const char* moduleName, const char* pattern, T detour, const char* name, const HookType hookType) : HookEntry(TryGetModuleHandle(moduleName), pattern, detour, name, hookType) {}
 
 		template<typename T>
-		HookEntry(T detour, const char* moduleName, const char* pattern, const HookType hookType) : HookEntry(detour, nullptr, moduleName, pattern, hookType) {}
+		HookEntry(const char* moduleName, const char* pattern, T detour, const HookType hookType) : HookEntry(moduleName, pattern, detour, nullptr, hookType) {}
 
 		template<typename T>
-		HookEntry(T detour, const char* pattern, const HookType hookType) : HookEntry(detour, static_cast<const char*>(nullptr), pattern, hookType) {}
+		HookEntry(const char* pattern, T detour, const HookType hookType) : HookEntry(static_cast<const char*>(nullptr), pattern, detour, hookType) {}
 	};
 
 	static inline HookEntry List[]
@@ -93,15 +93,14 @@ namespace Hooks
 			HookType::Mid
 		},
 		{
-			Detours::ExampleMidDetour,
 			"DEAD BEEF ?? BABE FACE", // Just a placeholder, will search for it in the executable module (e.g: game.exe)
+			Detours::ExampleMidDetour,
 			HookType::Mid
 		},
 		{
-
-			Detours::ExampleMidDetour,
 			"module.dll", // Name of the module to search for the pattern
 			"DEAD C0DE ?? B01D FACE", // Will search for it in the specified module
+			Detours::ExampleMidDetour,
 			HookType::Mid
 		},
 	};
