@@ -15,11 +15,11 @@ namespace mem
 	void Write(void* pAddress, const BYTE* pData, size_t nSize, size_t* nWritten = nullptr);
 
 	template<typename T = std::uint8_t*>
-	T PatternScan(void* hModule, const char* pattern);
+	T PatternScan(void* hModule, const char* pattern, bool bFastScan);
 	template<typename T = std::uint8_t*>
-	T PatternScan(void* hModule, const std::vector<const char*>& patterns);
+	T PatternScan(void* hModule, const std::vector<const char*>& patterns, bool bFastScan);
 	template<typename T = std::uint8_t*>
-	T PatternScan(PBYTE pBase, DWORD dwSize, const char* pattern);
+	T PatternScan(PBYTE pBase, DWORD dwSize, const char* pattern, bool bFastScan);
 
 	template <typename T>
 	T FindDMAAddy(const uintptr_t uAddress, const std::vector<unsigned int>& offsets)
@@ -65,19 +65,19 @@ namespace mem
 	}
 
 	template<typename T>
-	T PatternScan(void* hModule, const char* pattern)
+	T PatternScan(void* hModule, const char* pattern, const bool bFastScan = false)
 	{
 		const auto moduleBase = static_cast<std::uint8_t*>(hModule);
 		const auto ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(moduleBase + static_cast<PIMAGE_DOS_HEADER>(hModule)->e_lfanew);
-		return reinterpret_cast<T>(PatternScan(moduleBase, ntHeaders->OptionalHeader.SizeOfImage, pattern));
+		return reinterpret_cast<T>(PatternScan(moduleBase, ntHeaders->OptionalHeader.SizeOfImage, pattern, bFastScan));
 	}
 
 	template<typename T>
-	T PatternScan(void* hModule, const std::vector<const char*>& patterns)
+	T PatternScan(void* hModule, const std::vector<const char*>& patterns, const bool bFastScan = false)
 	{
 		for (const auto& pattern : patterns)
 		{
-			if (auto address = PatternScan<std::uint8_t*>(hModule, pattern))
+			if (auto address = PatternScan<std::uint8_t*>(hModule, pattern, bFastScan))
 				return reinterpret_cast<T>(address);
 		}
 		return reinterpret_cast<T>(nullptr);
@@ -88,7 +88,7 @@ namespace mem
 #define getByte(x)			(getBits((x)[0]) << 4 | getBits((x)[1]))
 
 	template<typename T>
-	T PatternScan(const PBYTE pBase, const DWORD dwSize, const char* pattern)
+	T PatternScan(const PBYTE pBase, const DWORD dwSize, const char* pattern, const bool bFastScan)
 	{
 		const size_t patternSize = strlen(pattern);
 		const auto patternBase = static_cast<PBYTE>(_alloca(patternSize));
@@ -117,7 +117,11 @@ namespace mem
 			nBytes++;
 		}
 
-		for (DWORD n = 0; n <= dwSize - nBytes; ++n)
+		// Fast scan: check only 4-byte aligned addresses.
+		const DWORD step = bFastScan ? 4 : 1;
+		const DWORD alignedStart = bFastScan ? static_cast<DWORD>((reinterpret_cast<uintptr_t>(pBase) + 3 & ~3) - reinterpret_cast<uintptr_t>(pBase)) : 0;
+
+		for (DWORD n = alignedStart; n <= dwSize - nBytes; n += step)
 		{
 			if (pBase[n] == patternBase[0] && pBase[n + nBytes - 1] == patternBase[nBytes - 1])
 			{
