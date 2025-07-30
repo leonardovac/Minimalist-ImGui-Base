@@ -61,7 +61,7 @@ namespace Hooks
 		HookEntry(void* address, T detour, const char* name, const HookType hookType) : address(address), detour(reinterpret_cast<void*>(detour)), name(name), type(hookType) {}
 
 		template<typename T>
-		HookEntry(void* address, T detour, const HookType hookType) : HookEntry(address, detour, nullptr, hookType) {}
+		HookEntry(void* address, T detour, const HookType hookType) : HookEntry(address, detour, "Unknown", hookType) {}
 
 		template<typename T>
 		HookEntry(const HMODULE& module, const char* pattern, T detour, const char* name, const HookType hookType) : detour(reinterpret_cast<void*>(detour)), name(name), type(hookType)
@@ -73,7 +73,7 @@ namespace Hooks
 		HookEntry(const char* moduleName, const char* pattern, T detour, const char* name, const HookType hookType) : HookEntry(TryGetModuleHandle(moduleName), pattern, detour, name, hookType) {}
 
 		template<typename T>
-		HookEntry(const char* moduleName, const char* pattern, T detour, const HookType hookType) : HookEntry(moduleName, pattern, detour, nullptr, hookType) {}
+		HookEntry(const char* moduleName, const char* pattern, T detour, const HookType hookType) : HookEntry(moduleName, pattern, detour, "Unknown", hookType) {}
 
 		template<typename T>
 		HookEntry(const char* pattern, T detour, const HookType hookType) : HookEntry(static_cast<const char*>(nullptr), pattern, detour, hookType) {}
