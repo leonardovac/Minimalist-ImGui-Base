@@ -11,9 +11,12 @@ namespace TinyHook
     class EATHook
     {
     public:
-        explicit EATHook(void* hModule) : moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
-        explicit EATHook(const char* moduleName) : EATHook(GetModuleHandleA(moduleName)) {}
-        explicit EATHook(const wchar_t* moduleName) : EATHook(GetModuleHandleW(moduleName)) {}
+        std::string name;
+
+        explicit EATHook(void* hModule, const std::string_view name) : name(name), moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
+        explicit EATHook(void* hModule) : EATHook(hModule, Utils::GetModuleFilename(hModule)) {}
+        explicit EATHook(const char* moduleName) : EATHook(GetModuleHandleA(moduleName), moduleName) {}
+        explicit EATHook(const wchar_t* moduleName) : EATHook(GetModuleHandleW(moduleName), Utils::ConvertToString(moduleName)) {}
 
         ~EATHook() { UnhookAll(); }
 
@@ -35,7 +38,7 @@ namespace TinyHook
             return true;
         }
 
-        std::expected<bool, Error> Unhook(const std::string_view functionName)
+        std::expected<bool, Error> Unhook(const std::string& functionName)
         {
             const auto it = mOriginalOffsets.find(functionName);
             if (it == mOriginalOffsets.end()) return std::unexpected(Error::NotHooked);
@@ -75,13 +78,13 @@ namespace TinyHook
             return mOriginalOffsets.size();
         }
 
-        [[nodiscard]] bool IsHooked(const std::string_view function) const noexcept
+        [[nodiscard]] bool IsHooked(const std::string& function) const noexcept
         {
             return mOriginalOffsets.contains(function);
         }
 
     	// Returns the original offset pointer if the function is hooked, otherwise returns an error.
-        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string_view function) const noexcept
+        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string& function) const noexcept
         {
             if (const auto it = mOriginalOffsets.find(function); it != mOriginalOffsets.end())
             {
@@ -94,7 +97,7 @@ namespace TinyHook
 
     private:
         uintptr_t moduleBase{};
-        std::unordered_map<std::string_view, std::pair<uintptr_t*, uintptr_t>> mOriginalOffsets;
+        std::unordered_map<std::string, std::pair<uintptr_t*, uintptr_t>> mOriginalOffsets;
 
         std::expected <std::pair<void*, uintptr_t*>, Error> FindEATFunction(const char* functionName)
         {

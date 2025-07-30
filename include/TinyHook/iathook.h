@@ -7,11 +7,15 @@ namespace TinyHook
     class IATHook
     {
     public:
+        std::string name;
+
         explicit IATHook() : moduleBase(reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr))) {}
-        explicit IATHook(void* hModule) : moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
-        explicit IATHook(const char* moduleName) : IATHook(GetModuleHandleA(moduleName)) {}
-        explicit IATHook(const wchar_t* moduleName) : IATHook(GetModuleHandleW(moduleName)) {}
-        ~IATHook() { UnhookAll(); }
+        explicit IATHook(void* hModule, const std::string_view name) : name(name), moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
+        explicit IATHook(void* hModule) : IATHook(hModule, Utils::GetModuleFilename(hModule)) {}
+        explicit IATHook(const char* moduleName) : IATHook(GetModuleHandleA(moduleName), moduleName) {}
+        explicit IATHook(const wchar_t* moduleName) : IATHook(GetModuleHandleW(moduleName), Utils::ConvertToString(moduleName)) {}
+
+    	~IATHook() { UnhookAll(); }
 
         std::expected<bool, Error> Hook(const char* functionName, void* newFunction)
         {
@@ -32,7 +36,7 @@ namespace TinyHook
             return true;
         }
 
-        std::expected<bool, Error> Unhook(const std::string_view functionName)
+        std::expected<bool, Error> Unhook(const std::string& functionName)
         {
             const auto it = mOriginalFunctions.find(functionName);
             if (it == mOriginalFunctions.end()) return std::unexpected(Error::NotHooked);
@@ -69,13 +73,13 @@ namespace TinyHook
             return mOriginalFunctions.size();
         }
 
-        [[nodiscard]] bool IsHooked(const std::string_view function) const noexcept
+        [[nodiscard]] bool IsHooked(const std::string& function) const noexcept
         {
             return mOriginalFunctions.contains(function);
         }
 
 		// Returns the original function pointer if the function is hooked, otherwise returns an error.
-        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string_view function) const noexcept
+        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string& function) const noexcept
         {
             if (const auto it = mOriginalFunctions.find(function); it != mOriginalFunctions.end())
             {
@@ -88,7 +92,7 @@ namespace TinyHook
 
     private:
         uintptr_t moduleBase;
-        std::unordered_map<std::string_view, std::pair<uintptr_t*, uintptr_t>> mOriginalFunctions; // name -> (original_ptr, hook_address)
+        std::unordered_map<std::string, std::pair<uintptr_t*, uintptr_t>> mOriginalFunctions; // name -> (original_ptr, hook_address)
 
         std::expected<uintptr_t*, Error> FindIATFunction(const char* functionName)
         {

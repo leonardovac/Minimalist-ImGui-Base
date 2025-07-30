@@ -7,7 +7,7 @@ namespace TinyHook
     class VMTHook
     {
     public:
-        std::string_view name;
+        std::string name;
 
         VMTHook() = default;
 

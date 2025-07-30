@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <type_traits>
 #include <expected>
+#include <filesystem>
 #include <string_view>
 
 namespace TinyHook
@@ -72,6 +73,31 @@ namespace TinyHook
             case NotHooked:         return "Not currently hooked";
             }
             return "Unknown error";
+        }
+
+        inline std::string ConvertToString(const std::wstring_view wideView)
+        {
+	        if (wideView.empty()) return {};
+
+	        const int size = WideCharToMultiByte(CP_UTF8, 0, wideView.data(), static_cast<int>(wideView.size()), nullptr, 0, nullptr, nullptr);
+	        std::string result(size, 0);
+	        WideCharToMultiByte(CP_UTF8, 0, wideView.data(), static_cast<int>(wideView.size()), result.data(), size,nullptr, nullptr);
+	        return result;
+        }
+
+        template<typename T>
+        std::string GetModuleFilename(const T hModule)
+        {
+            if (hModule)
+            {
+	            std::array<wchar_t, MAX_PATH> buffer{};
+            	if (const DWORD result = GetModuleFileNameW(static_cast<HMODULE>(hModule), buffer.data(), MAX_PATH); result == 0)
+            	{
+            		const std::filesystem::path modulePath{ buffer.data() };
+            		return modulePath.filename().string(); // Just the filename
+            	}
+            }
+            return "Unknown";
         }
     }
 
