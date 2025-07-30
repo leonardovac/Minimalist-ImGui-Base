@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "shared.h"
-#include <string>
 #include <ranges>
 
 namespace TinyHook
@@ -14,33 +13,38 @@ namespace TinyHook
         explicit IATHook(const wchar_t* moduleName) : IATHook(GetModuleHandleW(moduleName)) {}
         ~IATHook() { UnhookAll(); }
 
-        bool Hook(const char* functionName, void* newFunction)
+        std::expected<bool, Error> Hook(const char* functionName, void* newFunction)
         {
-            if (!functionName || !newFunction) return false;
+            if (!functionName) return std::unexpected(Error::FunctionNotFound);
+            if (!newFunction) return std::unexpected(Error::InvalidDetour);
+				
+            const auto found = FindIATFunction(functionName);
+            if (!found) return std::unexpected(found.error());
 
-            uintptr_t* pFunctionAddress = FindIATFunction(functionName);
-            if (!pFunctionAddress) return false;
+            const auto pOriginal = found.value();
 
-            const auto originalFunction = *pFunctionAddress;
-            if (!mOriginalFunctions.contains(functionName))
+            Manager::RegisterHook(newFunction, *pOriginal);
+
+            if (const auto result = Utils::Patch(pOriginal, newFunction); !result)
             {
-                mOriginalFunctions[functionName] = { pFunctionAddress, originalFunction };
+            	return std::unexpected(result.error());
             }
-
-            Manager::RegisterHook(newFunction, originalFunction);
-            Utils::Patch(pFunctionAddress, newFunction);
             return true;
         }
 
-        bool Unhook(const char* functionName)
+        std::expected<bool, Error> Unhook(const std::string_view functionName)
         {
             const auto it = mOriginalFunctions.find(functionName);
-            if (it == mOriginalFunctions.end()) return false;
+            if (it == mOriginalFunctions.end()) return std::unexpected(Error::NotHooked);
 
             const auto [pFunctionAddress, originalAddress] = it->second;
             const auto currentFunction = *pFunctionAddress;
 
-            Utils::Patch(pFunctionAddress, originalAddress);
+            if (const auto result = Utils::Patch(pFunctionAddress, originalAddress); !result)
+            {
+	            return std::unexpected(result.error());
+            }
+
             Manager::UnregisterHook(currentFunction);
             mOriginalFunctions.erase(it);
             return true;
@@ -53,22 +57,43 @@ namespace TinyHook
                 const auto currentFunction = *pFunctionAddress;
                 if (currentFunction != originalFunction)
                 {
-                    Utils::Patch(pFunctionAddress, originalFunction);
+                    const auto result = Utils::Patch(pFunctionAddress, originalFunction);
                     Manager::UnregisterHook(currentFunction);
                 }
             }
             mOriginalFunctions.clear();
         }
 
-        static OriginalFunction& GetOriginal(const void* hookFunction) { return Manager::GetOriginal(hookFunction); }
+        [[nodiscard]] size_t GetHookCount() const noexcept
+        {
+            return mOriginalFunctions.size();
+        }
+
+        [[nodiscard]] bool IsHooked(const std::string_view function) const noexcept
+        {
+            return mOriginalFunctions.contains(function);
+        }
+
+		// Returns the original function pointer if the function is hooked, otherwise returns an error.
+        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string_view function) const noexcept
+        {
+            if (const auto it = mOriginalFunctions.find(function); it != mOriginalFunctions.end())
+            {
+                return it->second.first;
+            }
+			return std::unexpected(Error::NotHooked);
+        }
+
+        static Original& GetOriginal(const void* hookFunction) { return Manager::GetOriginal(hookFunction); }
 
     private:
         uintptr_t moduleBase;
-        std::unordered_map<std::string, std::pair<uintptr_t*, uintptr_t>> mOriginalFunctions; // name -> (original_ptr, hook_address)
+        std::unordered_map<std::string_view, std::pair<uintptr_t*, uintptr_t>> mOriginalFunctions; // name -> (original_ptr, hook_address)
 
-        uintptr_t* FindIATFunction(const char* functionName) const
+        std::expected<uintptr_t*, Error> FindIATFunction(const char* functionName)
         {
-	        if (!moduleBase || !functionName) return nullptr;
+	        if (!moduleBase) return std::unexpected(Error::InvalidModule);
+	        if (!functionName) return  std::unexpected(Error::FunctionNotFound);
 
 	        const auto dosHeaders = reinterpret_cast<PIMAGE_DOS_HEADER>(moduleBase);
 	        const auto ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(moduleBase + dosHeaders->e_lfanew);
@@ -89,6 +114,7 @@ namespace TinyHook
 
 				        if (pImport && _stricmp(pImport->Name, functionName) == 0)
 				        {
+                            mOriginalFunctions.try_emplace(functionName, std::pair(&firstThunk->u1.Function, firstThunk->u1.Function));
 					        return reinterpret_cast<uintptr_t*>(&firstThunk->u1.Function);
 				        }
 			        }
@@ -97,7 +123,7 @@ namespace TinyHook
 		        }
 		        importDescriptor++;
 	        }
-	        return nullptr;
+	        return std::unexpected(Error::FunctionNotFound);
         }
     };
 }

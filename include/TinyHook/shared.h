@@ -1,78 +1,134 @@
 ﻿#pragma once
 #include <windows.h>
 #include <unordered_map>
+#include <type_traits>
+#include <expected>
+#include <string_view>
 
 namespace TinyHook
 {
-    // Shared utility functions
+    template<typename T>
+    concept value = std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>;
+
+    template<typename T>
+    concept pointer = std::is_pointer_v<T>;
+
+    enum class Error : std::uint8_t
+    {
+        InvalidAddress,
+        InvalidDetour,
+        InvalidModule,
+		FunctionNotFound,
+        AlreadyHooked,
+        NotHooked,
+        IndexOutOfBounds,
+        ProtectionError
+    };
+
     namespace Utils
     {
         template<typename T>
-        void Patch(void* address, T value)
+        constexpr std::expected<void, Error> Patch(void* address, T value)
         {
+            if (!address) return std::unexpected(Error::InvalidAddress);
+            
+
             DWORD oldProtection;
-            VirtualProtect(address, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtection);
+            if (!VirtualProtect(address, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtection))
+        	{
+                return std::unexpected(Error::ProtectionError);
+            }
+
             *static_cast<T*>(address) = value;
-            VirtualProtect(address, sizeof(T), oldProtection, &oldProtection);
+
+            if (!VirtualProtect(address, sizeof(T), oldProtection, &oldProtection))
+            {
+                return std::unexpected(Error::ProtectionError);
+            }
+
+            return {};
         }
 
-        template<typename T>
-        void Patch(void** address, const size_t index, T* value)
+        template<pointer T>
+        constexpr std::expected<void, Error> Patch(void** address, const size_t index, T value)
         {
-            const auto targetAddress = static_cast<void*>(&address[index]);
-            Patch(targetAddress, static_cast<void*>(value));
+            if (!address) return std::unexpected(Error::InvalidAddress);
+
+            return Patch(static_cast<void*>(&address[index]), static_cast<void*>(value));
+        }
+
+        [[nodiscard]] constexpr std::string_view GetErrorMessage(const Error error) noexcept
+        {
+            using enum Error;
+            switch (error)
+            {
+            case InvalidAddress:    return "Invalid memory address";
+            case InvalidDetour:    return "Invalid detour address";
+            case InvalidModule:   return "Module is not loaded";
+            case ProtectionError:       return "Memory protection (VirtualProtect) failed";
+            case FunctionNotFound:       return "Function not found on address table";
+            case AlreadyHooked:     return "Hook already exists";
+            case IndexOutOfBounds:     return "Index passed was bigger than table size";
+            case NotHooked:         return "Not currently hooked";
+            }
+            return "Unknown error";
         }
     }
 
-    class OriginalFunction
+    class Original
     {
     public:
-        OriginalFunction() = default;
-        explicit OriginalFunction(const void* originalPtr) : pOriginal(originalPtr) {}
-        explicit OriginalFunction(const uintptr_t originalPtr) : OriginalFunction(reinterpret_cast<void*>(originalPtr)) {}
+        constexpr Original() noexcept = default;
+
+        constexpr explicit Original(const void* originalPtr) noexcept : pOriginal(originalPtr) {}
+        constexpr explicit Original(const uintptr_t originalPtr) noexcept : Original(reinterpret_cast<const void*>(originalPtr)) {}
 
         template<typename ReturnType, typename... Args>
-        ReturnType call(Args... args) const {
+        constexpr ReturnType call(Args... args) const noexcept(noexcept(std::declval<ReturnType(*)(Args...)>()(args...)))
+        {
             return reinterpret_cast<ReturnType(*)(Args...)>(pOriginal)(args...);
         }
 
         template<typename ReturnType, typename... Args>
-        ReturnType fastcall(Args... args) const {
+        constexpr ReturnType fastcall(Args... args) const noexcept(noexcept(std::declval<ReturnType(__fastcall*)(Args...)>()(args...)))
+        {
             return reinterpret_cast<ReturnType(__fastcall*)(Args...)>(pOriginal)(args...);
         }
 
         template<typename ReturnType, typename... Args>
-        ReturnType stdcall(Args... args) const {
+        constexpr ReturnType stdcall(Args... args) const noexcept(noexcept(std::declval<ReturnType(__stdcall*)(Args...)>()(args...)))
+        {
             return reinterpret_cast<ReturnType(__stdcall*)(Args...)>(pOriginal)(args...);
         }
 
         template<typename ReturnType, typename... Args>
-        ReturnType thiscall(Args... args) const {
+        constexpr ReturnType thiscall(Args... args) const noexcept(noexcept(std::declval<ReturnType(__thiscall*)(Args...)>()(args...)))
+        {
             return reinterpret_cast<ReturnType(__thiscall*)(Args...)>(pOriginal)(args...);
         }
 
         template<typename ReturnType, typename... Args>
-        ReturnType vectorcall(Args... args) const {
+        constexpr ReturnType vectorcall(Args... args) const noexcept(noexcept(std::declval<ReturnType(__vectorcall*)(Args...)>()(args...)))
+        {
             return reinterpret_cast<ReturnType(__vectorcall*)(Args...)>(pOriginal)(args...);
         }
 
-        [[nodiscard]] bool isValid() const { return pOriginal != nullptr; }
-        [[nodiscard]] const void* ptr() const { return pOriginal; }
-        [[nodiscard]] uintptr_t ptr() { return reinterpret_cast<uintptr_t>(pOriginal); }
+        [[nodiscard]] bool isValid() const noexcept { return pOriginal != nullptr; }
+        [[nodiscard]] const void* ptr() const noexcept { return pOriginal; }
+        [[nodiscard]] uintptr_t address() const noexcept { return reinterpret_cast<uintptr_t>(pOriginal); }
 
-        explicit operator const void* () const { return ptr(); }
-        explicit operator uintptr_t () const { return reinterpret_cast<uintptr_t>(ptr()); }
-        explicit operator bool() const { return isValid(); }
+        explicit operator const void* () const noexcept { return ptr(); }
+        explicit operator uintptr_t() const noexcept { return address(); }
+        explicit operator bool() const noexcept { return isValid(); }
 
     private:
-        const void* pOriginal{ nullptr };
+        const void* pOriginal = nullptr;
     };
-
 
     class Manager
     {
     public:
-        static OriginalFunction& GetOriginal(const void* hookFunction)
+        [[nodiscard]] static Original& GetOriginal(const void* hookFunction) noexcept
         {
             if (const auto it = mHookChain.find(hookFunction); it != mHookChain.end())
             {
@@ -81,34 +137,48 @@ namespace TinyHook
             return nullMethod;
         }
 
-        static void RegisterHook(const void* hookFunction, const void* originalFunction)
+        static void RegisterHook(const void* hookFunction, const void* originalFunction) noexcept
         {
-            mHookChain[hookFunction] = OriginalFunction(originalFunction);
+            mHookChain.insert_or_assign(hookFunction, Original(originalFunction));
         }
 
-        static void RegisterHook(const void* hookFunction, const uintptr_t originalFunction)
+        static void RegisterHook(const void* hookFunction, const uintptr_t originalFunction) noexcept
         {
-            RegisterHook(hookFunction, reinterpret_cast<void*>(originalFunction));
+            RegisterHook(hookFunction, reinterpret_cast<const void*>(originalFunction));
         }
 
-        static void UnregisterHook(const void* hookFunction)
+        static bool UnregisterHook(const void* hookFunction) noexcept
         {
-            mHookChain.erase(hookFunction);
+            return mHookChain.erase(hookFunction) > 0;
         }
 
-        static void UnregisterHook(const uintptr_t hookFunction)
+        static bool UnregisterHook(const uintptr_t hookFunction) noexcept
         {
-            UnregisterHook(reinterpret_cast<void*>(hookFunction));
+            return UnregisterHook(reinterpret_cast<const void*>(hookFunction));
         }
 
-        static void ClearAll()
+        static void ClearAll() noexcept
         {
             mHookChain.clear();
         }
 
+        [[nodiscard]] static size_t GetHookCount() noexcept
+        {
+            return mHookChain.size();
+        }
+
+        [[nodiscard]] static bool IsHookRegistered(const void* hookFunction) noexcept
+        {
+            return mHookChain.contains(hookFunction);
+        }
+
+        [[nodiscard]] static bool IsHookRegistered(const uintptr_t hookFunction) noexcept
+        {
+            return IsHookRegistered(reinterpret_cast<const void*>(hookFunction));
+        }
+
     private:
-        inline static std::unordered_map<const void*, OriginalFunction> mHookChain;
-        inline static OriginalFunction nullMethod;
+        inline static std::unordered_map<const void*, Original> mHookChain;
+        inline static Original nullMethod;
     };
 }
-

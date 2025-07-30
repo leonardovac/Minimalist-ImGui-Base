@@ -1,6 +1,8 @@
 ﻿#pragma once
+#include <format>
 #include <safetyhook.hpp>
 #include <shared_mutex>
+#include <string_view>
 #include <variant>
 
 #include "misc/logger.h"
@@ -93,7 +95,7 @@ namespace HooksManager
 
 #define RETURN_FAIL(...) { fails++; return __VA_ARGS__; }
 
-	inline const char* ParseError(const uint8_t& type)
+	inline constexpr std::string_view ParseError(const uint8_t& type)
 	{
 		switch (type)
 		{
@@ -104,13 +106,12 @@ namespace HooksManager
 		case InlineHook::Error::UNSUPPORTED_INSTRUCTION_IN_TRAMPOLINE: return "UNSUPPORTED INSTRUCTION IN TRAMPOLINE";
 		case InlineHook::Error::FAILED_TO_UNPROTECT: return "FAILED TO UNPROTECT";
 		case InlineHook::Error::NOT_ENOUGH_SPACE: return "NOT ENOUGH SPACE";
-		default:;
+		default: return "UNKNOWN ERROR";
 		}
-		return {};
 	}
 
 	template <typename HookType>
-	bool Setup(void* original, void* replacement, const char* detourName, int flags = Default)
+	bool Setup(void* original, void* replacement, std::string_view detourName, int flags = Default)
 	{
 		if (!original)
 		{
@@ -128,16 +129,16 @@ namespace HooksManager
 
 		// Locks until out of scope
 		std::unique_lock lock(hooking);
-		hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(original, replacement, flags));
 
-		if (const uint8_t error = hooks[replacement].back()->getError())
+		auto& hook = hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(original, replacement, flags));
+		if (const uint8_t error = hook->getError())
 		{
 			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}", reinterpret_cast<uintptr_t>(original), detourName, ParseError(error));
 			hooks.erase(replacement);
 			RETURN_FAIL(false)
 		}
 
-		const char* hookType = std::is_same_v<HookType, InlineHook> ? "Inline" : "Mid";
+		constexpr std::string_view hookType = std::is_same_v<HookType, InlineHook> ? "Inline" : "Mid";
 		LOG_INFO("{}Hook placed at 0x{:X} -> {} (0x{:X})", hookType, reinterpret_cast<uintptr_t>(original), detourName, reinterpret_cast<uintptr_t>(replacement));
 		return true;
 	}
@@ -223,13 +224,14 @@ namespace HooksManager
 		}
 	}
 
-	template<typename... Args>
-	static void Unhook(Args... args) {
+	template <typename... Args>
+	static void Unhook(Args... args)
+	{
 		Unhook({ static_cast<const void*>(args)... });
 	}
 }
 
-using HookVariant = std::variant<TinyHook::OriginalFunction, std::reference_wrapper<InlineHook>>;
+using HookVariant = std::variant<TinyHook::Original, std::reference_wrapper<InlineHook>>;
 
 class OriginalFunc
 {
@@ -249,7 +251,7 @@ public:
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::OriginalFunction>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::Original>)
 			{
 				return hook.template call<ReturnType>(args...);
 			}
@@ -262,7 +264,7 @@ public:
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::OriginalFunction>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::Original>)
 			{
 				return hook.template stdcall<ReturnType>(args...);
 			}
@@ -275,7 +277,7 @@ public:
 	{
 		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
 		{
-			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::OriginalFunction>)
+			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::Original>)
 			{
 				return hook.template thiscall<ReturnType>(args...);
 			}
