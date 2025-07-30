@@ -12,6 +12,7 @@
 #include <quill/Backend.h>
 #include <quill/Logger.h>
 #include <quill/LogMacros.h>
+#include <quill/std/WideString.h>
 
 class ConsoleManager
 {
