@@ -10,8 +10,12 @@ namespace TinyHook
         std::string name;
 
         explicit IATHook() : moduleBase(reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr))) {}
-        explicit IATHook(void* hModule, const std::string_view name) : name(name), moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
-        explicit IATHook(void* hModule) : IATHook(hModule, Utils::GetModuleFilename(hModule)) {}
+
+        template<address T>
+        explicit IATHook(T hModule, const std::string_view name) : name(name), moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
+        template<address T>
+        explicit IATHook(T hModule) : IATHook(hModule, Utils::GetModuleFilename(reinterpret_cast<void*>(hModule))) {}
+   
         explicit IATHook(const char* moduleName) : IATHook(GetModuleHandleA(moduleName), moduleName) {}
         explicit IATHook(const wchar_t* moduleName) : IATHook(GetModuleHandleW(moduleName), Utils::ConvertToString(moduleName)) {}
 
@@ -36,9 +40,10 @@ namespace TinyHook
             return true;
         }
 
-        std::expected<bool, Error> Unhook(const std::string& functionName)
+        std::expected<bool, Error> Unhook(const std::string_view functionName)
         {
-            const auto it = mOriginalFunctions.find(functionName);
+            // Convert to string only for map lookup
+            const auto it = mOriginalFunctions.find(std::string{ functionName });
             if (it == mOriginalFunctions.end()) return std::unexpected(Error::NotHooked);
 
             const auto [pFunctionAddress, originalAddress] = it->second;
@@ -46,7 +51,7 @@ namespace TinyHook
 
             if (const auto result = Utils::Patch(pFunctionAddress, originalAddress); !result)
             {
-	            return std::unexpected(result.error());
+                return std::unexpected(result.error());
             }
 
             Manager::UnregisterHook(currentFunction);
@@ -73,26 +78,26 @@ namespace TinyHook
             return mOriginalFunctions.size();
         }
 
-        [[nodiscard]] bool IsHooked(const std::string& function) const noexcept
+        [[nodiscard]] bool IsHooked(const std::string_view function) const noexcept
         {
-            return mOriginalFunctions.contains(function);
+            return mOriginalFunctions.contains(std::string{ function });
         }
 
-		// Returns the original function pointer if the function is hooked, otherwise returns an error.
-        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string& function) const noexcept
+        // Returns a pointer to the original address if the function is hooked, otherwise returns an error.
+        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string_view function) const noexcept
         {
-            if (const auto it = mOriginalFunctions.find(function); it != mOriginalFunctions.end())
+            if (const auto it = mOriginalFunctions.find(std::string{ function }); it != mOriginalFunctions.end())
             {
                 return it->second.first;
             }
-			return std::unexpected(Error::NotHooked);
+            return std::unexpected(Error::NotHooked);
         }
 
         static Original& GetOriginal(const void* hookFunction) { return Manager::GetOriginal(hookFunction); }
 
     private:
         uintptr_t moduleBase;
-        std::unordered_map<std::string, std::pair<uintptr_t*, uintptr_t>> mOriginalFunctions; // name -> (original_ptr, hook_address)
+        std::unordered_map<std::string, std::pair<uintptr_t*, uintptr_t>> mOriginalFunctions; // name -> (pFunction, functionAddress)
 
         std::expected<uintptr_t*, Error> FindIATFunction(const char* functionName)
         {
@@ -118,8 +123,9 @@ namespace TinyHook
 
 				        if (pImport && _stricmp(pImport->Name, functionName) == 0)
 				        {
-                            mOriginalFunctions.try_emplace(functionName, std::pair(&firstThunk->u1.Function, firstThunk->u1.Function));
-					        return reinterpret_cast<uintptr_t*>(&firstThunk->u1.Function);
+                            const auto pFunction = reinterpret_cast<uintptr_t*>(&firstThunk->u1.Function);
+                            mOriginalFunctions.try_emplace(functionName, std::pair(pFunction, *pFunction));
+					        return pFunction;
 				        }
 			        }
 			        ++originalFirstThunk;

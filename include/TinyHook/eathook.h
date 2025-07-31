@@ -13,8 +13,11 @@ namespace TinyHook
     public:
         std::string name;
 
-        explicit EATHook(void* hModule, const std::string_view name) : name(name), moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
-        explicit EATHook(void* hModule) : EATHook(hModule, Utils::GetModuleFilename(hModule)) {}
+        template<address T>
+        explicit EATHook(T hModule, const std::string_view name) : name(name), moduleBase(reinterpret_cast<uintptr_t>(hModule)) {}
+        template<address T>
+        explicit EATHook(T hModule) : EATHook(hModule, Utils::GetModuleFilename(reinterpret_cast<void*>(hModule))) {}
+
         explicit EATHook(const char* moduleName) : EATHook(GetModuleHandleA(moduleName), moduleName) {}
         explicit EATHook(const wchar_t* moduleName) : EATHook(GetModuleHandleW(moduleName), Utils::ConvertToString(moduleName)) {}
 
@@ -38,9 +41,9 @@ namespace TinyHook
             return true;
         }
 
-        std::expected<bool, Error> Unhook(const std::string& functionName)
+        std::expected<bool, Error> Unhook(const std::string_view functionName)
         {
-            const auto it = mOriginalOffsets.find(functionName);
+            const auto it = mOriginalOffsets.find(std::string{ functionName });
             if (it == mOriginalOffsets.end()) return std::unexpected(Error::NotHooked);
 
             const auto [pRelativeOffset, originalValue] = it->second;
@@ -78,15 +81,15 @@ namespace TinyHook
             return mOriginalOffsets.size();
         }
 
-        [[nodiscard]] bool IsHooked(const std::string& function) const noexcept
+        [[nodiscard]] bool IsHooked(const std::string_view function) const noexcept
         {
-            return mOriginalOffsets.contains(function);
+            return mOriginalOffsets.contains(std::string{ function });
         }
 
-    	// Returns the original offset pointer if the function is hooked, otherwise returns an error.
-        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string& function) const noexcept
+        // Returns a pointer to the original offset if the function is hooked, otherwise returns an error.
+        [[nodiscard]] std::expected<uintptr_t*, Error> GetOriginal(const std::string_view function) const noexcept
         {
-            if (const auto it = mOriginalOffsets.find(function); it != mOriginalOffsets.end())
+            if (const auto it = mOriginalOffsets.find(std::string{ function }); it != mOriginalOffsets.end())
             {
                 return it->second.first;
             }

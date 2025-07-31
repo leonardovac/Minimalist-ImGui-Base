@@ -14,6 +14,9 @@ namespace TinyHook
     template<typename T>
     concept pointer = std::is_pointer_v<T>;
 
+    template<typename T>
+    concept address = std::is_same_v<T, void*> || std::is_same_v<T, HMODULE> || std::is_same_v<T, uintptr_t>;
+
     enum class Error : std::uint8_t
     {
         InvalidAddress,
@@ -91,11 +94,12 @@ namespace TinyHook
             if (hModule)
             {
 	            std::array<wchar_t, MAX_PATH> buffer{};
-            	if (const DWORD result = GetModuleFileNameW(static_cast<HMODULE>(hModule), buffer.data(), MAX_PATH); result == 0)
-            	{
-            		const std::filesystem::path modulePath{ buffer.data() };
-            		return modulePath.filename().string(); // Just the filename
-            	}
+
+	            if (const DWORD result = GetModuleFileNameW(static_cast<HMODULE>(hModule), buffer.data(), MAX_PATH); result != 0 && result < MAX_PATH)
+                {
+                    const std::filesystem::path modulePath{ buffer.data() };
+                    return modulePath.filename().string();
+                }
             }
             return "Unknown";
         }

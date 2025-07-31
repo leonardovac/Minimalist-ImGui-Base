@@ -14,19 +14,25 @@ namespace TinyHook
 	template<typename T>
 	concept vmt_hook = std::is_same_v<T, VMTHook>;
 
-	template <at_hook Type, typename T>
-	[[nodiscard]] std::unique_ptr<Type> Setup(void* module, std::string_view name = {})
+	template <at_hook HookType, address T>
+	[[nodiscard]] std::unique_ptr<HookType> Setup(T module, std::string_view name = {})
 	{
-		return std::make_unique<Type>(module, name);
+		return std::make_unique<HookType>(module, name);
 	}
 
-	template <at_hook Type, typename T>
+	template <at_hook HookType, address T>
+	[[nodiscard]] std::unique_ptr<HookType> Setup(T module)
+	{
+		return std::make_unique<HookType>(module);
+	}
+
+	template <at_hook Type>
 	[[nodiscard]] std::unique_ptr<Type> Setup(const char* moduleName)
 	{
 		return std::make_unique<Type>(moduleName);
 	}
 
-	template <at_hook Type, typename T>
+	template <at_hook Type>
 	[[nodiscard]] std::unique_ptr<Type> Setup(const wchar_t* moduleName)
 	{
 		return std::make_unique<Type>(moduleName);
