@@ -9,13 +9,13 @@
 namespace TinyHook
 {
 	template<typename T>
+	concept void_convertible = requires(T t) { static_cast<const void*>(t); };
+
+	template<typename T>
 	concept value = std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>;
 
 	template<typename T>
-	concept pointer = std::is_pointer_v<T>;
-
-	template<typename T>
-	concept address = std::is_same_v<T, void*> || std::is_same_v<T, uintptr_t>  || std::is_same_v<T, DWORD> || std::is_same_v<T, HMODULE> || std::is_same_v<T, FARPROC>;
+	concept address = void_convertible || std::is_same_v<T, void*> || std::is_same_v<T, uintptr_t>  || std::is_same_v<T, DWORD> || std::is_same_v<T, HMODULE>;
 
 	enum class Error : std::uint8_t
 	{
@@ -31,21 +31,21 @@ namespace TinyHook
 
 	namespace Utils
 	{
-		template<typename T>
-		constexpr std::expected<void, Error> Patch(void* address, T value)
+		template<address T>
+		constexpr std::expected<void, Error> Patch(void* pAddress, T value)
 		{
-			if (!address) return std::unexpected(Error::InvalidAddress);
+			if (!pAddress) return std::unexpected(Error::InvalidAddress);
             
 
 			DWORD oldProtection;
-			if (!VirtualProtect(address, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtection))
+			if (!VirtualProtect(pAddress, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtection))
 			{
 				return std::unexpected(Error::ProtectionError);
 			}
 
-			*static_cast<T*>(address) = value;
+			*static_cast<T*>(pAddress) = value;
 
-			if (!VirtualProtect(address, sizeof(T), oldProtection, &oldProtection))
+			if (!VirtualProtect(pAddress, sizeof(T), oldProtection, &oldProtection))
 			{
 				return std::unexpected(Error::ProtectionError);
 			}
@@ -53,12 +53,12 @@ namespace TinyHook
 			return {};
 		}
 
-		template<pointer T>
-		constexpr std::expected<void, Error> Patch(void** address, const size_t index, T value)
+		template<address T>
+		constexpr std::expected<void, Error> Patch(void** ppAddress, const size_t index, T value)
 		{
-			if (!address) return std::unexpected(Error::InvalidAddress);
+			if (!ppAddress) return std::unexpected(Error::InvalidAddress);
 
-			return Patch(static_cast<void*>(&address[index]), static_cast<void*>(value));
+			return Patch(static_cast<void*>(&ppAddress[index]), static_cast<void*>(value));
 		}
 
 		[[nodiscard]] constexpr std::string_view GetErrorMessage(const Error error) noexcept
