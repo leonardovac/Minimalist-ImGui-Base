@@ -83,7 +83,7 @@ namespace Hooks
 	{
 		{
 			MessageBoxA, // Address of the original function
-			FUNCTION(Detours::ExampleInlineDetour), // Macro for getting the address of the detour function and its name
+			PTR_AND_NAME(Detours::ExampleInlineDetour), // Macro for getting the address of the detour function and its name
 			HookType::Inline
 		},
 		{

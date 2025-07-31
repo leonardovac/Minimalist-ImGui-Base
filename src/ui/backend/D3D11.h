@@ -73,8 +73,8 @@ namespace Overlay::DirectX11
 		swapChainHook->Hook(8, &PresentHook);
 		swapChainHook->Hook(13, &ResizeBuffersHook);
 #else
-		HooksManager::Setup<InlineHook>(pVTable[8], FUNCTION(PresentHook));
-		HooksManager::Setup<InlineHook>(pVTable[13], FUNCTION(ResizeBuffersHook));
+		HooksManager::Setup<InlineHook>(pVTable[8], PTR_AND_NAME(PresentHook));
+		HooksManager::Setup<InlineHook>(pVTable[13], PTR_AND_NAME(ResizeBuffersHook));
 #endif
 		return true;
 	}

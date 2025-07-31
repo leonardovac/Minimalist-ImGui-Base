@@ -25,5 +25,5 @@ bool ScreenCleaner::Init()
 	const auto hGDI32 = GetModuleHandleW(L"gdi32.dll");
 	if (!hGDI32) return false;
 	const auto BitBlt = GetProcAddress(hGDI32, "BitBlt");
-	return HooksManager::Setup<InlineHook>(BitBlt, FUNCTION(BitBltHook));
+	return HooksManager::Setup<InlineHook>(BitBlt, PTR_AND_NAME(BitBltHook));
 }

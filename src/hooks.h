@@ -17,7 +17,7 @@ namespace Hooks
 	void SetupAllHooks();
 }
 
-#define FUNCTION(func) &(func), \
+#define PTR_AND_NAME(func) &(func), \
         #func
 
 enum : std::uint8_t {

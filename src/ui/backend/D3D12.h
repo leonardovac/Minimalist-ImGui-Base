@@ -108,7 +108,7 @@ namespace Overlay::DirectX12
 		commandQueueHook = std::make_unique<TinyHook::VMTHook>(pvCommandQueue);
 		commandQueueHook->Hook(10, &ExecuteCommandLists);
 #else
-		HooksManager::Setup<InlineHook>(pvCommandQueue[10], FUNCTION(ExecuteCommandLists));
+		HooksManager::Setup<InlineHook>(pvCommandQueue[10], PTR_AND_NAME(ExecuteCommandLists));
 #endif
 		return true;
 	}
@@ -153,8 +153,8 @@ namespace Overlay::DirectX12
 		swapChainHook->Hook(8, &Present);
 		swapChainHook->Hook(13, &ResizeBuffers);
 #else
-		HooksManager::Setup<InlineHook>(pvSwapChain[8], FUNCTION(Present));
-		HooksManager::Setup<InlineHook>(pvSwapChain[13], FUNCTION(ResizeBuffers));
+		HooksManager::Setup<InlineHook>(pvSwapChain[8], PTR_AND_NAME(Present));
+		HooksManager::Setup<InlineHook>(pvSwapChain[13], PTR_AND_NAME(ResizeBuffers));
 #endif
 		return true;
 	}

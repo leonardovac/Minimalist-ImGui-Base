@@ -15,7 +15,7 @@ namespace Overlay::OpenGL
 		if (const HMODULE opengl32 = GetModuleHandleW(L"opengl32.dll"))
 		{
 			const auto wglSwapBuffers = reinterpret_cast<void*>(GetProcAddress(opengl32, "wglSwapBuffers"));
-			return HooksManager::Setup<InlineHook>(wglSwapBuffers, FUNCTION(WglSwapBuffers));
+			return HooksManager::Setup<InlineHook>(wglSwapBuffers, PTR_AND_NAME(WglSwapBuffers));
 		}
 		return false;
 	}

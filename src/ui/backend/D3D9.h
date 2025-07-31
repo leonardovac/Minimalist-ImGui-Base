@@ -41,8 +41,8 @@ namespace Overlay::DirectX9
 
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
-        HooksManager::Setup<InlineHook>(pVTable[16], FUNCTION(Reset));
-        HooksManager::Setup<InlineHook>(pVTable[42], FUNCTION(EndScene));
+        HooksManager::Setup<InlineHook>(pVTable[16], PTR_AND_NAME(Reset));
+        HooksManager::Setup<InlineHook>(pVTable[42], PTR_AND_NAME(EndScene));
         return true;
     }
 

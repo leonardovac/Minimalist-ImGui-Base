@@ -58,15 +58,15 @@ namespace Overlay::Steam
 				{
 					const auto pPresent = GetPointerFromRef(xRefDevicePresent);
 					const auto pReset = pPresent - 1; // previous ptr
-					SwapPointer(pPresent, FUNCTION(DirectX9::Present));
-					SwapPointer(pReset, FUNCTION(DirectX9::Reset));
+					SwapPointer(pPresent, PTR_AND_NAME(DirectX9::Present));
+					SwapPointer(pReset, PTR_AND_NAME(DirectX9::Reset));
 					anySuccess = true;
 				}
 
 				if (const uintptr_t xRefSwapChainPresent = mem::PatternScan<uintptr_t>(hModule, d3d9_swapchain_present_pattern))
 				{
 					const auto pPresent = GetPointerFromRef(xRefSwapChainPresent);
-					SwapPointer(pPresent, FUNCTION(DirectX9::SwapChainPresent));
+					SwapPointer(pPresent, PTR_AND_NAME(DirectX9::SwapChainPresent));
 					anySuccess = true;
 				}
 			}
@@ -78,15 +78,15 @@ namespace Overlay::Steam
 					const auto pResizeBuffers = pPresent + 1; // next ptr
 					if (Overlay::graphicsAPI & D3D11)
 					{
-						SwapPointer(pPresent, FUNCTION(DirectX11::PresentHook));
-						SwapPointer(pResizeBuffers, FUNCTION(DirectX11::ResizeBuffersHook));
+						SwapPointer(pPresent, PTR_AND_NAME(DirectX11::PresentHook));
+						SwapPointer(pResizeBuffers, PTR_AND_NAME(DirectX11::ResizeBuffersHook));
 						anySuccess = true;
 					}
 #ifdef _WIN64
 					if (Overlay::graphicsAPI & D3D12 && DirectX12::CreateFactoryAndCommandQueue())
 					{
-						SwapPointer(pPresent, FUNCTION(DirectX12::Present));
-						SwapPointer(pResizeBuffers, FUNCTION(DirectX12::ResizeBuffers));
+						SwapPointer(pPresent, PTR_AND_NAME(DirectX12::Present));
+						SwapPointer(pResizeBuffers, PTR_AND_NAME(DirectX12::ResizeBuffers));
 						anySuccess = true;
 					}
 #endif
@@ -97,7 +97,7 @@ namespace Overlay::Steam
 				if (const uintptr_t xRefSwapBuffers = mem::PatternScan<uintptr_t>(hModule, opengl_swap_buffers_pattern))
 				{
 					const auto pWglSwapBuffers = GetPointerFromRef(xRefSwapBuffers);
-					SwapPointer(pWglSwapBuffers, FUNCTION(OpenGL::WglSwapBuffers));
+					SwapPointer(pWglSwapBuffers, PTR_AND_NAME(OpenGL::WglSwapBuffers));
 					anySuccess = true;
 				}
 			}

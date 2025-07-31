@@ -33,7 +33,7 @@ namespace
 			if (windowProcess == processId)
 			{
 				std::array<char, 256> windowTitle{};
-				if (GetWindowTextA(hWindow, windowTitle.data(), windowTitle.size()))
+				if (GetWindowTextA(hWindow, windowTitle.data(), static_cast<int>(windowTitle.size())))
 				{
 					LOG_NOTICE("Found game window: {}", windowTitle.data());
 					ParseTitleForGraphicsAPI(windowTitle.data()); // Just in case...
