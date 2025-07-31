@@ -29,7 +29,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [3/3] Setting sparse-checkout patterns...
-git sparse-checkout set "/*" "!docs/" "!examples/" "!misc/" "!/imconfig.h" "!/imgui_demo.cpp" "!backends/sdlgpu3/" "!backends/vulkan/" "!backends/*_allegro5*" "!backends/*_android*" "!backends/*_glut*" "!backends/*_osx*" "!backends/*_sdlgpu3*" "!backends/*_sdlrenderer*" "!backends/*_wgpu*"
+git sparse-checkout set "/*" "!docs/" "!examples/" "!misc/" "!/imconfig.h" "!/imgui_demo.cpp" "!backends/sdlgpu3/" "!backends/vulkan/" "!backends/*_allegro5*" "!backends/*_android*" "!backends/*_glut*" "!backends/*_metal*" "!backends/*_osx*" "!backends/*_sdlgpu3*" "!backends/*_sdlrenderer*" "!backends/*_wgpu*"
 if %errorlevel% neq 0 (
     echo Error: Failed to set sparse-checkout patterns
     pause

@@ -86,11 +86,11 @@ This is a simple project that I visit once in a while during my free time. Contr
 
 **Supported backends:**
 
-- [X] Direct3D 9
+- [X] Direct3D 9 / 9EX
+- [ ] Direct3D 10
 - [X] Direct3D 11
 - [X] Direct3D 12
 - [X] OpenGL
-- [ ] Metal
 - [X] Vulkan
 
 ## 📂 Examples
