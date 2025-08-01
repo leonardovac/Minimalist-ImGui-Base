@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <windows.h>
 
+#include "Vulkan.h"
 #include "../overlay.h"
 #include "Mem/mem.h"
 #include "TinyHook/tinyhook.h"
@@ -23,7 +24,8 @@ namespace Overlay::Steam
 	}
 
 #ifdef _WIN64
-	constexpr auto module_name = "GameOverlayRenderer64.dll";
+	constexpr auto game_overlay_renderer = "GameOverlayRenderer64.dll";
+	constexpr auto steam_overlay_vulkan_layer = "SteamOverlayVulkanLayer64.dll";
 	constexpr auto d3d_present_pattern = "48 8B 05 ?? ?? ?? ?? 44 8B C5 8B D6";
 	constexpr auto d3d9_present_pattern = "48 8B 05 ?? ?? ?? ?? 4C 8B C5 49 8B D7";
 	constexpr auto d3d9_swapchain_present_pattern = "4C 8B 15 ?? ?? ?? ?? 4C 8B C5";
@@ -34,7 +36,8 @@ namespace Overlay::Steam
 		return reinterpret_cast<uintptr_t*>(instructionStart + 7 + *reinterpret_cast<int32_t*>(instructionStart + 3));
 	}
 #else
-	constexpr auto module_name = "GameOverlayRenderer.dll";
+	constexpr auto game_overlay_renderer = "GameOverlayRenderer.dll";
+	constexpr auto steam_overlay_vulkan_layer = "SteamOverlayVulkanLayer.dll";
 	constexpr auto d3d_present_pattern = "A1 ?? ?? ?? ?? 53 FF 75 ?? FF 75 ?? FF D0 8B 4D ?? 64 89 0D ?? ?? ?? ?? 5F 5E 5B 8B E5 5D C2 ?? ?? 68 ?? ?? ?? ?? C7 45 ?? ?? ?? ?? ?? FF 15 ?? ?? ?? ?? 8B 75";
 	constexpr auto d3d9_present_pattern = "A1 ?? ?? ?? ?? 51 53 FF D0";
 	constexpr auto d3d9_swapchain_present_pattern = "A1 ?? ?? ?? ?? 56 FF 75 ?? FF 75 ?? FF 75 ?? FF 75 ?? 57";
@@ -49,7 +52,7 @@ namespace Overlay::Steam
 	inline bool Hook()
 	{
 		bool anySuccess = false;
-		if (const auto hModule = GetModuleHandleA(module_name))
+		if (const auto hModule = GetModuleHandleA(game_overlay_renderer))
 		{
 			LOG_NOTICE("Detected Steam overlay...");
 			if (Overlay::graphicsAPI & D3D9)
@@ -99,6 +102,22 @@ namespace Overlay::Steam
 					const auto pWglSwapBuffers = GetPointerFromRef(xRefSwapBuffers);
 					SwapPointer(pWglSwapBuffers, PTR_AND_NAME(OpenGL::WglSwapBuffers));
 					anySuccess = true;
+				}
+			}
+
+			if (Overlay::graphicsAPI & GraphicsAPI::Vulkan)
+			{
+				if (const auto hSteamOverlayVulkan = GetModuleHandleA(steam_overlay_vulkan_layer))
+				{
+					const uintptr_t pQueuePresentKHR = reinterpret_cast<uintptr_t>(GetProcAddress(hSteamOverlayVulkan, "vkQueuePresentKHR"));
+					const uintptr_t pCreateSwapchainKHR = reinterpret_cast<uintptr_t>(GetProcAddress(hSteamOverlayVulkan, "vkCreateSwapchainKHR"));
+					if (pQueuePresentKHR && pCreateSwapchainKHR)
+					{
+						HooksManager::Create<InlineHook>(pQueuePresentKHR, PTR_AND_NAME(Overlay::Vulkan::vkQueuePresentKHR));
+						HooksManager::Create<InlineHook>(pCreateSwapchainKHR, PTR_AND_NAME(Overlay::Vulkan::vkCreateSwapchainKHR));
+						Vulkan::Hook(); // Hooking remaining functions
+						anySuccess = true;
+					}
 				}
 			}
 			if (!anySuccess) LOG_WARNING("Couldn't find Steam Overlay's function addresses...");
