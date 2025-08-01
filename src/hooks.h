@@ -384,30 +384,17 @@ namespace HooksManager
 
 using HookVariant = std::variant<TinyHook::Original, std::reference_wrapper<InlineHook>>;
 
-template <typename T>
-concept hook_identifier = requires(T* t)
-	{{ TinyHook::Manager::GetOriginal(t) } -> std::convertible_to<TinyHook::Original>;} || requires(T* t){{ HooksManager::GetOriginal<T>(t) };};
-
 class OriginalFunc
 {
 public:
-	template<hook_identifier HookType>
-	explicit OriginalFunc(HookType* hookIdentifier)
+	template<typename T>
+	OriginalFunc(T* replacement)
 	{
-		if constexpr (requires { TinyHook::Manager::GetOriginal(hookIdentifier); })
+		if (TinyHook::Manager::IsHookRegistered(replacement))
 		{
-			auto tinyHook = TinyHook::Manager::GetOriginal(hookIdentifier);
-			if (tinyHook.isValid())
-			{
-				hookVariant = tinyHook;
-				return;
-			}
+			hookVariant = TinyHook::Manager::GetOriginal(replacement);
 		}
-
-		if constexpr (requires { HooksManager::GetOriginal<HookType>(hookIdentifier); })
-		{
-			hookVariant = std::ref(HooksManager::GetOriginal<HookType>(hookIdentifier));
-		}
+		else hookVariant = std::ref(HooksManager::GetOriginal(replacement));
 	}
 
 	[[nodiscard]] constexpr bool isValid() const noexcept
@@ -425,7 +412,7 @@ public:
 	template <typename ReturnType, typename... Args>
 	ReturnType call(Args... args) const
 	{
-		return std::visit([&]<typename T0>(const T0 & hook) -> ReturnType
+		return std::visit([&]<typename T0>(const T0& hook) -> ReturnType
 		{
 			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::Original>)
 			{
