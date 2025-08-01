@@ -7,7 +7,7 @@
 #include "ScreenCleaner/ScreenCleaner.h"
 
 #define HOOK_THIRD_PARTY_OVERLAYS 1
-#define USE_VMTHOOK_WHEN_AVAILABLE 1 // For D3D11 or D3D12
+#define USE_VMTHOOK_WHEN_AVAILABLE 0 // For D3D11 or D3D12
 
 using Microsoft::WRL::ComPtr;
 
