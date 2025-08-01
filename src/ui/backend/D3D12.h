@@ -219,7 +219,6 @@ namespace Overlay::DirectX12
 				if (FAILED(pSwapChain->GetDesc(&descSwapChain))) return;
 				
 				hWindow = descSwapChain.OutputWindow;
-				lpPrevWndFunc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWindow, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
 
 				Interface::nBuffersCounts = descSwapChain.BufferCount;
 				Interface::pFrameContext = new Interface::FrameContext[Interface::nBuffersCounts];
