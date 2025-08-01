@@ -105,7 +105,7 @@ namespace Hooks
 		},
 	};
 
-	void SetupAllHooks()
+	extern void SetupAllHooks()
 	{
 		LOG_NOTICE("Starting hooking procedures...");
 		for (auto& [address, detour, name, type] : Hooks::List)

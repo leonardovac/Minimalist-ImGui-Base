@@ -8,17 +8,34 @@
 #include "misc/logger.h"
 #include "TinyHook/tinyhook.h"
 
+// Classes
 using safetyhook::InlineHook;
 using safetyhook::MidHook;
 using safetyhook::Context;
+using TinyHook::EATHook;
+using TinyHook::IATHook;
+using TinyHook::VMTHook;
 
-namespace Hooks
+// Concepts
+using TinyHook::tiny_hook;
+using TinyHook::at_hook;
+using TinyHook::vmt_hook;
+
+template<typename T>
+concept safety_hook = std::is_same_v<T, InlineHook> || std::is_same_v<T, MidHook>;
+
+template <typename T>
+concept function = requires(T t)
 {
-	void SetupAllHooks();
-}
+	requires std::is_pointer_v<T>;
+	requires std::is_function_v<std::remove_pointer_t<T>>;
+	{ static_cast<const void*>(t) } -> std::convertible_to<const void*>;
+};
 
 #define PTR_AND_NAME(func) &(func), \
         #func
+
+#define RETURN_FAIL(...) { fails++; return __VA_ARGS__; }
 
 enum : std::uint8_t {
 	Default = 0,	///< Default flags.
@@ -35,12 +52,11 @@ class HookBase
 public:
 	virtual ~HookBase() = default;
 
-	virtual void				unhook()	= 0;
-	virtual InlineOrMidHook&	getHook()	= 0;
-	virtual uint8_t				getError()	= 0;
+	virtual void unhook() = 0;
+	virtual InlineOrMidHook& getHook() = 0;
+	virtual uint8_t getError() = 0;
 };
 
-// Template class for specific function hooks
 template <typename HookType>
 class FunctionHook final : public HookBase
 {
@@ -89,13 +105,20 @@ private:
 namespace HooksManager
 {
 	inline int fails;
-	inline std::unordered_map<const void*, std::vector<std::unique_ptr<HookBase>>> hooks;
 	// To avoid a (possible) crash on Inject
 	static std::shared_mutex hooking;
+	// Single storage for Inline and mid-hooks
+	inline std::unordered_map<const void*, std::vector<std::unique_ptr<HookBase>>> hooks;
+	// Triple storage for EAT/IAT/VMT hooks
+    template<tiny_hook HookType>
+    inline std::unordered_map<std::string_view, std::unique_ptr<HookType>> tinyHooks{};
 
-#define RETURN_FAIL(...) { fails++; return __VA_ARGS__; }
+	namespace Utils
+	{
+		template<tiny_hook HookType>
+		auto& GetHookStorage() { return tinyHooks<HookType>; }
 
-	inline constexpr std::string_view ParseError(const uint8_t& type)
+		constexpr std::string_view ParseError(const uint8_t& type)
 	{
 		switch (type)
 		{
@@ -108,6 +131,7 @@ namespace HooksManager
 		case InlineHook::Error::NOT_ENOUGH_SPACE: return "NOT ENOUGH SPACE";
 		default: return "UNKNOWN ERROR";
 		}
+	}
 	}
 
 	template <typename HookType>

@@ -85,6 +85,10 @@ namespace
 	}
 }
 
+namespace Hooks {
+	extern void SetupAllHooks();
+}
+
 ScreenCleaner screenCleaner(&Overlay::bEnabled);
 extern void MainThread()
 {
