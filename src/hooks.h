@@ -173,15 +173,15 @@ namespace HooksManager
 	template <safety_hook HookType, typename T>
 	bool Create(const T original, void* replacement, std::string_view detourName, int flags = Default)
 	{
-		auto address = [&]() -> void*
+		const auto address = [&original]() -> uintptr_t
 		{
-			if constexpr (std::is_same_v<T, void*>) return original;
-			else return reinterpret_cast<void*>(original);
+			if constexpr (std::is_same_v<T, uintptr_t>) return original;
+			else return reinterpret_cast<uintptr_t>(original);
 		}();
 
 		if (!address)
 		{
-			LOG_ERROR("Invalid address passed for {}: 0x{:X}.", detourName, reinterpret_cast<uintptr_t>(address));
+			LOG_ERROR("Invalid address passed for {}: 0x{:X}.", detourName, address);
 			RETURN_FAIL(false)
 		}
 
@@ -196,15 +196,15 @@ namespace HooksManager
 		// Locks until out of scope
 		std::unique_lock lock(hooking);
 
-		auto& hook = hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(address, replacement, flags));
+		auto& hook = hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(reinterpret_cast<void*>(address), replacement, flags));
 		if (const uint8_t error = hook->getError())
 		{
-			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}.", reinterpret_cast<uintptr_t>(address), detourName, Utils::ParseError(error));
+			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}.", address, detourName, Utils::ParseError(error));
 			hooks.erase(replacement);
 			RETURN_FAIL(false)
 		}
 
-		LOG_INFO("{} placed at 0x{:X} -> {} (0x{:X})", std::string(typeid(HookType).name()).substr(18), reinterpret_cast<uintptr_t>(address), detourName, reinterpret_cast<uintptr_t>(replacement));
+		LOG_INFO("{} placed at 0x{:X} -> {} (0x{:X})", std::string(typeid(HookType).name()).substr(18), address, detourName, reinterpret_cast<uintptr_t>(replacement));
 		return true;
 	}
 
