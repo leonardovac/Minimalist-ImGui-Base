@@ -76,10 +76,10 @@ namespace Overlay::Vulkan
 		void* pCreateSwapchainKHR = vkGetDeviceProcAddr(vkDevice, "vkCreateSwapchainKHR");
 		void* pQueuePresentKHR = vkGetDeviceProcAddr(vkDevice, "vkQueuePresentKHR");
 
-		HooksManager::Setup<InlineHook>(pAcquireNextImageKHR, PTR_AND_NAME(vkAcquireNextImageKHR));
-		HooksManager::Setup<InlineHook>(pAcquireNextImage2KHR, PTR_AND_NAME(vkAcquireNextImage2KHR));
-		HooksManager::Setup<InlineHook>(pCreateSwapchainKHR, PTR_AND_NAME(vkCreateSwapchainKHR));
-		HooksManager::Setup<InlineHook>(pQueuePresentKHR, PTR_AND_NAME(vkQueuePresentKHR));
+		HooksManager::Create<InlineHook>(pAcquireNextImageKHR, PTR_AND_NAME(vkAcquireNextImageKHR));
+		HooksManager::Create<InlineHook>(pAcquireNextImage2KHR, PTR_AND_NAME(vkAcquireNextImage2KHR));
+		HooksManager::Create<InlineHook>(pCreateSwapchainKHR, PTR_AND_NAME(vkCreateSwapchainKHR));
+		HooksManager::Create<InlineHook>(pQueuePresentKHR, PTR_AND_NAME(vkQueuePresentKHR));
 		return true;
 	}
 

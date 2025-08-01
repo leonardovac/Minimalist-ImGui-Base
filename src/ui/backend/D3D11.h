@@ -13,7 +13,7 @@ namespace Overlay::DirectX11
 	HRESULT WINAPI PresentHook(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT uFlags);
 	HRESULT WINAPI ResizeBuffersHook(IDXGISwapChain* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 
-	inline std::unique_ptr<TinyHook::VMTHook> swapChainHook;
+	inline VMTHook* swapChainHook;
 
 	namespace Interface
 	{
@@ -69,12 +69,12 @@ namespace Overlay::DirectX11
 		uintptr_t** pVTable = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE 
-		swapChainHook = std::make_unique<TinyHook::VMTHook>(pVTable);
-		swapChainHook->Hook(8, &PresentHook);
-		swapChainHook->Hook(13, &ResizeBuffersHook);
+		swapChainHook = HooksManager::Setup<VMTHook>(pVTable, "IDXGISwapChain");
+		HooksManager::Create<VMTHook>(swapChainHook, 8, PTR_AND_NAME(PresentHook));
+		HooksManager::Create<VMTHook>(swapChainHook, 13, PTR_AND_NAME(ResizeBuffersHook));
 #else
-		HooksManager::Setup<InlineHook>(pVTable[8], PTR_AND_NAME(PresentHook));
-		HooksManager::Setup<InlineHook>(pVTable[13], PTR_AND_NAME(ResizeBuffersHook));
+		HooksManager::Create<InlineHook>(pVTable[8], PTR_AND_NAME(PresentHook));
+		HooksManager::Create<InlineHook>(pVTable[13], PTR_AND_NAME(ResizeBuffersHook));
 #endif
 		return true;
 	}
@@ -98,7 +98,7 @@ namespace Overlay::DirectX11
 		std::thread([]
 		{
 #if USE_VMTHOOK_WHEN_AVAILABLE
-			swapChainHook.reset();
+			HooksManager::UnhookAll(swapChainHook);
 #else
 			HooksManager::Unhook(&PresentHook, &ResizeBuffersHook);
 #endif

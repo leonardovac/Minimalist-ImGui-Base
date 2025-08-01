@@ -119,27 +119,69 @@ namespace HooksManager
 		auto& GetHookStorage() { return tinyHooks<HookType>; }
 
 		constexpr std::string_view ParseError(const uint8_t& type)
-	{
-		switch (type)
 		{
-		case InlineHook::Error::BAD_ALLOCATION: return "BAD ALLOCATION";
-		case InlineHook::Error::FAILED_TO_DECODE_INSTRUCTION: return "FAILED TO DECODE INSTRUCTION";
-		case InlineHook::Error::SHORT_JUMP_IN_TRAMPOLINE: return "SHORT JUMP IN TRAMPOLINE";
-		case InlineHook::Error::IP_RELATIVE_INSTRUCTION_OUT_OF_RANGE: return "IP RELATIVE INSTRUCTION OUT OF RANGE";
-		case InlineHook::Error::UNSUPPORTED_INSTRUCTION_IN_TRAMPOLINE: return "UNSUPPORTED INSTRUCTION IN TRAMPOLINE";
-		case InlineHook::Error::FAILED_TO_UNPROTECT: return "FAILED TO UNPROTECT";
-		case InlineHook::Error::NOT_ENOUGH_SPACE: return "NOT ENOUGH SPACE";
-		default: return "UNKNOWN ERROR";
+			switch (type)
+			{
+			case InlineHook::Error::BAD_ALLOCATION: return "BAD ALLOCATION";
+			case InlineHook::Error::FAILED_TO_DECODE_INSTRUCTION: return "FAILED TO DECODE INSTRUCTION";
+			case InlineHook::Error::SHORT_JUMP_IN_TRAMPOLINE: return "SHORT JUMP IN TRAMPOLINE";
+			case InlineHook::Error::IP_RELATIVE_INSTRUCTION_OUT_OF_RANGE: return "IP RELATIVE INSTRUCTION OUT OF RANGE";
+			case InlineHook::Error::UNSUPPORTED_INSTRUCTION_IN_TRAMPOLINE: return "UNSUPPORTED INSTRUCTION IN TRAMPOLINE";
+			case InlineHook::Error::FAILED_TO_UNPROTECT: return "FAILED TO UNPROTECT";
+			case InlineHook::Error::NOT_ENOUGH_SPACE: return "NOT ENOUGH SPACE";
+			default: return "UNKNOWN ERROR";
+			}
 		}
 	}
+
+	template <tiny_hook HookType, typename T>
+	HookType* Setup(T* target, const std::string_view name = {})
+	{
+		std::unique_lock lock(hooking);
+		std::string identifier{ name };
+
+		if constexpr (std::is_same_v<HookType, VMTHook>)
+		{
+			if (identifier.empty())
+			{
+				int counter = 1;
+				while (tinyHooks<VMTHook>.contains(identifier))
+				{
+					identifier = std::format("Unknown_{}", counter++);
+				}
+			}
+		}
+		else if (identifier.empty()) identifier = TinyHook::Utils::GetModuleFilename(target);
+		
+		auto [it, inserted] = Utils::GetHookStorage<HookType>().try_emplace(identifier, TinyHook::Setup<HookType>(target, identifier));
+		if (inserted) LOG_INFO("Registered {} for: {}.", std::string(typeid(HookType).name()).substr(16), identifier);
+		return it->second.get();
 	}
 
-	template <typename HookType>
-	bool Setup(void* original, void* replacement, std::string_view detourName, int flags = Default)
+	template <at_hook HookType>
+	HookType* Setup(const char* module)
 	{
-		if (!original)
+		return Setup<HookType>(GetModuleHandleA(module), module);
+	}
+
+	template <at_hook HookType>
+	HookType* Setup(const wchar_t* module)
+	{
+		return Setup<HookType>(GetModuleHandleW(module), module);
+	}
+
+	template <safety_hook HookType, typename T>
+	bool Create(const T original, void* replacement, std::string_view detourName, int flags = Default)
+	{
+		auto address = [&]() -> void*
 		{
-			LOG_ERROR("Invalid address passed for {}: 0x{:X}", detourName, reinterpret_cast<uintptr_t>(original));
+			if constexpr (std::is_same_v<T, void*>) return original;
+			else return reinterpret_cast<void*>(original);
+		}();
+
+		if (!address)
+		{
+			LOG_ERROR("Invalid address passed for {}: 0x{:X}.", detourName, reinterpret_cast<uintptr_t>(address));
 			RETURN_FAIL(false)
 		}
 
@@ -154,44 +196,56 @@ namespace HooksManager
 		// Locks until out of scope
 		std::unique_lock lock(hooking);
 
-		auto& hook = hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(original, replacement, flags));
+		auto& hook = hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(address, replacement, flags));
 		if (const uint8_t error = hook->getError())
 		{
-			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}", reinterpret_cast<uintptr_t>(original), detourName, ParseError(error));
+			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}.", reinterpret_cast<uintptr_t>(address), detourName, Utils::ParseError(error));
 			hooks.erase(replacement);
 			RETURN_FAIL(false)
 		}
 
-		constexpr std::string_view hookType = std::is_same_v<HookType, InlineHook> ? "Inline" : "Mid";
-		LOG_INFO("{}Hook placed at 0x{:X} -> {} (0x{:X})", hookType, reinterpret_cast<uintptr_t>(original), detourName, reinterpret_cast<uintptr_t>(replacement));
+		LOG_INFO("{} placed at 0x{:X} -> {} (0x{:X})", std::string(typeid(HookType).name()).substr(18), reinterpret_cast<uintptr_t>(address), detourName, reinterpret_cast<uintptr_t>(replacement));
 		return true;
 	}
 
-	template <typename HookType>
-	bool Setup(void* original, void* replacement, const int flags = Default)
+	template <safety_hook HookType, typename T>
+	bool Create(const T original, void* replacement, const int flags = Default)
 	{
-		return Setup<HookType>(original, replacement, "Unknown", flags);
+		return Create<HookType>(original, replacement, "Unknown", flags);
 	}
 
-	template <typename HookType, typename... Args>
-	bool Setup(const uintptr_t original, void* replacement, Args&&... args)
+	template <at_hook HookType>
+	bool Create(HookType* hook, std::string_view targetName, void* replacement, std::string_view detourName = {})
 	{
-		return Setup<HookType>(reinterpret_cast<void*>(original), replacement, std::forward<Args>(args)...);
+		constexpr std::string hookType = std::string(typeid(HookType).name()).substr(16);
+		if (const auto originalMethod = hook->Hook(targetName.data(), replacement); !originalMethod)
+		{
+			LOG_ERROR("Couldn't {}Hook {} ({}) to {} (0x{:X}), error: {}.", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement), TinyHook::Utils::GetErrorMessage(originalMethod.error()));
+			RETURN_FAIL(false)
+		}
+
+		LOG_INFO("{}Hooked {} ({}) -> {} (0x{:X}).", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement));
+		return true;
 	}
 
-	template <typename HookType>
-	HookType& GetOriginal(const void* replacement)
+	template <at_hook HookType>
+	bool Create(std::string_view module, std::string_view targetName, void* replacement, std::string_view detourName = {})
 	{
-		std::shared_lock lock(hooking);
-
-		auto& hookVariant = hooks[replacement].back()->getHook();
-		return std::get<HookType>(hookVariant);
+		auto hook = Setup<HookType>(module);
+		return Create<HookType>(hook, targetName, replacement, detourName);
 	}
 
-	// Convenience function for InlineHook (most common case)
-	inline InlineHook& GetOriginal(const void* replacement)
+	template <vmt_hook HookType>
+	bool Create(VMTHook* vmtHook, const uint32_t index, void* newMethod, std::string_view name = "Unknown")
 	{
-		return GetOriginal<InlineHook>(replacement);
+		if (const auto originalMethod = vmtHook->Hook(index, newMethod); !originalMethod)
+		{
+			LOG_ERROR("Couldn't hook {}[{}] for {}, error: {}.", vmtHook->name, index, name, TinyHook::Utils::GetErrorMessage(originalMethod.error()));
+			RETURN_FAIL(false)
+		}
+
+		LOG_INFO("Hooked virtual method {}[{}] -> {} (0x{:X}).", vmtHook->name, index, name, reinterpret_cast<uintptr_t>(newMethod));
+		return true;
 	}
 
 	inline bool Enable(const void* replacement)
@@ -227,31 +281,104 @@ namespace HooksManager
 		return hooks.size();
 	}
 
-	inline void UnhookAll()
+	template <safety_hook HookType>
+	HookType& GetOriginal(const void* replacement)
 	{
-		hooks.clear();
+		std::shared_lock lock(hooking);
+		auto& hookVariant = hooks[replacement].back()->getHook();
+		return std::get<HookType>(hookVariant);
 	}
 
-	inline void Unhook(const void* replacement)
+	// Convenience function for InlineHook (most common case)
+	inline InlineHook& GetOriginal(const void* replacement)
 	{
+		return GetOriginal<InlineHook>(replacement);
+	}
+
+	inline void UnhookEverything()
+	{
+		hooks.clear();
+		tinyHooks<EATHook>.clear();
+		tinyHooks<IATHook>.clear();
+		tinyHooks<VMTHook>.clear();
+	}
+
+	template <tiny_hook HookType>
+	void UnhookAll(const HookType* pHook)
+	{
+		for (const auto& [name, hook] : tinyHooks<HookType>)
+		{
+			if (hook.get() == pHook)
+			{
+				tinyHooks<HookType>.erase(name);
+				return;
+			}
+		}
+	}
+
+	template <tiny_hook HookType>
+	void UnhookAll(const std::string_view hookName)
+	{
+		if (tinyHooks<HookType>.contains(hookName))
+		{
+			tinyHooks<HookType>.erase(hookName);
+		}
+	}
+
+	template <tiny_hook... Args>
+	void UnhookAll(Args*... args)
+	{
+		(UnhookAll(args), ...);
+	}
+
+	template <function T>
+	void Unhook(const T replacement)
+	{
+		std::unique_lock lock(hooking);
 		if (hooks.contains(replacement))
 		{
 			hooks.erase(replacement);
 		}
 	}
 
-	inline void Unhook(const std::vector<const void*>& replacements)
+	template <function... Args>
+	void Unhook(Args... args)
 	{
-		for (const auto& replacement : replacements)
-		{
-			Unhook(replacement);
-		}
+		(Unhook(args), ...);
 	}
 
-	template <typename... Args>
-	static void Unhook(Args... args)
+	inline void Unhook(const std::string_view hookName, const uint32_t index)
 	{
-		Unhook({ static_cast<const void*>(args)... });
+		if (const auto it = tinyHooks<VMTHook>.find(hookName); it != tinyHooks<VMTHook>.end())
+		{
+			if (const auto& hook = it->second.get(); hook->IsHooked(index))
+			{
+				if (const auto result = hook->Unhook(index); !result)
+				{
+					LOG_ERROR("Couldn't unhook {}[{}], error: ", hookName, index, TinyHook::Utils::GetErrorMessage(result.error()));
+				}
+				return;
+			}
+			LOG_ERROR("{} isn't hooked at index {}.", hookName, index);
+		}
+		LOG_ERROR("Couldn't find a VMTHook for {}.", hookName);
+	}
+
+	template <at_hook HookType>
+	void Unhook(const std::string_view functionName)
+	{
+		for (const auto& hook : tinyHooks<HookType> | std::views::values)
+		{
+			if (hook->IsHooked(functionName))
+			{
+				if (const auto result = hook->Unhook(functionName); !result)
+				{
+					LOG_ERROR("Couldn't unhook {}, error: ", functionName, TinyHook::Utils::GetErrorMessage(result.error()));
+				}
+				return;
+			}
+		}
+		LOG_ERROR("Couldn't find a hook related to {}.", functionName);
 	}
 }
 
@@ -288,7 +415,7 @@ public:
 		return std::visit([]<typename T0>(const T0& hook) -> bool
 		{
 			if constexpr (std::is_same_v<std::decay_t<T0>, TinyHook::Original>)
-	{
+			{
 				return hook.isValid();
 			}
 			else return true;

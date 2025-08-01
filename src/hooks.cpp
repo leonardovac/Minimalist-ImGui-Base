@@ -113,10 +113,10 @@ namespace Hooks
 			switch (type)
 			{
 			case HookType::Inline:
-				HooksManager::Setup<InlineHook>(address, detour, name);
+				HooksManager::Create<InlineHook>(address, detour, name);
 				break;
 			case HookType::Mid:
-				HooksManager::Setup<MidHook>(address, detour, name);
+				HooksManager::Create<MidHook>(address, detour, name);
 				break;
 			}
 		}

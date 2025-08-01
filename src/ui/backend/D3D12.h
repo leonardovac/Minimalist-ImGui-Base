@@ -18,8 +18,8 @@ namespace Overlay::DirectX12
 	HRESULT ResizeBuffers(IDXGISwapChain3* pSwapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat, UINT swapChainFlags);
 	HRESULT Present(IDXGISwapChain3* pSwapChain, UINT SyncInterval, UINT uFlags);
 
-	inline std::unique_ptr<TinyHook::VMTHook> commandQueueHook;
-	inline std::unique_ptr<TinyHook::VMTHook> swapChainHook;
+	inline VMTHook* commandQueueHook;
+	inline VMTHook* swapChainHook;
 
 	namespace Interface
 	{
@@ -105,10 +105,10 @@ namespace Overlay::DirectX12
 		uintptr_t** pvCommandQueue = *reinterpret_cast<uintptr_t***>(pCommandQueue.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		commandQueueHook = std::make_unique<TinyHook::VMTHook>(pvCommandQueue);
-		commandQueueHook->Hook(10, &ExecuteCommandLists);
+		commandQueueHook = HooksManager::Setup<VMTHook>(pvCommandQueue, "ID3D12CommandQueue");
+		HooksManager::Create<VMTHook>(commandQueueHook, 10, PTR_AND_NAME(ExecuteCommandLists));
 #else
-		HooksManager::Setup<InlineHook>(pvCommandQueue[10], PTR_AND_NAME(ExecuteCommandLists));
+		HooksManager::Create<InlineHook>(pvCommandQueue[10], PTR_AND_NAME(ExecuteCommandLists));
 #endif
 		return true;
 	}
@@ -149,12 +149,12 @@ namespace Overlay::DirectX12
 		uintptr_t** pvSwapChain = *reinterpret_cast<uintptr_t***>(pSwapChain.Get());
 
 #if USE_VMTHOOK_WHEN_AVAILABLE
-		swapChainHook = std::make_unique<TinyHook::VMTHook>(pvSwapChain);
-		swapChainHook->Hook(8, &Present);
-		swapChainHook->Hook(13, &ResizeBuffers);
+		swapChainHook = HooksManager::Setup<VMTHook>(pvSwapChain, "IDXGISwapChain3");
+		HooksManager::Create<VMTHook>(swapChainHook, 8, PTR_AND_NAME(Present));
+		HooksManager::Create<VMTHook>(swapChainHook, 13, PTR_AND_NAME(ResizeBuffers));
 #else
-		HooksManager::Setup<InlineHook>(pvSwapChain[8], PTR_AND_NAME(Present));
-		HooksManager::Setup<InlineHook>(pvSwapChain[13], PTR_AND_NAME(ResizeBuffers));
+		HooksManager::Create<InlineHook>(pvSwapChain[8], PTR_AND_NAME(Present));
+		HooksManager::Create<InlineHook>(pvSwapChain[13], PTR_AND_NAME(ResizeBuffers));
 #endif
 		return true;
 	}
@@ -183,8 +183,7 @@ namespace Overlay::DirectX12
 		std::thread([]
 		{
 #if USE_VMTHOOK_WHEN_AVAILABLE
-			commandQueueHook.reset();
-			swapChainHook.reset();
+			HooksManager::UnhookAll(commandQueueHook, swapChainHook);
 #else
 			HooksManager::Unhook(&Present, &ResizeBuffers);
 #endif

@@ -12,7 +12,7 @@ namespace Overlay::DirectX9
 {
     HRESULT WINAPI Reset(IDirect3DDevice9* pDevice, D3DPRESENT_PARAMETERS* pPresentationParameters, DWORD dwFlags);
 	HRESULT WINAPI Present(IDirect3DDevice9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
-	HRESULT WINAPI SwapChainPresent(IDirect3DSwapChain9* pDevice, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
+	HRESULT WINAPI SwapChainPresent(IDirect3DSwapChain9* pSwapChain, const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, DWORD dwFlags);
 	HRESULT WINAPI EndScene(IDirect3DDevice9* pDevice);
 
 	inline bool Hook()
@@ -41,8 +41,8 @@ namespace Overlay::DirectX9
 
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
-        HooksManager::Setup<InlineHook>(pVTable[16], PTR_AND_NAME(Reset));
-        HooksManager::Setup<InlineHook>(pVTable[42], PTR_AND_NAME(EndScene));
+        HooksManager::Create<InlineHook>(pVTable[16], PTR_AND_NAME(Reset));
+        HooksManager::Create<InlineHook>(pVTable[42], PTR_AND_NAME(EndScene));
         return true;
     }
 
