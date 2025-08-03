@@ -24,7 +24,7 @@
     <ProjectGuid>{6fced408-75b2-4ef9-9e5f-3ec58b19249b}</ProjectGuid>
     <RootNamespace>version</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Minimalistic ImGui Base</ProjectName>
+    <ProjectName>Minimalist ImGui Base</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

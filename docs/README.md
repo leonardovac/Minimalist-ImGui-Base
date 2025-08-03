@@ -1,16 +1,16 @@
 <div align="center">
-<h1> Minimalistic ImGui Base </h1>
+<h1> Minimalist ImGui Base </h1>
 <div>
 <a href="https://en.wikipedia.org/wiki/C++23"><img src="https://img.shields.io/badge/Language-C%2B%2B23-f44c7c?style=flat-square" alt="Static Badge"></a>
-<a href="https://github.com/leonardovac/Minimalistic-ImGui-Base/blob/main/LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="Static Badge"></a>
-<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/leonardovac/Minimalistic-ImGui-Base">
+<a href="https://github.com/leonardovac/Minimalist-ImGui-Base/blob/main/LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="Static Badge"></a>
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/leonardovac/Minimalist-ImGui-Base">
 </div>
 <div>
-<a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalistic-ImGui-Base">
-<img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalistic-ImGui-Base&label=Repo.%20Visits&countColor=%23ba68c8&style=flat-square" alt="Visitors"></a>
-<a href="https://app.deepsource.com/gh/leonardovac/Minimalistic-ImGui-Base/"><img alt="DeepSource" title="DeepSource" src="https://app.deepsource.com/gh/leonardovac/Minimalistic-ImGui-Base.svg/?label=active+issues&show_trend=false&token=VEY-dCFd7Zvez753JFNRKMHy"/></a>
-<a href="https://app.codacy.com/gh/leonardovac/Minimalistic-ImGui-Base/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade"><img alt="Codacy" title="Codacy" src="https://img.shields.io/codacy/grade/60d23119442344d7913494bbfbdc31f7?logo=codacy&style=flat-square"/></a>
-<a href="https://www.codefactor.io/repository/github/leonardovac/Minimalistic-imgui-base"><img alt="CodeFactor" title="CodeFactor" src="https://img.shields.io/codefactor/grade/github/leonardovac/Minimalistic-imgui-base?logo=codefactor&style=flat-square"/></a>
+<a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalist-ImGui-Base">
+<img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fleonardovac%2FMinimalist-ImGui-Base&label=Repo.%20Visits&countColor=%23ba68c8&style=flat-square" alt="Visitors"></a>
+<a href="https://app.deepsource.com/gh/leonardovac/Minimalist-ImGui-Base/"><img alt="DeepSource" title="DeepSource" src="https://app.deepsource.com/gh/leonardovac/Minimalist-ImGui-Base.svg/?label=active+issues&show_trend=false&token=VEY-dCFd7Zvez753JFNRKMHy"/></a>
+<a href="https://app.codacy.com/gh/leonardovac/Minimalist-ImGui-Base/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade"><img alt="Codacy" title="Codacy" src="https://img.shields.io/codacy/grade/60d23119442344d7913494bbfbdc31f7?logo=codacy&style=flat-square"/></a>
+<a href="https://www.codefactor.io/repository/github/leonardovac/Minimalist-imgui-base"><img alt="CodeFactor" title="CodeFactor" src="https://img.shields.io/codefactor/grade/github/leonardovac/Minimalist-imgui-base?logo=codefactor&style=flat-square"/></a>
 </div>
 
 | [Introduction](#-introduction) - [Requirements](#-requirements) - [Quick Start](#-quick-start) - [Features](#-features) |
@@ -21,7 +21,7 @@
 
 ## 🌱 Introduction
 
-Welcome to a *(definitely not)* minimalistic base/framework for your *debug tools* — inspired by the well-known [UniversalHookX](https://github.com/bruhmoment21/UniversalHookX), but even simpler and more user-friendly.
+Welcome to a *(definitely not)* Minimalist base/framework for your *debug tools* — inspired by the well-known [UniversalHookX](https://github.com/bruhmoment21/UniversalHookX), but even simpler and more user-friendly.
 
 This is a simple project that I visit once in a while during my free time. Contributions are welcome!
 
@@ -41,13 +41,13 @@ This is a simple project that I visit once in a while during my free time. Contr
 
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/leonardovac/Minimalistic-ImGui-Base.git
+    git clone https://github.com/leonardovac/Minimalist-ImGui-Base.git
     ```
 >[!NOTE]   
 >This script will use vcpkg to install dependencies (`x86`/`x64-windows-static`) and runs [git sparse-checkout](https://git-scm.com/docs/git-sparse-checkout) to reduce submodule size.
 2. **Navigate to the project folder and run the setup script:**
     ```bash 
-    cd Minimalistic-ImGui-Base/scripts
+    cd Minimalist-ImGui-Base/scripts
     .\quick_setup.bat
     ```
 
@@ -98,4 +98,4 @@ Special thanks to:
     
 ## ⚖ License
 
-Minimalistic ImGui Base is licensed under the MIT License, see [LICENSE.txt](https://github.com/leonardovac/Minimalistic-ImGui-Base/blob/main/LICENSE.txt) for more information.
+Minimalist ImGui Base is licensed under the MIT License, see [LICENSE.txt](https://github.com/leonardovac/Minimalist-ImGui-Base/blob/main/LICENSE.txt) for more information.
