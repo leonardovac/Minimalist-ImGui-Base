@@ -2,13 +2,13 @@
 
 #include <windows.h>
 
+#include "font_awesome.hpp"
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "overlay.h"
+#include "roboto_mono.hpp"
 #include "widgets.h"
 #include "../game.h"
-#include "../misc/fonts/font_awesome.hpp"
-#include "../misc/fonts/roboto_mono.hpp"
 
 void Menu::SetupImGui()
 {
@@ -24,11 +24,10 @@ void Menu::SetupImGui()
 	io.LogFilename = nullptr;
 	io.IniFilename = nullptr;
 
-	constexpr float sizeScale = 1.0f; // Build a HQ font, so we can upscale without blurring, works by setting the font size to X * sizeScale and then downscaling it to X (1 / sizeScale)
 	constexpr float fontSize = 16.5f; // Font size, while the value is ~30% bigger than Default (13.0f), it has (almost) the same size.
 
 	// Main Font
-	io.Fonts->AddFontFromMemoryCompressedTTF(roboto_mono.data(), (int)roboto_mono.size(), fontSize * sizeScale);
+	io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_mono, fontSize);
 
 	// Icon Font
 	static constexpr ImWchar icon_ranges[]{ ICON_MIN_FA, ICON_MAX_FA, 0 };
@@ -39,10 +38,7 @@ void Menu::SetupImGui()
 	icons_config.MergeMode = true;
 	icons_config.PixelSnapH = true;
 
-	io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome.data(), (int)font_awesome.size(), fontSize * sizeScale, &icons_config, icon_ranges);
-
-	// Set the font scaling to 1.0f / sizeScale, so the font is rendered at our desired fontSize
-	style.FontScaleMain = 1.0f / sizeScale;
+	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome, fontSize, &icons_config, icon_ranges);
 
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;

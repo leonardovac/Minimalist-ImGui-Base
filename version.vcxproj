@@ -213,8 +213,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\game.h" />
     <ClInclude Include="src\hooks.h" />
-    <ClInclude Include="src\misc\fonts\font_awesome.hpp" />
-    <ClInclude Include="src\misc\fonts\roboto_mono.hpp" />
     <ClInclude Include="src\misc\keybinds.h" />
     <ClInclude Include="src\misc\logger.h" />
     <ClInclude Include="src\ui\backend\D3D11.h" />

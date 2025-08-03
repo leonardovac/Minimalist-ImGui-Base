@@ -80,12 +80,6 @@
     <ClInclude Include="src\game.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\misc\fonts\font_awesome.hpp">
-      <Filter>src\misc\fonts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\misc\fonts\roboto_mono.hpp">
-      <Filter>src\misc\fonts</Filter>
-    </ClInclude>
     <ClInclude Include="include\ScreenCleaner\ScreenCleaner.h">
       <Filter>include\ScreenCleaner</Filter>
     </ClInclude>
@@ -153,9 +147,6 @@
     </Filter>
     <Filter Include="src\ui">
       <UniqueIdentifier>{36629bfe-03ba-431c-94d9-2dc9bf7639bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\misc\fonts">
-      <UniqueIdentifier>{67332f60-a0d7-4b79-a66a-1035118f6d7b}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\ScreenCleaner">
       <UniqueIdentifier>{595fd539-999a-4283-86c4-5d3592f7ad77}</UniqueIdentifier>
