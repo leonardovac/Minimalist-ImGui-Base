@@ -27,22 +27,15 @@ This is a simple project that I visit once in a while during my free time. Contr
 
 ## ⚙️ Requirements
 
-**Hard Requirements:** 
+>[!TIP]
+> Use vcpkg (or any C++ package manager) for includes and libraries.
 
-- [Dear ImGui](https://github.com/ocornut/imgui)  
-- [SafetyHook](https://github.com/cursey/safetyhook)
-
-**Soft Requirements:**
-
-- [Quill](https://github.com/odygrd/quill) (for logging)
-
-**Optional:**  
-
-- [Volk](https://github.com/zeux/volk) (only for Vulkan)
-
-**Recommended:**  
-
-- [vcpkg](https://vcpkg.io/en/) (or any C++ package manager)
+| Required | Package | About |
+|------|---------|---------|
+| Yes | [Dear ImGui](https://github.com/ocornut/imgui) | Bloat-free Graphical User interface for C++  |
+| Yes | [SafetyHook](https://github.com/cursey/safetyhook) | C++23 procedure hooking library.  |
+| Optional | [Volk](https://github.com/zeux/volk) | Meta loader for Vulkan API |
+| Optional | [Quill](https://github.com/odygrd/quill) | Asynchronous Low Latency C++ Logging Library   |
 
 ## 🚀 Quick Start
 
