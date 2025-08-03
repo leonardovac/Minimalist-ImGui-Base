@@ -1,7 +1,7 @@
 ﻿#pragma once
 #define ENABLE_LOGGING 1
 
-#if ENABLE_LOGGING || defined(_DEBUG)
+#if (ENABLE_LOGGING || defined(_DEBUG)) && __has_include(<quill/Backend.h>)
 #define LOGGING_ENABLED 1
 #else
 #define LOGGING_ENABLED 0
@@ -31,6 +31,9 @@ inline HWND hConsole;
 #define LOG_IMPL(level, fmt, ...) QUILL_LOG_##level(globalLogger, fmt, ##__VA_ARGS__)
 #define LOG_IMPL_DYNAMIC(log_level, fmt, ...) QUILL_LOG_DYNAMIC(globalLogger, log_level, fmt, ##__VA_ARGS__)
 #else
+#include <windows.h>
+inline HWND hConsole;
+
 #define LOG_IMPL(level, fmt, ...) (void)0
 #define LOG_IMPL_DYNAMIC(log_level, fmt, ...) (void)0
 #endif
