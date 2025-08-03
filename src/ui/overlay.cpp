@@ -49,6 +49,10 @@ bool Overlay::TryAllPresentMethods()
 	if (graphicsAPI & GraphicsAPI::D3D12) anySuccess = Overlay::DirectX12::Hook() || anySuccess;
 #endif
 	if (graphicsAPI & GraphicsAPI::OpenGL) anySuccess = Overlay::OpenGL::Hook() || anySuccess;
+#ifdef VULKAN_BACKEND_ENABLED
 	if (graphicsAPI & GraphicsAPI::Vulkan) anySuccess = Overlay::Vulkan::Hook() || anySuccess;
+#else
+	if (graphicsAPI & GraphicsAPI::Vulkan) LOG_WARNING("Vulkan API detected but backend is DISABLED - install Volk library or #include \"volk.h\".");
+#endif
 	return anySuccess;
 }

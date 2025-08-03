@@ -109,6 +109,7 @@ namespace Overlay::Steam
 			{
 				if (const auto hSteamOverlayVulkan = GetModuleHandleA(steam_overlay_vulkan_layer))
 				{
+#ifdef VULKAN_BACKEND_ENABLED
 					const uintptr_t pQueuePresentKHR = reinterpret_cast<uintptr_t>(GetProcAddress(hSteamOverlayVulkan, "vkQueuePresentKHR"));
 					const uintptr_t pCreateSwapchainKHR = reinterpret_cast<uintptr_t>(GetProcAddress(hSteamOverlayVulkan, "vkCreateSwapchainKHR"));
 					if (pQueuePresentKHR && pCreateSwapchainKHR)
@@ -118,6 +119,10 @@ namespace Overlay::Steam
 						Vulkan::Hook(); // Hooking remaining functions
 						anySuccess = true;
 					}
+#else
+					LOG_WARNING("Vulkan Steam Overlay detected but backend is DISABLED - install Volk library or #include \"volk.h\".");
+#endif
+					
 				}
 			}
 			if (!anySuccess) LOG_WARNING("Couldn't find Steam Overlay's function addresses...");

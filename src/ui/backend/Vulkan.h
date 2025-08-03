@@ -1,4 +1,6 @@
 ﻿#pragma once
+#if __has_include(<volk.h>)
+#define VULKAN_BACKEND_ENABLED
 #define VK_USE_PLATFORM_WIN32_KHR
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
@@ -385,3 +387,4 @@ namespace Overlay::Vulkan
 		return original.stdcall<VkResult>(queue, pPresentInfo);
 	}
 }
+#endif
