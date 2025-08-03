@@ -50,12 +50,9 @@ This is a simple project that I visit once in a while during my free time. Contr
     ```bash
     git clone https://github.com/leonardovac/Minimalistic-ImGui-Base.git
     ```
-
-2. **Navigate to the project folder and run the setup script:**
-
 >[!NOTE]   
->This script uses vcpkg to install dependencies (`x86`/`x64-windows-static`) and runs [git sparse-checkout](https://git-scm.com/docs/git-sparse-checkout) to reduce submodule size.
-
+>This script will use vcpkg to install dependencies (`x86`/`x64-windows-static`) and runs [git sparse-checkout](https://git-scm.com/docs/git-sparse-checkout) to reduce submodule size.
+2. **Navigate to the project folder and run the setup script:**
     ```bash 
     cd Minimalistic-ImGui-Base/scripts
     .\quick_setup.bat
