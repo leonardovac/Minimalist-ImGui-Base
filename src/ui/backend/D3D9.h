@@ -42,7 +42,7 @@ namespace Overlay::DirectX9
         void** pVTable = *reinterpret_cast<void***>(pDevice.Get());
 
         HooksManager::Create<InlineHook>(pVTable[16], PTR_AND_NAME(Reset));
-        HooksManager::Create<InlineHook>(pVTable[42], PTR_AND_NAME(EndScene));
+		HooksManager::Create<InlineHook>(pVTable[42], PTR_AND_NAME(EndScene));
         return true;
     }
 
@@ -120,9 +120,11 @@ namespace Overlay::DirectX9
 
 	inline HRESULT WINAPI SwapChainPresent(IDirect3DSwapChain9* pSwapChain, const RECT* pSourceRect, const RECT* pDestRect, const HWND hDestWindowOverride, const RGNDATA* pDirtyRegion, const DWORD dwFlags)
 	{
-		static IDirect3DDevice9* pDevice {nullptr};
-		if (pDevice) RenderOverlay(pDevice);
-		else (void)pSwapChain->GetDevice(&pDevice);
+		IDirect3DDevice9* pDevice {nullptr};
+		if (SUCCEEDED(pSwapChain->GetDevice(&pDevice)))
+		{
+			RenderOverlay(pDevice);
+		}
 
 		static const OriginalFunc originalFunction(&SwapChainPresent);
 		return originalFunction.stdcall<HRESULT>(pSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
