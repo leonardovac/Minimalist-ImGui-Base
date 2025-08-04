@@ -30,7 +30,7 @@ void Menu::SetupImGui()
 	io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_mono.data(), fontSize);
 
 	// Icon Font
-	static constexpr ImWchar glyph_ranges[]{ ICON_MIN_FA, ICON_MAX_FA, 0 };
+	constexpr ImWchar glyphRanges[]{ ICON_MIN_FA, ICON_MAX_FA, 0 };
 	ImFontConfig iconsConfig;
 	iconsConfig.GlyphOffset = ImVec2(1.f, 1.f);
 	iconsConfig.GlyphMinAdvanceX = fontSize;
@@ -38,7 +38,7 @@ void Menu::SetupImGui()
 	iconsConfig.MergeMode = true;
 	iconsConfig.PixelSnapH = true;
 
-	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome.data(), fontSize, &iconsConfig, glyph_ranges);
+	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome.data(), fontSize, &iconsConfig, glyphRanges);
 
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;
