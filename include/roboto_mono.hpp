@@ -1,6 +1,6 @@
 ﻿#pragma once
-
-static constexpr char roboto_mono [82031] =
+#include <array>
+static constexpr std::array<char, 82031> roboto_mono = {{
 "7])#######=dJ+c'/###[),##1xL$#Q6>##tExF>9q*:4F7YY#JLE/1H]n42gd.9bC->>#_Ldp/mfax7WnhaeH(m<-X7Bk0HNV=BX9BBg;wmo%FK3<%k`(*HMY`=-.5T;-+g6#5#-0%J"
 "'n71jA$'58^xkf(E-d<BZ?E4UiIwA-&=oY-TT$=(Xw4Q#T(m<-Q6Bk0<_[FHxpN.)[jFJ(f;B>%34JuB;917L&TZ`*qe68%;K[^II^u>#+'l?-'OE/1+>00F#JVxg(H:;$GE*j0p&S+H"
 "C#WK[ID4;-*LuZ-(eFVC9v>#Pw'l?-i*.m/9XMuu@LJ>PiVJn.$)>>#;R3N0dHZ;#@T@%#39=,M`P'HNv-gfLYF-##6&/HuR+o>/G7YYu0=maPAX<nL/l?##.L*^kAie<6,[aT%u@58."
@@ -586,6 +586,6 @@ static constexpr char roboto_mono [82031] =
 "GQ.suod1Ql,i/squR%HgsB%huOU$K#Zk4wL(Ab2YdHU:vO?2]Oqh^4`,MMB#(exX#bNc##:qR)vk5S>-6>oY-q0%5)v(DB#=8.NMB`%QMqoNuL(Xc-9q.f34W>R44*CHgLilQX.F=Gf$"
 "PVqw-ax*GM9-[TM)W*uLI9H`MaYh<N@xIQMc@h0M:.Xh;YqNw9mru`4hbP`k^e(/`Yw3W@TmE>#OR]20?&MJ(D5k,4$XWL#LOOF3><N1)GAOTWx@Jpu;A/i^nvA9VcQ1;Z<-uf(nHG>u"
 "#;b9uaF(>u)I@[#>5J-=N%Xw9T=dw9Am1T/$RYm/ZF+F3PRkY`.)@nu_IID*9][R#or)(`x#nrZ+mhWB0*']=&_kI#-hT^?BZtkObgvA#1INh#_5jrZgBp4j^GV7endx1X%I>PjUH258"
-"sN6g#,RMPJ$F,v5<8lMuwl/EuW0Y<MF9iF?qvRs;2&UkPP53qug_J(i*tSC^;[GU#QejjhD4r=l(`_nu$7KiumV';-$+(JC.bxdOan'mA+gTs$1cj+MRY#%jsr(:mn*Q:#";
+"sN6g#,RMPJ$F,v5<8lMuwl/EuW0Y<MF9iF?qvRs;2&UkPP53qug_J(i*tSC^;[GU#QejjhD4r=l(`_nu$7KiumV';-$+(JC.bxdOan'mA+gTs$1cj+MRY#%jsr(:mn*Q:#"}};
 
 

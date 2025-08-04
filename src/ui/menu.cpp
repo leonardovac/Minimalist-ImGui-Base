@@ -27,7 +27,7 @@ void Menu::SetupImGui()
 	constexpr float fontSize = 16.5f; // Font size, while the value is ~30% bigger than Default (13.0f), it has (almost) the same size.
 
 	// Main Font
-	io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_mono, fontSize);
+	io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_mono.data(), fontSize);
 
 	// Icon Font
 	static constexpr ImWchar glyph_ranges[]{ ICON_MIN_FA, ICON_MAX_FA, 0 };
@@ -38,7 +38,7 @@ void Menu::SetupImGui()
 	iconsConfig.MergeMode = true;
 	iconsConfig.PixelSnapH = true;
 
-	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome, fontSize, &iconsConfig, glyph_ranges);
+	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome.data(), fontSize, &iconsConfig, glyph_ranges);
 
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;

@@ -1,5 +1,6 @@
 ﻿#pragma once
-static constexpr char font_awesome[700221] =
+#include <array>
+static constexpr std::array<char, 700221> font_awesome = {{
 "7])#######_o7ZR'/###[),##-`($#Q6>##kZn423^.YB(->>#@tkU%'vA0FGGdD`'++##O_%##rPOkEoJ20oTM&##(q72'EqAUC+)2e*aZXw0vVp-$f'TqLQT]G;0>D_&WaD'#<_[FH"
 "M7B@-)2K424G9D3'4JuBeZ>+5JC2MKb^]H33K[^I_(O9%k4S>->('Y%34^=BxU.==[lKM'o9'##=[HiFO;M`]UQJM'V:&##I<P-Z]Yu>#bJboUBie<6&%iZ#u@58.Ti[#t.(L#v$*(n#"
 "S3-&M]em##]obkLWR-##EGw4v07YY#hF4v-,/S7N]Q7fMDS/Kq>Nfp&JQw0#T[>hLl_Y-M=I#hLY'*Z#_H*1#-Dc>#Y&@qLvA>0NJi0=#l?*1#.%no%C3`eMWs5/(9.^e$89ff=F([0#"
@@ -5001,7 +5002,7 @@ static constexpr char font_awesome[700221] =
 "avElE+P2eG.?4,H6BrEF'vr9(DrPQ:.$VdMI'crL(k1F?0H'_G0)ddG&8HoDq7AY'XmaN1%Q4ZBv,+;C<c7.%2Phc$pZ3nD':^e$x4`cHvr%#'#B#hFH8KwH6rDmE+<4cH(/]Y']jS&8"
 "**K:'m.W<?2QtMCN=K^=MD%aF:&BE#-qU)N'>@8)Ye8N08@=GH3ToUC;NS,M/<2VC5t^cH/EA>B`jB_%*o;N2#D)<H?ceBIRv._J8g0,HIYfZ$;m0,HHt$T^x0h`$t3@p&pxr,2&K6)%"
 "4&?lE*IC9Iu1vLFlULvHpg`9CEWMdE5Z1U1-As*%/RG8h'%1w%t2`d,q[0b*u]7q.iAQ<BTwkXQG:Fm'C/S$K/,4nDHB@rLpwK2BxPpKF4:@m/T'vmDiv[TCKJ8Z$-Nl'&7FVMFSkYh1"
-"0+xFHlp[TCCg7bF'tqpLfLA*Hn+]5A7jh_&0&omDNe)[8rsE#H9TwrL$m0E%gg.>Bj6f.##m8At9wKp:";
+"0+xFHlp[TCCg7bF'tqpLfLA*Hn+]5A7jh_&0&omDNe)[8rsE#H9TwrL$m0E%gg.>Bj6f.##m8At9wKp:"}};
 
 #define ICON_MIN_FA 0xe005
 #define ICON_MAX_16_FA 0xf8ff
