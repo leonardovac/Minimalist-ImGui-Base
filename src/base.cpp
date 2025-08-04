@@ -15,6 +15,40 @@ namespace
 		return pos != std::string_view::npos ? haystack.substr(pos) : std::string_view{};
 	}
 
+	std::string GetCurrentProcessName()
+	{
+		std::array<char, MAX_PATH> processPath{};
+		DWORD size = static_cast<DWORD>(processPath.size());
+
+		if (QueryFullProcessImageNameA(GetCurrentProcess(), 0, processPath.data(), &size))
+		{
+			// Extract filename from full path
+			const std::filesystem::path fullPath(processPath.data());
+			return fullPath.filename().string();
+		}
+
+		return {};
+	}
+
+	bool IsBlacklistedProcess()
+	{
+		const std::string processName = GetCurrentProcessName();
+		constexpr std::array<const char*, 1> blacklist = {
+			"UnityCrashHandler"
+		};
+
+		for (const auto& name : blacklist)
+		{
+			if (stristr(processName, name).data())
+			{
+				LOG_CRITICAL("Blacklisted process detected: {}", processName);
+				ConsoleManager::destroy_console();
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void ParseTitleForGraphicsAPI(const std::string_view windowTitle)
 	{
 		if (stristr(windowTitle, "DX9").data()) Overlay::graphicsAPI = GraphicsAPI::D3D9;
@@ -92,6 +126,8 @@ namespace Hooks {
 ScreenCleaner screenCleaner(&Overlay::bEnabled);
 extern void MainThread()
 {
+	if (IsBlacklistedProcess()) return;
+	
 #if LOGGING_ENABLED
 	ConsoleManager::create_console();
 	SetupQuill("log.txt");
