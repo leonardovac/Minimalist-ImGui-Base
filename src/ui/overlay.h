@@ -85,6 +85,8 @@ namespace Overlay
 	inline bool bInitialized{false};
 	inline bool bEnabled{true};
 
+	inline static ImDrawList* pBgDrawList{nullptr};
+
 	inline GraphicsAPI graphicsAPI{UNKNOWN};
 	inline HWND hWindow{nullptr};
 

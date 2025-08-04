@@ -26,6 +26,7 @@ void Overlay::RenderLogic()
 #endif
 
 	ImGui::NewFrame();
+	pBgDrawList = ImGui::GetBackgroundDrawList();
 	//ImGui::GetIO().MouseDrawCursor = Menu::bOpen;
 	if (Menu::bOpen) Menu::DrawMenu();
 	ImGui::Render();
