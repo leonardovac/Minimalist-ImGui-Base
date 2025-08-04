@@ -66,6 +66,9 @@ This is a simple project that I visit once in a while during my free time. Contr
 
 ## 🎯 Features
 
+>[!WARNING]
+> Currently not compatible with upscaling technologies such as FidelityFX Super Resolution (FSR) or NVIDIA DLSS.
+
 - Simple and easy to use
 - Automatic graphics API detection
 - Logging system based on Quill
