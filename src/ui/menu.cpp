@@ -30,15 +30,15 @@ void Menu::SetupImGui()
 	io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_mono, fontSize);
 
 	// Icon Font
-	static constexpr ImWchar icon_ranges[]{ ICON_MIN_FA, ICON_MAX_FA, 0 };
-	ImFontConfig icons_config;
-	icons_config.GlyphOffset = ImVec2(1.f, 1.f);
-	icons_config.GlyphMinAdvanceX = fontSize;
-	icons_config.GlyphMaxAdvanceX = fontSize;
-	icons_config.MergeMode = true;
-	icons_config.PixelSnapH = true;
+	static constexpr ImWchar glyph_ranges[]{ ICON_MIN_FA, ICON_MAX_FA, 0 };
+	ImFontConfig iconsConfig;
+	iconsConfig.GlyphOffset = ImVec2(1.f, 1.f);
+	iconsConfig.GlyphMinAdvanceX = fontSize;
+	iconsConfig.GlyphMaxAdvanceX = fontSize;
+	iconsConfig.MergeMode = true;
+	iconsConfig.PixelSnapH = true;
 
-	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome, fontSize, &icons_config, icon_ranges);
+	io.Fonts->AddFontFromMemoryCompressedBase85TTF(font_awesome, fontSize, &iconsConfig, glyph_ranges);
 
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;
@@ -139,7 +139,7 @@ void Menu::DrawMenu()
 	if (ImGui::Begin("Minimalist ImGui Base", &Menu::bOpen, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Hello, world!");
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 265);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 281);
 		ImGui::LabelText(ICON_FA_COMPUTER_MOUSE" Hook examples:", ""); // Can use icons from FontAwesome with their macros outside quotes, ex: ICON "TEXT" ICON "MORE TEXT"
 		ImGui::SameLine();
 		if (ImGui::Button("MessageBoxA")) 
@@ -158,6 +158,4 @@ void Menu::DrawMenu()
 		ImGui::Text("Press %s %s to open/close this menu.", ICON_FA_KEYBOARD, Keybinds::GetKeyBind(&Menu::bOpen)->keyName.c_str()); // Icons can also be used inside text with std::format or similar
 	}
 	ImGui::End();
-
-	//ImGui::ShowDemoWindow();
 }
