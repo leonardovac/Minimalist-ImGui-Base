@@ -215,10 +215,10 @@ namespace HooksManager
 	}
 
 	template <at_hook HookType>
-	bool Create(HookType* hook, std::string_view targetName, void* replacement, std::string_view detourName = {})
+	bool Create(HookType* hook, const char* targetName, void* replacement, std::string_view detourName = {})
 	{
-		constexpr std::string hookType = std::string(typeid(HookType).name()).substr(16);
-		if (const auto originalMethod = hook->Hook(targetName.data(), replacement); !originalMethod)
+		const std::string hookType = std::string(typeid(HookType).name()).substr(16);
+		if (const auto originalMethod = hook->Hook(targetName, replacement); !originalMethod)
 		{
 			LOG_ERROR("Couldn't {}Hook {} ({}) to {} (0x{:X}), error: {}.", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement), TinyHook::Utils::GetErrorMessage(originalMethod.error()));
 			RETURN_FAIL(false)

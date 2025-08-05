@@ -76,7 +76,10 @@ namespace Hooks
 		HookEntry(const char* moduleName, const char* pattern, T detour, const HookType hookType) : HookEntry(moduleName, pattern, detour, "Unknown", hookType) {}
 
 		template<typename T>
-		HookEntry(const char* pattern, T detour, const HookType hookType) : HookEntry(static_cast<const char*>(nullptr), pattern, detour, hookType) {}
+		HookEntry(const char* pattern, T detour, const char* name, const HookType hookType) : HookEntry(static_cast<const char*>(nullptr), pattern, detour, name, hookType) {}
+
+		template<typename T>
+		HookEntry(const char* pattern, T detour, const HookType hookType) : HookEntry(pattern, detour, "Unknown", hookType) {}
 	};
 
 	static inline HookEntry List[]
