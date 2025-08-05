@@ -42,7 +42,7 @@ void Menu::SetupImGui()
 
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;
-	style.WindowPadding = ImVec2(12.0f, 12.0f);
+	//style.WindowPadding = ImVec2(12.0f, 12.0f);
 	style.WindowRounding = 0.0f;
 	style.WindowBorderSize = 0.0f;
 	style.WindowMinSize = ImVec2(20.0f, 20.0f);
@@ -52,12 +52,13 @@ void Menu::SetupImGui()
 	style.ChildBorderSize = 1.0f;
 	style.PopupRounding = 0.0f;
 	style.PopupBorderSize = 1.0f;
-	style.FramePadding = ImVec2(6.0f, 6.0f);
+	//style.FramePadding = ImVec2(6.0f, 6.0f);
+	style.FramePadding.x = 6.0f;
 	style.FrameRounding = 0.0f;
 	style.FrameBorderSize = 0.0f;
 	style.ItemSpacing = ImVec2(12.0f, 6.0f);
-	style.ItemInnerSpacing = ImVec2(6.0f, 3.0f);
-	style.CellPadding = ImVec2(12.0f, 6.0f);
+	//style.ItemInnerSpacing = ImVec2(6.0f, 3.0f);
+	//style.CellPadding = ImVec2(12.0f, 6.0f);
 	style.IndentSpacing = 20.0f;
 	style.ColumnsMinSpacing = 6.0f;
 	style.ScrollbarSize = 12.0f;
@@ -139,7 +140,7 @@ void Menu::DrawMenu()
 	if (ImGui::Begin("Minimalist ImGui Base", &Menu::bOpen, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Hello, world!");
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 281);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 278);
 		ImGui::LabelText(ICON_FA_COMPUTER_MOUSE" Hook examples:", ""); // Can use icons from FontAwesome with their macros outside quotes, ex: ICON "TEXT" ICON "MORE TEXT"
 		ImGui::SameLine();
 		if (ImGui::Button("MessageBoxA")) 
