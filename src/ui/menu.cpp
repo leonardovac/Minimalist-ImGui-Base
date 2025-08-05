@@ -154,8 +154,10 @@ void Menu::DrawMenu()
 
 		ImGui::CustomBindKey("Open Menu", &Menu::bOpen);
 		ImGui::CustomBindKey("Example Keybind", {"example_keybind", &Menu::bExample, ImGuiKey_MouseLeft, Keybinds::KeyBind::HOLD});
+		ImGui::Checkbox("Example Checkbox", &Menu::bExample);
 		ImGui::Separator();
-		ImGui::Text("Press %s %s to open/close this menu.", ICON_FA_KEYBOARD, Keybinds::GetKeyBind(&Menu::bOpen)->keyName.c_str()); // Icons can also be used inside text with std::format or similar
+		const auto& openKey = Keybinds::GetKeyBind(&Menu::bOpen);
+		ImGui::Text("Press %s %s to open/close this menu.", openKey->keyIcon.c_str(), openKey->keyName.c_str()); // Icons can also be used inside text with std::format or similar
 	}
 	ImGui::End();
 }

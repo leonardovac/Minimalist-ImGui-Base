@@ -6,11 +6,34 @@
 #include <vector>
 #include <windows.h>
 
+#include "font_awesome.hpp"
 #include "imgui.h"
-#include "menu.h"
+#include "../ui/menu.h"
 
 namespace Keybinds
 {
+	namespace Utils
+	{
+		inline std::string ToSnakeCase(const char* input)
+		{
+			std::string output = input;
+
+			std::ranges::transform(output, output.begin(), [](unsigned char c)
+				{
+					return std::tolower(c);
+				});
+
+			std::ranges::replace(output, ' ', '_');
+
+			std::erase_if(output, [](unsigned char c)
+				{
+					return !(std::isalnum(c) || c == '_');
+				});
+
+			return output;
+		}
+	}
+
 	namespace Modifiers
 	{
 		const std::unordered_map<int, std::uint8_t> keys = 
@@ -77,6 +100,7 @@ namespace Keybinds
 			TOGGLE,
 			HOLD
 		};
+		inline static float gui_spacing {};
 
 		std::string		name;
 		bool*			pFunction;
@@ -85,6 +109,7 @@ namespace Keybinds
 		std::uint16_t	modifiers = 0;
 
 		std::string		keyName;
+		std::string		keyIcon;
 		bool			isWaiting = false;
 
 		KeyBind(std::string name, bool* function, const std::uint16_t key = 0, Type	type = TOGGLE, const std::uint16_t modifiers = 0) : name(std::move(name)), pFunction(function), key(key), type(type), modifiers(modifiers), keyName(GetKeyName(key, modifiers)) {}
@@ -122,7 +147,10 @@ namespace Keybinds
 			modifiers = currentModifiers;
 			keyName = GetKeyName(key, modifiers);
 			isWaiting = false;
+			gui_spacing = 0;
 		}
+
+		void Clear() { Update(0, 0); }
 	};
 
 	inline std::vector<KeyBind> kbList
@@ -149,6 +177,96 @@ namespace Keybinds
 		{
 			keyBind.Check(currentModifiers);
 		}
+	}
+}
+
+namespace ImGui
+{
+	inline bool CustomBindKey(const char* label, Keybinds::KeyBind* keyBind, const bool useCheckbox = false)
+	{
+		const char* typeText = useCheckbox ? "" : keyBind->type == Keybinds::KeyBind::TOGGLE ? "[T] " : "[H] ";
+		const std::string visibleText = std::format("{}{} Key: {} ", typeText, label, keyBind->keyName);
+		const std::string labelText = std::string("##") + label;
+		const float itemSize = ImGui::CalcTextSize(visibleText.c_str()).x;
+
+		if (useCheckbox && keyBind->pFunction != nullptr)
+		{
+			Checkbox(visibleText.c_str(), keyBind->pFunction);
+		}
+		else
+		{
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 8.f);							// offset hidden text
+			ImGui::SetNextItemWidth(itemSize);											// ensuring it can fit our text (It would render max 35 chars otherwise)
+			ImGui::LabelText("", "%s", visibleText.c_str());
+			if (ImGui::IsItemClicked() && ImGui::GetMouseClickedCount(0) == 2)
+			{
+				keyBind->ChangeType();
+			}
+		}
+
+		Keybinds::KeyBind::gui_spacing = std::max(Keybinds::KeyBind::gui_spacing, itemSize);
+		ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x + Keybinds::KeyBind::gui_spacing);
+
+		keyBind->keyIcon = keyBind->key >= ImGuiKey_MouseLeft && keyBind->key <= ImGuiKey_MouseWheelY ? ICON_FA_COMPUTER_MOUSE : ICON_FA_KEYBOARD;
+		const char* buttonText = keyBind->isWaiting ? "Press any key..." : "Bind Key";
+		const std::string buttonLabel = keyBind->keyIcon + " " + buttonText + labelText;
+
+		if (ImGui::Button(buttonLabel.c_str()))
+		{
+			keyBind->isWaiting = !keyBind->isWaiting;
+		}
+
+		if (keyBind->key)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button((std::string(ICON_FA_ERASER" Clear") + labelText).c_str()))
+			{
+				keyBind->Clear();
+			}
+		}
+
+		if (keyBind->isWaiting)
+		{
+			for (std::uint16_t key = ImGuiKey_NamedKey_BEGIN; key < ImGuiKey_NamedKey_END; key++)
+			{
+				if (key >= ImGuiKey_ReservedForModCtrl && key <= ImGuiKey_ReservedForModSuper) continue;
+
+				const bool isModifierKey = key >= ImGuiKey_LeftCtrl && key <= ImGuiKey_Menu;
+				if ((isModifierKey && ImGui::IsKeyReleased(static_cast<ImGuiKey>(key))) || (!isModifierKey && ImGui::IsKeyPressed(static_cast<ImGuiKey>(key))))
+				{
+					keyBind->Update(key, Keybinds::Modifiers::GetModifiers());
+					break;
+				}
+			}
+		}
+		
+		return keyBind->pFunction != nullptr ? *keyBind->pFunction : true;
+	}
+
+	inline bool CustomBindKey(const char* label, bool* pFunction, const bool useCheckbox = false)
+	{
+		if (pFunction == nullptr) return false;
+
+		if (Keybinds::KeyBind* existingKeyBind = Keybinds::GetKeyBind(pFunction))
+		{
+			return CustomBindKey(label, existingKeyBind, useCheckbox);
+		}
+
+		Keybinds::kbList.emplace_back(Keybinds::Utils::ToSnakeCase(label), pFunction);
+		return CustomBindKey(label, &Keybinds::kbList.back(), useCheckbox);
+	}
+
+	inline bool CustomBindKey(const char* label, const Keybinds::KeyBind& keyBind, const bool useCheckbox = false)
+	{
+		if (keyBind.pFunction == nullptr) return false;
+
+		if (Keybinds::KeyBind* existingKeyBind = Keybinds::GetKeyBind(keyBind.pFunction))
+		{
+			return CustomBindKey(label, existingKeyBind, useCheckbox);
+		}
+
+		Keybinds::kbList.push_back(keyBind);
+		return CustomBindKey(label, &Keybinds::kbList.back(), useCheckbox);
 	}
 }
  #endif
