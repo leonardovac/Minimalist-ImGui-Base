@@ -139,9 +139,10 @@ void Menu::DrawMenu()
 	if (ImGui::Begin("Minimalist ImGui Base", &Menu::bOpen, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Hello, world!");
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 278);
-		ImGui::LabelText(ICON_FA_COMPUTER_MOUSE" Hook examples:", ""); // Can use icons from FontAwesome with their macros outside quotes, ex: ICON "TEXT" ICON "MORE TEXT"
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted(ICON_FA_COMPUTER_MOUSE" Hook examples:"); // Can use icons from FontAwesome with their macros outside quotes, ex: ICON "TEXT" ICON "MORE TEXT"
 		ImGui::SameLine();
+		ImGui::SameLine(0, 1 * ImGui::GetStyle().ItemSpacing.y);
 		if (ImGui::Button("MessageBoxA")) 
 		{
 			MessageBoxA(nullptr, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", "Lorem ipsum", MB_OK);	// MessageBoxA is hooked in this context (see hooks.h)

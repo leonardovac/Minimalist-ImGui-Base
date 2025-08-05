@@ -185,7 +185,7 @@ namespace ImGui
 	inline bool CustomBindKey(const char* label, Keybinds::KeyBind* keyBind, const bool useCheckbox = false)
 	{
 		const char* typeText = useCheckbox ? "" : keyBind->type == Keybinds::KeyBind::TOGGLE ? "[T] " : "[H] ";
-		const std::string visibleText = std::format("{}{} Key: {} ", typeText, label, keyBind->keyName);
+		const std::string visibleText = std::format("{}{} Key: {}", typeText, label, keyBind->keyName);
 		const std::string labelText = std::string("##") + label;
 		const float itemSize = ImGui::CalcTextSize(visibleText.c_str()).x;
 
@@ -195,9 +195,9 @@ namespace ImGui
 		}
 		else
 		{
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 8.f);							// offset hidden text
-			ImGui::SetNextItemWidth(itemSize);											// ensuring it can fit our text (It would render max 35 chars otherwise)
-			ImGui::LabelText("", "%s", visibleText.c_str());
+			ImGui::AlignTextToFramePadding();
+			ImGui::SetNextItemWidth(itemSize);
+			ImGui::TextUnformatted(visibleText.c_str());
 			if (ImGui::IsItemClicked() && ImGui::GetMouseClickedCount(0) == 2)
 			{
 				keyBind->ChangeType();
@@ -205,7 +205,7 @@ namespace ImGui
 		}
 
 		Keybinds::KeyBind::gui_spacing = std::max(Keybinds::KeyBind::gui_spacing, itemSize);
-		ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x + Keybinds::KeyBind::gui_spacing);
+		ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetStyle().ItemSpacing.x + Keybinds::KeyBind::gui_spacing, 1 * ImGui::GetStyle().ItemSpacing.x);
 
 		keyBind->keyIcon = keyBind->key >= ImGuiKey_MouseLeft && keyBind->key <= ImGuiKey_MouseWheelY ? ICON_FA_COMPUTER_MOUSE : ICON_FA_KEYBOARD;
 		const char* buttonText = keyBind->isWaiting ? "Press any key..." : "Bind Key";
