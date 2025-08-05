@@ -7,7 +7,7 @@
 #include "imgui_impl_win32.h"
 #include "overlay.h"
 #include "roboto_mono.hpp"
-#include "widgets.h"
+#include "components/widgets.h"
 
 void Menu::SetupImGui()
 {
