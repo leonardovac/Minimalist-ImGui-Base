@@ -8,7 +8,6 @@
 #include "overlay.h"
 #include "roboto_mono.hpp"
 #include "widgets.h"
-#include "../game.h"
 
 void Menu::SetupImGui()
 {

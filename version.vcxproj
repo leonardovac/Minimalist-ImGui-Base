@@ -194,7 +194,7 @@
     <ClCompile Include="include\Mem\hook.cpp" />
     <ClCompile Include="include\Mem\mem.cpp" />
     <ClCompile Include="include\ScreenCleaner\ScreenCleaner.cpp" />
-    <ClCompile Include="src\base.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\hooks.cpp" />
     <ClCompile Include="src\misc\logger.cpp" />
     <ClCompile Include="src\ui\menu.cpp" />
@@ -211,7 +211,6 @@
     <ClInclude Include="include\TinyHook\tinyhook.h" />
     <ClInclude Include="include\TinyHook\vmthook.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\game.h" />
     <ClInclude Include="src\hooks.h" />
     <ClInclude Include="src\misc\keybinds.h" />
     <ClInclude Include="src\misc\logger.h" />
@@ -222,9 +221,9 @@
     <ClInclude Include="src\ui\backend\OpenGL.h" />
     <ClInclude Include="src\ui\backend\Steam.h" />
     <ClInclude Include="src\ui\backend\Vulkan.h" />
+    <ClInclude Include="src\ui\components\widgets.h" />
     <ClInclude Include="src\ui\menu.h" />
     <ClInclude Include="src\ui\overlay.h" />
-    <ClInclude Include="src\ui\widgets.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
