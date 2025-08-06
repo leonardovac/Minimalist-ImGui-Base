@@ -128,7 +128,7 @@ namespace Hooks
 				if (auto result = entry.TryResolveAddress(); !result)
 				{
 					auto err = result.error();
-					LOG_ERROR("Pattern scan failed in module '{}' for '{}': {} (code: {})", entry.module, entry.name, TinyHook::Utils::GetErrorMessage(err), static_cast<int>(err));
+					LOG_ERROR("Pattern scan failed in module '{}' for '{}': {} (code: {}).", entry.module, entry.name, TinyHook::Utils::GetErrorMessage(err), static_cast<int>(err));
 					continue;
 				}
 			}
