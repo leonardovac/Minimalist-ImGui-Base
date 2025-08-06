@@ -181,13 +181,13 @@ namespace HooksManager
 
 		if (!address)
 		{
-			LOG_ERROR("Invalid address passed for {}: 0x{:X}.", detourName, address);
+			LOG_ERROR("Invalid target address passed for {}: 0x{:X}.", detourName, address);
 			RETURN_FAIL(false)
 		}
 
 		if (!(flags & Duplicated) && hooks.contains(replacement))
 		{
-			LOG_WARNING("Possible unintended duplicated hook for {}.", detourName);
+			LOG_WARNING("Possible unintended duplicate hook detected for {}.", detourName);
 			RETURN_FAIL(false)
 		}
 
@@ -199,7 +199,7 @@ namespace HooksManager
 		auto& hook = hooks[replacement].emplace_back(std::make_unique<FunctionHook<HookType>>(reinterpret_cast<void*>(address), replacement, flags));
 		if (const uint8_t error = hook->getError())
 		{
-			LOG_ERROR("Couldn't hook function at 0x{:X} for {} | {}.", address, detourName, Utils::ParseError(error));
+			LOG_ERROR("Couldn't hook function at 0x{:X} for {}: {}", address, detourName, Utils::ParseError(error));
 			hooks.erase(replacement);
 			RETURN_FAIL(false)
 		}
@@ -220,11 +220,11 @@ namespace HooksManager
 		const std::string hookType = std::string(typeid(HookType).name()).substr(16);
 		if (const auto originalMethod = hook->Hook(targetName, replacement); !originalMethod)
 		{
-			LOG_ERROR("Couldn't {}Hook {} ({}) to {} (0x{:X}), error: {}.", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement), TinyHook::Utils::GetErrorMessage(originalMethod.error()));
+			LOG_ERROR("Couldn't {} {} ({}) to {} (0x{:X}), error: {}.", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement), TinyHook::Utils::GetErrorMessage(originalMethod.error()));
 			RETURN_FAIL(false)
 		}
 
-		LOG_INFO("{}Hooked {} ({}) -> {} (0x{:X}).", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement));
+		LOG_INFO("{} placed at {} ({}) -> {} (0x{:X}).", hookType, targetName, hook->name, detourName, reinterpret_cast<uintptr_t>(replacement));
 		return true;
 	}
 
