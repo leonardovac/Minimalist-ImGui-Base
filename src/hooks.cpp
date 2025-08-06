@@ -52,10 +52,13 @@ namespace Hooks
 
 	struct HookEntry
 	{
-		void* address;
+		mutable void* address{ nullptr };
 		void* detour;
 		const char* name{};
 		HookType type;
+
+		const char* module = nullptr;
+		const char* pattern = nullptr;
 
 		template<typename T>
 		HookEntry(void* address, T detour, const char* name, const HookType hookType) : address(address), detour(reinterpret_cast<void*>(detour)), name(name), type(hookType) {}
@@ -64,13 +67,7 @@ namespace Hooks
 		HookEntry(void* address, T detour, const HookType hookType) : HookEntry(address, detour, "Unknown", hookType) {}
 
 		template<typename T>
-		HookEntry(const HMODULE& module, const char* pattern, T detour, const char* name, const HookType hookType) : detour(reinterpret_cast<void*>(detour)), name(name), type(hookType)
-		{
-			if (module) address = mem::PatternScan(module, pattern);
-		}
-
-		template<typename T>
-		HookEntry(const char* moduleName, const char* pattern, T detour, const char* name, const HookType hookType) : HookEntry(TryGetModuleHandle(moduleName), pattern, detour, name, hookType) {}
+		HookEntry(const char* moduleName, const char* pattern, T detour, const char* name, const HookType hookType) : detour(reinterpret_cast<void*>(detour)), name(name), type(hookType), module(moduleName), pattern(pattern) {}
 
 		template<typename T>
 		HookEntry(const char* moduleName, const char* pattern, T detour, const HookType hookType) : HookEntry(moduleName, pattern, detour, "Unknown", hookType) {}
@@ -80,6 +77,19 @@ namespace Hooks
 
 		template<typename T>
 		HookEntry(const char* pattern, T detour, const HookType hookType) : HookEntry(pattern, detour, "Unknown", hookType) {}
+
+		std::expected<void*, TinyHook::Error> TryResolveAddress() const
+		{
+			if (!address)
+			{
+				const HMODULE hModule = TryGetModuleHandle(module);
+				if (!hModule) return std::unexpected(TinyHook::Error::InvalidModule);
+
+				address = mem::PatternScan(hModule, pattern);
+				if (!address) return std::unexpected(TinyHook::Error::InvalidAddress);
+			}
+			return address;
+		}
 	};
 
 	static inline HookEntry List[]
@@ -111,15 +121,25 @@ namespace Hooks
 	extern void SetupAllHooks()
 	{
 		LOG_NOTICE("Starting hooking procedures...");
-		for (auto& [address, detour, name, type] : Hooks::List)
+		for (auto& entry : Hooks::List)
 		{
-			switch (type)
+			if (!entry.address && entry.pattern)
+			{
+				if (auto result = entry.TryResolveAddress(); !result)
+				{
+					auto err = result.error();
+					LOG_ERROR("Pattern scan failed in module '{}' for '{}': {} (code: {})", entry.module, entry.name, TinyHook::Utils::GetErrorMessage(err), static_cast<int>(err));
+					continue;
+				}
+			}
+
+			switch (entry.type)
 			{
 			case HookType::Inline:
-				HooksManager::Create<InlineHook>(address, detour, name);
+				HooksManager::Create<InlineHook>(entry.address, entry.detour, entry.name);
 				break;
 			case HookType::Mid:
-				HooksManager::Create<MidHook>(address, detour, name);
+				HooksManager::Create<MidHook>(entry.address, entry.detour, entry.name);
 				break;
 			}
 		}
