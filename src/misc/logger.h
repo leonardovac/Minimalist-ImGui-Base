@@ -3,8 +3,6 @@
 
 #if (ENABLE_LOGGING || defined(_DEBUG)) && __has_include(<quill/Backend.h>)
 #define LOGGING_ENABLED 1
-#else
-#define LOGGING_ENABLED 0
 #endif
 
 #if LOGGING_ENABLED
