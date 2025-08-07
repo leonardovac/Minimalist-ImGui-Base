@@ -1,5 +1,5 @@
 ﻿#pragma once
-#define ENABLE_LOGGING 1
+#define ENABLE_LOGGING 0
 
 #if (ENABLE_LOGGING || defined(_DEBUG)) && __has_include(<quill/Backend.h>)
 #define LOGGING_ENABLED 1
