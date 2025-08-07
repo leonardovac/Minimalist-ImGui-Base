@@ -42,7 +42,9 @@ namespace
 			if (stristr(processName, name).data())
 			{
 				LOG_CRITICAL("Blacklisted process detected: {}", processName);
+#if LOGGING_ENABLED
 				ConsoleManager::destroy_console();
+#endif
 				return true;
 			}
 		}

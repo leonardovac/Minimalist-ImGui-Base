@@ -1,6 +1,8 @@
 ﻿#pragma once
 #ifndef KEYBINDS_H
 #define KEYBINDS_H
+#include <algorithm>
+#include <format>
 #include <string>
 #include <unordered_map>
 #include <vector>
