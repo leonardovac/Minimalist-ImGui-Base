@@ -106,15 +106,15 @@ namespace Keybinds
 
 		std::string		name;
 		bool*			pFunction;
-		std::uint16_t	key = 0;
-		Type			type = TOGGLE;
-		std::uint16_t	modifiers = 0;
+		std::uint16_t	key{ 0 };
+		Type			type{ TOGGLE };
+		std::uint16_t	modifiers{ 0 };
 
 		std::string		keyName;
-		std::string		keyIcon;
-		bool			isWaiting = false;
+		std::string		keyIcon{ ICON_FA_KEYBOARD };
+		bool			isWaiting{ false };
 
-		KeyBind(std::string name, bool* function, const std::uint16_t key = 0, Type	type = TOGGLE, const std::uint16_t modifiers = 0) : name(std::move(name)), pFunction(function), key(key), type(type), modifiers(modifiers), keyName(GetKeyName(key, modifiers)) {}
+		KeyBind(std::string name, bool* function, const std::uint16_t key = 0, const Type type = TOGGLE, const std::uint16_t modifiers = 0) : name(std::move(name)), pFunction(function), key(key), type(type), modifiers(modifiers), keyName(GetKeyName(key, modifiers)) {}
 
         void ChangeType()
         {
