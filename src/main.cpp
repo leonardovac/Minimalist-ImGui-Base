@@ -37,16 +37,13 @@ namespace
 			"UnityCrashHandler"
 		};
 
-		for (const auto& name : blacklist)
+		if (std::ranges::any_of(blacklist, [&](const char* name){ return stristr(processName, name).data() != nullptr; }))
 		{
-			if (stristr(processName, name).data())
-			{
-				LOG_CRITICAL("Blacklisted process detected: {}", processName);
+			LOG_CRITICAL("Blacklisted process detected: {}", processName);
 #if LOGGING_ENABLED
-				ConsoleManager::destroy_console();
+			ConsoleManager::destroy_console();
 #endif
-				return true;
-			}
+			return true;
 		}
 		return false;
 	}
