@@ -36,19 +36,37 @@ namespace TinyHook
 		constexpr std::expected<void, Error> Patch(void* pAddress, T value)
 		{
 			if (!pAddress) return std::unexpected(Error::InvalidAddress);
-            
 
-			DWORD oldProtection;
-			if (!VirtualProtect(pAddress, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtection))
+			MEMORY_BASIC_INFORMATION mbi;
+			if (!VirtualQuery(pAddress, &mbi, sizeof(mbi)))
 			{
-				return std::unexpected(Error::ProtectionError);
+				return std::unexpected(Error::InvalidAddress);
 			}
 
+			DWORD oldProtection{ 0 };
+			bool bProtectionChanged{ false };
+
+			// Check if it's writable
+			if ((mbi.Protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_WRITECOPY)) == 0)
+			{
+				// Change protection
+				if (!VirtualProtect(pAddress, sizeof(T), PAGE_EXECUTE_READWRITE, &oldProtection))
+				{
+					return std::unexpected(Error::ProtectionError);
+				}
+				bProtectionChanged = true;
+			}
+
+			// Change value
 			*static_cast<T*>(pAddress) = value;
 
-			if (!VirtualProtect(pAddress, sizeof(T), oldProtection, &oldProtection))
+			// Restore original protection
+			if (bProtectionChanged)
 			{
-				return std::unexpected(Error::ProtectionError);
+				if (!VirtualProtect(pAddress, sizeof(T), oldProtection, &oldProtection))
+				{
+					return std::unexpected(Error::ProtectionError);
+				}
 			}
 
 			return {};
