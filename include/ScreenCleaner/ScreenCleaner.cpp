@@ -6,6 +6,7 @@ namespace
 {
 	BOOL WINAPI BitBltHook(const HDC hdcDst, const int x, const int y, const int cx, const int cy, const HDC hdcSrc, const int x1, const int y1, const DWORD rop)
 	{
+		LOG_WARNING("BitBlt triggered, cleaning screen before calling original.");
 		// Disable drawing
 		*screenCleaner.pDrawingEnabled = false;
 		
