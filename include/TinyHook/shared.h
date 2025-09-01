@@ -1,10 +1,10 @@
 ﻿#pragma once
-#include <windows.h>
-#include <unordered_map>
-#include <type_traits>
 #include <expected>
 #include <filesystem>
 #include <string_view>
+#include <type_traits>
+#include <unordered_map>
+#include <windows.h>
 
 namespace TinyHook
 {
@@ -19,13 +19,14 @@ namespace TinyHook
 
 	enum class Error : std::uint8_t
 	{
+		AlreadyHooked,
+		FunctionNotFound,
+		IndexOutOfBounds,
 		InvalidAddress,
 		InvalidDetour,
 		InvalidModule,
-		FunctionNotFound,
-		AlreadyHooked,
 		NotHooked,
-		IndexOutOfBounds,
+		NotInitialized,
 		ProtectionError
 	};
 
@@ -66,14 +67,15 @@ namespace TinyHook
 			using enum Error;
 			switch (error)
 			{
+			case AlreadyHooked: return "Hook already exists";
+			case FunctionNotFound: return "Function not found on address table";
+			case IndexOutOfBounds: return "Index passed was bigger than table size";
 			case InvalidAddress: return "Invalid memory address";
 			case InvalidDetour: return "Invalid detour address";
 			case InvalidModule: return "Module is not loaded";
-			case ProtectionError: return "Memory protection (VirtualProtect) failed";
-			case FunctionNotFound: return "Function not found on address table";
-			case AlreadyHooked: return "Hook already exists";
-			case IndexOutOfBounds: return "Index passed was bigger than table size";
 			case NotHooked: return "Not currently hooked";
+			case NotInitialized: return "Not initialized";
+			case ProtectionError: return "Memory protection (VirtualProtect) failed";
 			}
 			return "Unknown error";
 		}
