@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "shared.h"
 #include <unordered_map>
+#include "shared.h"
 
 namespace TinyHook
 {
@@ -97,19 +97,18 @@ namespace TinyHook
         {
             uint32_t index = 0;
             MEMORY_BASIC_INFORMATION mbiBuffer = {};
-            while (pVTable)
-            {
-                if (!pVTable[index] || !VirtualQuery(pVTable[index], &mbiBuffer, sizeof(mbiBuffer)))
-                {
-                    break;
-                }
 
-                if (mbiBuffer.State != MEM_COMMIT || mbiBuffer.Protect & (PAGE_GUARD | PAGE_NOACCESS) || !(mbiBuffer.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE)))
-                {
-                    break;
-                }
-                ++index;
-            }
+            if (pVTable)
+	        {
+		        while (VirtualQuery(pVTable[index], &mbiBuffer, sizeof(mbiBuffer)))
+		        {
+		        	if (mbiBuffer.State != MEM_COMMIT || mbiBuffer.Protect & (PAGE_GUARD | PAGE_NOACCESS) || !(mbiBuffer.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
+		        	{
+		        		break;
+		        	}
+		        	++index;
+		        }
+	        }
             return index;
         }
     };
