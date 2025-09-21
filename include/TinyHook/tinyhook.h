@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <TinyHook/eathook.h>
+#include <TinyHook/hwbphook.h>
 #include <TinyHook/iathook.h>
+#include <TinyHook/vehhook.h>
 #include <TinyHook/vmthook.h>
 
 namespace TinyHook
@@ -13,6 +15,12 @@ namespace TinyHook
 
 	template<typename T>
 	concept vmt_hook = std::is_same_v<T, VMTHook>;
+
+	template<typename T>
+	concept veh_hook = std::is_same_v<T, VEHHook>;
+
+	template<typename T>
+	concept hwbp_hook = std::is_same_v<T, HWBPHook>;
 
 	template <at_hook HookType, address T>
 	[[nodiscard]] std::unique_ptr<HookType> Setup(T module, std::string_view name = {})

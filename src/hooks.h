@@ -15,22 +15,22 @@ using safetyhook::Context;
 using TinyHook::EATHook;
 using TinyHook::IATHook;
 using TinyHook::VMTHook;
+using TinyHook::VEHHook;
+using TinyHook::HWBPHook;
 
 // Concepts
+using TinyHook::callback;
+using TinyHook::function;
+using TinyHook::detour_function;
+
 using TinyHook::tiny_hook;
 using TinyHook::at_hook;
 using TinyHook::vmt_hook;
+using TinyHook::veh_hook;
+using TinyHook::hwbp_hook;
 
 template<typename T>
 concept safety_hook = std::is_same_v<T, InlineHook> || std::is_same_v<T, MidHook>;
-
-template <typename T>
-concept function = requires(T t)
-{
-	requires std::is_pointer_v<T>;
-	requires std::is_function_v<std::remove_pointer_t<T>>;
-	{ static_cast<const void*>(t) } -> std::convertible_to<const void*>;
-};
 
 #define PTR_AND_NAME(func) &(func), \
         #func
@@ -235,6 +235,70 @@ namespace HooksManager
 		return Create<HookType>(hook, targetName, replacement, detourName);
 	}
 
+	template <hwbp_hook HookType, callback Callback>
+	bool Create(void* address, Callback callback, std::string_view name, const TinyHook::AccessType type = TinyHook::AccessType::Execute, const TinyHook::Size size = TinyHook::Size::Byte)
+	{
+		auto& instance = HWBPHook::GetInstance();
+		if (const auto result = instance.Hook(address, callback, type, size); !result)
+		{
+			LOG_ERROR("Couldn't apply hardware breakpoint at 0x{:X} for {}, error: {}.", reinterpret_cast<uintptr_t>(address), name, TinyHook::Utils::GetErrorMessage(result.error()));
+			RETURN_FAIL(false)
+		}
+
+		LOG_INFO("HWBP Hook placed at 0x{:X} -> {} (0x{:X})", reinterpret_cast<uintptr_t>(address), name, reinterpret_cast<uintptr_t>(callback));
+		return true;
+	}
+
+	template <hwbp_hook HookType, typename DetourFunc>
+	bool Create(void* address, DetourFunc replacement, std::string_view name, const TinyHook::AccessType type = TinyHook::AccessType::Execute, const TinyHook::Size size = TinyHook::Size::Byte)
+	{
+		auto detourCallback = [replacement](CONTEXT* context)
+		{
+			context->Rip = reinterpret_cast<uintptr_t>(replacement);
+		};
+
+		TinyHook::Manager::RegisterHook(replacement, address);
+		return Create<HookType>(address, detourCallback, name, type, size);
+	}
+
+	template <hwbp_hook HookType, callback Callback>
+	bool Create(void* address, Callback callback, const TinyHook::AccessType type = TinyHook::AccessType::Execute, const TinyHook::Size size = TinyHook::Size::Byte)
+	{
+		return Create<HookType>(address, callback, "Unknown", type, size);
+	}
+
+	template <hwbp_hook HookType, typename DetourFunc>
+	bool Create(void* address, DetourFunc replacement, const TinyHook::AccessType type = TinyHook::AccessType::Execute, const TinyHook::Size size = TinyHook::Size::Byte)
+	{
+		return Create<HookType>(address, replacement, "Unknown", type, size);
+	}
+
+	template <veh_hook HookType, callback Callback>
+	bool Create(void* address, Callback callback, std::string_view name = "Unknown")
+	{
+		auto& instance = VEHHook::GetInstance();
+		if (const auto result = instance.Hook(address, callback); !result)
+		{
+			LOG_ERROR("Couldn't apply VEH Hook at 0x{:X} for {}, error: {}.", reinterpret_cast<uintptr_t>(address), name, TinyHook::Utils::GetErrorMessage(result.error()));
+			RETURN_FAIL(false)
+		}
+
+		LOG_INFO("VEH Hook placed at 0x{:X} -> {} (0x{:X})", reinterpret_cast<uintptr_t>(address), name, reinterpret_cast<uintptr_t>(callback));
+		return true;
+	}
+
+	template <veh_hook HookType, detour_function DetourFunc>
+	bool Create(void* address, DetourFunc replacement, std::string_view name = "Unknown")
+	{
+		auto detourCallback = [replacement](CONTEXT* context)
+		{
+			context->Rip = reinterpret_cast<uintptr_t>(replacement);
+		};
+
+		TinyHook::Manager::RegisterHook(replacement, address);
+		return Create<HookType>(address, detourCallback, name);
+	}
+
 	template <vmt_hook HookType>
 	bool Create(VMTHook* vmtHook, const uint32_t index, void* newMethod, std::string_view name = "Unknown")
 	{
@@ -253,10 +317,11 @@ namespace HooksManager
 		std::shared_lock lock(hooking);
 
 		auto& hookVariant = hooks[replacement].back()->getHook();
-		return std::visit([](auto& hook) -> bool {
+		return std::visit([](auto& hook) -> bool
+		{
 			(void)hook.enable();
 			return hook.enabled();
-			}, hookVariant);
+		}, hookVariant);
 	}
 
 	inline bool Disable(const void* replacement)
@@ -264,10 +329,11 @@ namespace HooksManager
 		std::shared_lock lock(hooking);
 
 		auto& hookVariant = hooks[replacement].back()->getHook();
-		return std::visit([](auto& hook) -> bool {
+		return std::visit([](auto& hook) -> bool
+		{
 			(void)hook.disable();
 			return !hook.enabled();
-			}, hookVariant);
+		}, hookVariant);
 	}
 
 	inline int GetFailCount()

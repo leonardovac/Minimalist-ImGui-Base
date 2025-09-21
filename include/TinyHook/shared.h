@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <array>
 #include <expected>
 #include <filesystem>
 #include <string_view>
@@ -16,6 +17,20 @@ namespace TinyHook
 
 	template<typename T>
 	concept address = void_convertible || std::is_same_v<T, void*> || std::is_same_v<T, uintptr_t>  || std::is_same_v<T, DWORD> || std::is_same_v<T, HMODULE>;
+
+	template <typename T>
+	concept function = requires(T t)
+	{
+		requires std::is_pointer_v<T>;
+		requires std::is_function_v<std::remove_pointer_t<T>>;
+	{ static_cast<const void*>(t) } -> std::convertible_to<const void*>;
+	};
+
+	template<typename T>
+	concept callback = std::is_same_v<T, void(*)(CONTEXT*)> || std::is_same_v<T, void(*)(const CONTEXT*)>;
+
+	template<typename T>
+	concept detour_function = !callback<T> && function<T>;
 
 	enum class Error : std::uint8_t
 	{
@@ -87,13 +102,13 @@ namespace TinyHook
 			{
 			case AlreadyHooked: return "Hook already exists";
 			case FunctionNotFound: return "Function not found on address table";
-			case IndexOutOfBounds: return "Index passed was bigger than table size";
-			case InvalidAddress: return "Invalid memory address";
+			case IndexOutOfBounds: return "Index passed was bigger than it should";
+			case InvalidAddress: return "Invalid target address";
 			case InvalidDetour: return "Invalid detour address";
 			case InvalidModule: return "Module is not loaded";
 			case NotHooked: return "Not currently hooked";
 			case NotInitialized: return "Not initialized";
-			case ProtectionError: return "Memory protection (VirtualProtect) failed";
+			case ProtectionError: return "Memory protection failed";
 			}
 			return "Unknown error";
 		}

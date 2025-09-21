@@ -125,6 +125,12 @@
     <ClInclude Include="src\ui\components\widgets.h">
       <Filter>src\ui\components</Filter>
     </ClInclude>
+    <ClInclude Include="include\TinyHook\hwbphook.h">
+      <Filter>include\TinyHook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TinyHook\vehhook.h">
+      <Filter>include\TinyHook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />

@@ -206,9 +206,11 @@
     <ClInclude Include="include\Mem\mem.h" />
     <ClInclude Include="include\ScreenCleaner\ScreenCleaner.h" />
     <ClInclude Include="include\TinyHook\eathook.h" />
+    <ClInclude Include="include\TinyHook\hwbphook.h" />
     <ClInclude Include="include\TinyHook\iathook.h" />
     <ClInclude Include="include\TinyHook\shared.h" />
     <ClInclude Include="include\TinyHook\tinyhook.h" />
+    <ClInclude Include="include\TinyHook\vehhook.h" />
     <ClInclude Include="include\TinyHook\vmthook.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\hooks.h" />
