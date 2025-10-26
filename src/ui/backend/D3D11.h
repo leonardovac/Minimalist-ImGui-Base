@@ -18,23 +18,23 @@ namespace Overlay::DirectX11
 	namespace Interface
 	{
 		using D3D11CREATEDEVICEANDSWAPCHAIN = HRESULT(WINAPI*)(
-			IDXGIAdapter* pAdapter,
-			D3D_DRIVER_TYPE DriverType,
-			HMODULE Software,
-			UINT Flags,
-			const D3D_FEATURE_LEVEL* pFeatureLevels,
-			UINT FeatureLevels,
-			UINT SDKVersion,
-			const DXGI_SWAP_CHAIN_DESC* pSwapChainDesc,
-			IDXGISwapChain** ppSwapChain,
-			ID3D11Device** ppDevice,
-			D3D_FEATURE_LEVEL* pFeatureLevel,
-			ID3D11DeviceContext** ppImmediateContext
-		);
+				IDXGIAdapter* pAdapter,
+				D3D_DRIVER_TYPE DriverType,
+				HMODULE Software,
+				UINT Flags,
+				const D3D_FEATURE_LEVEL* pFeatureLevels,
+				UINT FeatureLevels,
+				UINT SDKVersion,
+				const DXGI_SWAP_CHAIN_DESC* pSwapChainDesc,
+				IDXGISwapChain** ppSwapChain,
+				ID3D11Device** ppDevice,
+				D3D_FEATURE_LEVEL* pFeatureLevel,
+				ID3D11DeviceContext** ppImmediateContext
+				);
 
-		inline ID3D11Device* pDevice = nullptr;
-		inline ID3D11DeviceContext* pDeviceContext = nullptr;
-		inline ID3D11RenderTargetView* pRenderTargetView = nullptr;
+		inline ComPtr<ID3D11Device> pDevice = nullptr;
+		inline ComPtr<ID3D11DeviceContext> pDeviceContext = nullptr;
+		inline ComPtr<ID3D11RenderTargetView> pRenderTargetView = nullptr;
 	}
 
 	inline bool Hook()
@@ -83,13 +83,13 @@ namespace Overlay::DirectX11
 		ComPtr<ID3D11Texture2D> pBackBuffer;
 		if (SUCCEEDED(pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer))))
 		{
-			(void)Interface::pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &Interface::pRenderTargetView);
+			(void)Interface::pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, Interface::pRenderTargetView.GetAddressOf());
 		}
 	}
 
 	inline void ReleaseRenderTargetView()
 	{
-		SafeRelease(Interface::pRenderTargetView);
+		Interface::pRenderTargetView.Reset();
 	}
 
 	inline void CleanupDeviceD3D()
@@ -108,8 +108,8 @@ namespace Overlay::DirectX11
 			Menu::CleanupImGui();
 
 			ReleaseRenderTargetView();
-			SafeRelease(Interface::pDevice);
-			SafeRelease(Interface::pDeviceContext);
+			Interface::pDeviceContext.Reset();
+			Interface::pDevice.Reset();
 		}).detach();
 	}
 
@@ -125,13 +125,17 @@ namespace Overlay::DirectX11
 
 			if (!Overlay::bInitialized)
 			{
-				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Overlay::DirectX11::Interface::pDevice)))) return;
-				Interface::pDevice->GetImmediateContext(&Interface::pDeviceContext);
+				if (FAILED(pSwapChain->GetDevice(IID_PPV_ARGS(&Interface::pDevice)))) return;
+				Interface::pDevice->GetImmediateContext(Interface::pDeviceContext.GetAddressOf());
+
+				DXGI_SWAP_CHAIN_DESC descSwapChain;
+				if (FAILED(pSwapChain->GetDesc(&descSwapChain))) return;
+				hWindow = descSwapChain.OutputWindow;
 
 				// Setup Dear ImGui context 
 				Menu::SetupImGui();
 				// Setup Platform/Renderer backends 
-				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX11_Init(Interface::pDevice, Interface::pDeviceContext)) return;
+				if (!ImGui_ImplWin32_Init(hWindow) || !ImGui_ImplDX11_Init(Interface::pDevice.Get(), Interface::pDeviceContext.Get())) return;
 				CreateMainRenderTargetView(pSwapChain);
 				Overlay::bInitialized = true;
 			}
@@ -142,7 +146,7 @@ namespace Overlay::DirectX11
 
 			Overlay::RenderLogic();
 
-			Interface::pDeviceContext->OMSetRenderTargets(1, &Interface::pRenderTargetView, nullptr);
+			Interface::pDeviceContext->OMSetRenderTargets(1, Interface::pRenderTargetView.GetAddressOf(), nullptr);
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		}();
 
