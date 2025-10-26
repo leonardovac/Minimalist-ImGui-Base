@@ -23,7 +23,6 @@ namespace Overlay::DirectX12
 
 	namespace Interface
 	{
-		inline ID3D12CommandAllocator* pCommandAllocator;
 		inline ID3D12GraphicsCommandList* pCommandList;
 		inline ID3D12CommandQueue* pCommandQueue;
 		inline ID3D12Device* pDevice;
@@ -71,8 +70,9 @@ namespace Overlay::DirectX12
 
 		struct FrameContext
 		{
-			D3D12_CPU_DESCRIPTOR_HANDLE		pDescriptorHandle;
+			D3D12_CPU_DESCRIPTOR_HANDLE	pDescriptorHandle;
 			ID3D12Resource* pResource;
+			ID3D12CommandAllocator* pCommandAllocator;
 		}; inline FrameContext* pFrameContext;
 
 		inline UINT	nBuffersCounts = -1;
@@ -175,6 +175,7 @@ namespace Overlay::DirectX12
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{
 			SafeRelease(Interface::pFrameContext[i].pResource);
+			SafeRelease(Interface::pFrameContext[i].pCommandAllocator);
 		}
 	}
 
@@ -197,6 +198,7 @@ namespace Overlay::DirectX12
 			SafeRelease(Interface::pCommandQueue);
 			SafeRelease(Interface::pDescHeapBackBuffers);
 			SafeRelease(Interface::pDescHeapImGuiRender);
+			SafeRelease(Interface::pCommandList);
 			SafeRelease(Interface::pDevice);
 		}).detach();
 	}
@@ -229,9 +231,12 @@ namespace Overlay::DirectX12
 				const D3D12_DESCRIPTOR_HEAP_DESC descImGuiRender = { D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, Interface::nBuffersCounts, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1};
 				if (FAILED(Interface::pDevice->CreateDescriptorHeap(&descImGuiRender, IID_PPV_ARGS(&Interface::pDescHeapImGuiRender)))) return;
 
-				if (FAILED(Interface::pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Interface::pCommandAllocator)))) return;
+				for (UINT i = 0; i < Interface::nBuffersCounts; i++)
+				{
+					if (FAILED(Interface::pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Interface::pFrameContext[i].pCommandAllocator)))) return;
+				}
 
-				if (FAILED(Interface::pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Interface::pCommandAllocator, nullptr, IID_PPV_ARGS(&Interface::pCommandList))) || FAILED(Interface::pCommandList->Close())) return;
+				if (FAILED(Interface::pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Interface::pFrameContext[0].pCommandAllocator, nullptr, IID_PPV_ARGS(&Interface::pCommandList))) || FAILED(Interface::pCommandList->Close())) return;
 
 				const auto rtvDescriptorSize = Interface::pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 				D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = Interface::pDescHeapBackBuffers->GetCPUDescriptorHandleForHeapStart();
@@ -273,12 +278,16 @@ namespace Overlay::DirectX12
 
 			if (!Interface::pCommandQueue) return;
 
+			const UINT backBufferIndex = pSwapChain->GetCurrentBackBufferIndex();
+
+			ID3D12CommandAllocator* pFrameAllocator = Interface::pFrameContext[backBufferIndex].pCommandAllocator;
+			if (FAILED(pFrameAllocator->Reset())) return;
+
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 
 			Overlay::RenderLogic();
 
-			const UINT backBufferIndex = pSwapChain->GetCurrentBackBufferIndex();
 			D3D12_RESOURCE_BARRIER barrier;
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -287,7 +296,7 @@ namespace Overlay::DirectX12
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-			if(FAILED(Interface::pCommandList->Reset(Interface::pCommandAllocator, nullptr))) return;
+			if (FAILED(Interface::pCommandList->Reset(pFrameAllocator, nullptr))) return;
 			Interface::pCommandList->ResourceBarrier(1, &barrier);
 			Interface::pCommandList->OMSetRenderTargets(1, &Interface::pFrameContext[backBufferIndex].pDescriptorHandle, FALSE, nullptr);
 			Interface::pCommandList->SetDescriptorHeaps(1, &Interface::pDescHeapImGuiRender);
