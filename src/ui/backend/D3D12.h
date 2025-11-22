@@ -175,7 +175,6 @@ namespace Overlay::DirectX12
 		for (UINT i = 0; i < Interface::nBuffersCounts; i++)
 		{
 			SafeRelease(Interface::pFrameContext[i].pResource);
-			SafeRelease(Interface::pFrameContext[i].pCommandAllocator);
 		}
 	}
 
@@ -194,7 +193,12 @@ namespace Overlay::DirectX12
 			ImGui_ImplDX12_Shutdown();
 			Menu::CleanupImGui();
 
-			ReleaseMainTargetView();
+			for (UINT i = 0; i < Interface::nBuffersCounts; i++)
+			{
+				SafeRelease(Interface::pFrameContext[i].pResource);
+				SafeRelease(Interface::pFrameContext[i].pCommandAllocator);
+			}
+
 			SafeRelease(Interface::pCommandQueue);
 			SafeRelease(Interface::pDescHeapBackBuffers);
 			SafeRelease(Interface::pDescHeapImGuiRender);
