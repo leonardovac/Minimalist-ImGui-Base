@@ -5,6 +5,7 @@
 #include <string_view>
 #include <variant>
 
+#include "Mem/mem.h"
 #include "misc/logger.h"
 #include "TinyHook/tinyhook.h"
 
@@ -516,3 +517,89 @@ public:
 private:
 	HookVariant hookVariant;
 };
+
+namespace Hooks
+{
+	enum class HookType : std::uint8_t
+	{
+		Inline,
+		Mid
+	};
+
+	template<typename T>
+	struct is_mid_hook_signature : std::false_type {};
+
+	template<> struct is_mid_hook_signature<void(Context&)> : std::true_type {};
+	template<> struct is_mid_hook_signature<void(const Context&)> : std::true_type {};
+	template<> struct is_mid_hook_signature<void(Context*)> : std::true_type {};
+	template<> struct is_mid_hook_signature<void(const Context*)> : std::true_type {};
+
+	template<typename T>
+	inline constexpr bool is_mid_hook_signature_v = is_mid_hook_signature<std::remove_pointer_t<T>>::value;
+
+	template<typename Fn>
+	constexpr HookType DeduceHookType()
+	{
+		if constexpr (is_mid_hook_signature_v<Fn>)
+			return HookType::Mid;
+		else return HookType::Inline;
+	}
+
+	inline HMODULE TryGetModuleHandle(const char* moduleName)
+	{
+		static std::unordered_map<const char*, HMODULE> moduleRegistry{};
+		if (const auto it = moduleRegistry.find(moduleName); it != moduleRegistry.end())
+		{
+			return it->second;
+		}
+
+		if (const HMODULE handle = GetModuleHandleA(moduleName))
+		{
+			return moduleRegistry[moduleName] = handle;
+		}
+		return nullptr;
+	}
+
+	struct HookEntry
+	{
+		mutable void* address{ nullptr };
+		void* detour;
+		const char* name{};
+		HookType type;
+
+		const char* module = nullptr;
+		const char* pattern = nullptr;
+
+		template<typename T>
+		HookEntry(void* address, T detour, const char* name) : address(address), detour(reinterpret_cast<void*>(detour)), name(name), type(DeduceHookType<T>()) {}
+
+		template<typename T>
+		HookEntry(void* address, T detour) : HookEntry(address, detour, "Unknown") {}
+
+		template<typename T>
+		HookEntry(const char* pattern, T detour, const char* name) : detour(reinterpret_cast<void*>(detour)), name(name), type(DeduceHookType<T>()), pattern(pattern) {}
+
+		template<typename T>
+		HookEntry(const char* pattern, T detour) : HookEntry(pattern, detour, "Unknown") {}
+
+		template<typename T>
+		HookEntry(const char* moduleName, const char* pattern, T detour, const char* name) : detour(reinterpret_cast<void*>(detour)), name(name), type(DeduceHookType<T>()), module(moduleName), pattern(pattern) {}
+
+		template<typename T>
+		HookEntry(const char* moduleName, const char* pattern, T detour) : HookEntry(moduleName, pattern, detour, "Unknown") {}
+
+
+		std::expected<void*, TinyHook::Error> TryResolveAddress() const
+		{
+			if (!address)
+			{
+				const HMODULE hModule = TryGetModuleHandle(module);
+				if (!hModule) return std::unexpected(TinyHook::Error::InvalidModule);
+
+				address = mem::PatternScan(hModule, pattern);
+				if (!address) return std::unexpected(TinyHook::Error::InvalidAddress);
+			}
+			return address;
+		}
+	};
+}

@@ -44,77 +44,25 @@ namespace Detours
 
 namespace Hooks
 {
-	enum class HookType : std::uint8_t
-	{
-		Inline,
-		Mid
-	};
-
-	struct HookEntry
-	{
-		mutable void* address{ nullptr };
-		void* detour;
-		const char* name{};
-		HookType type;
-
-		const char* module = nullptr;
-		const char* pattern = nullptr;
-
-		template<typename T>
-		HookEntry(void* address, T detour, const char* name, const HookType hookType) : address(address), detour(reinterpret_cast<void*>(detour)), name(name), type(hookType) {}
-
-		template<typename T>
-		HookEntry(void* address, T detour, const HookType hookType) : HookEntry(address, detour, "Unknown", hookType) {}
-
-		template<typename T>
-		HookEntry(const char* moduleName, const char* pattern, T detour, const char* name, const HookType hookType) : detour(reinterpret_cast<void*>(detour)), name(name), type(hookType), module(moduleName), pattern(pattern) {}
-
-		template<typename T>
-		HookEntry(const char* moduleName, const char* pattern, T detour, const HookType hookType) : HookEntry(moduleName, pattern, detour, "Unknown", hookType) {}
-
-		template<typename T>
-		HookEntry(const char* pattern, T detour, const char* name, const HookType hookType) : HookEntry(static_cast<const char*>(nullptr), pattern, detour, name, hookType) {}
-
-		template<typename T>
-		HookEntry(const char* pattern, T detour, const HookType hookType) : HookEntry(pattern, detour, "Unknown", hookType) {}
-
-		std::expected<void*, TinyHook::Error> TryResolveAddress() const
-		{
-			if (!address)
-			{
-				const HMODULE hModule = TryGetModuleHandle(module);
-				if (!hModule) return std::unexpected(TinyHook::Error::InvalidModule);
-
-				address = mem::PatternScan(hModule, pattern);
-				if (!address) return std::unexpected(TinyHook::Error::InvalidAddress);
-			}
-			return address;
-		}
-	};
-
 	static inline HookEntry List[]
 	{
 		{
 			MessageBoxA, // Address of the original function
 			PTR_AND_NAME(Detours::ExampleInlineDetour), // Macro for getting the address of the detour function and its name
-			HookType::Inline
 		},
 		{
 			MessageBoxW,
 			Detours::ExampleMidDetour,
 			"Detours::ExampleMidDetour", // Name for logging purposes, can be nullptr
-			HookType::Mid
 		},
 		{
 			"DEAD BEEF ?? BABE FACE", // Just a placeholder, will search for it in the executable module (e.g: game.exe)
 			Detours::ExampleMidDetour,
-			HookType::Mid
 		},
 		{
 			"module.dll", // Name of the module to search for the pattern
 			"DEAD C0DE ?? B01D FACE", // Will search for it in the specified module
 			Detours::ExampleMidDetour,
-			HookType::Mid
 		},
 	};
 
