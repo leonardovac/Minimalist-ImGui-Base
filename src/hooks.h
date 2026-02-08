@@ -32,9 +32,8 @@ using TinyHook::hwbp_hook;
 template<typename T>
 concept safety_hook = std::is_same_v<T, InlineHook> || std::is_same_v<T, MidHook>;
 
-#define PTR_AND_NAME(func) &(func), \
-        #func
-
+#define GET_ORIGINAL(func) HooksManager::GetOriginal(func).original<decltype(&(func))>()
+#define PTR_AND_NAME(func) &(func), #func
 #define RETURN_FAIL(...) { fails++; return __VA_ARGS__; }
 
 enum : std::uint8_t {
